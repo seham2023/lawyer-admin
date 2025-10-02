@@ -12,9 +12,6 @@ class Category extends Model
     protected $fillable = ['name', 'image', 'parent_id', 'type'];
     protected $translatable = ['name'];
 
-
-
-
     public function parent()
     {
         return $this->belongsTo(Category::class, 'parent_id');
@@ -29,10 +26,12 @@ class Category extends Model
     {
         return $query->where('type', 'client');
     }
+
     public function scopeCase(Builder $query): Builder
     {
         return $query->where('type', 'case');
     }
+
     public function scopeExpense(Builder $query): Builder
     {
         return $query->where('type', 'expense');

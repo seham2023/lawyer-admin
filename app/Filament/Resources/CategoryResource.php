@@ -9,6 +9,7 @@ use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Filters\SelectFilter;
@@ -21,14 +22,17 @@ class CategoryResource extends Resource
 
     protected static ?string $navigationIcon = '';
     protected static ?string $navigationGroup = 'Law Management';
+
     public static function getNavigationLabel(): string
     {
         return __('categories');
     }
+
     public static function getPluralModelLabel(): string
     {
         return __('category');
     }
+
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
@@ -37,20 +41,23 @@ class CategoryResource extends Resource
                     TextInput::make('name')
                         ->label(__('Category Name'))
                         ->required()
-                        // ->maxLength(255)
-                        // ->rule('max:255')
-
+                        ->maxLength(255)
                         ->columns(2),
                 )->columnSpanFull(),
 
-                // FileUpload::make('image')
-                //     ->label(__('Category Image'))
-                //     ->directory('categories')
-                //     ->image(),
+                Textarea::make('description')
+                    ->label(__('Description'))
+                    ->columnSpanFull(),
 
-
-
-
+                Select::make('type')
+                    ->label(__('Type'))
+                    ->options([
+                        'client' => __('Client'),
+                        'case' => __('Case'),
+                        'expense' => __('Expense'),
+                        'client_type' => __('Client Type'),
+                    ])
+                    ->required(),
             ]);
     }
 
@@ -62,13 +69,20 @@ class CategoryResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                // ImageColumn::make('image'),
-
-
+                TextColumn::make('type')
+                    ->sortable()
+                    ->searchable(),
+            ])
+            ->filters([
+                SelectFilter::make('type')
+                    ->options([
+                        'client' => __('Client'),
+                        'case' => __('Case'),
+                        'expense' => __('Expense'),
+                        'client_type' => __('Client Type'),
+                    ]),
             ]);
     }
-
-
 
     public static function getPages(): array
     {

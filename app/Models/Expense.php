@@ -43,6 +43,12 @@ class Expense extends Model
     {
         return $this->belongsTo(Payment::class);
     }
+
+    // Relationship with Client
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
     public function check()
     {
         return $this->hasOne(ExpenseCheck::class);

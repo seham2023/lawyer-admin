@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Models\CaseRecord;
+use App\Models\Category;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Resources\Resource;
@@ -35,13 +36,12 @@ class CaseResource extends Resource
     {
         return $form
             ->schema([
-                TranslatableContainer::make(
-                    Forms\Components\Section::make(__('Case Information'))
-                        ->schema([
-                            Select::make('category_id')
-                                ->label(__('Category'))
-                                ->relationship('category', 'name')
-                                ->required(),
+Select::make('category_id')
+    ->label(__('Category'))
+    ->options(function (callable $get) {
+        return Category::where('type', 'case')->pluck('name', 'id');
+    })
+    ->required(),
 
                             Select::make('status_id')
                                 ->label(__('Status'))
@@ -111,8 +111,6 @@ class CaseResource extends Resource
                             TextInput::make('contract')
                                 ->label(__('Contract'))
                                 ->maxLength(255),
-                        ])->columns(2),
-                )->columnSpanFull(),
             ]);
     }
 

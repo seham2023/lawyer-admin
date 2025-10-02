@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Models\Client;
+use App\Models\Category;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Resources\Resource;
@@ -34,50 +35,59 @@ class ClientResource extends Resource
     {
         return $form
             ->schema([
-                TranslatableContainer::make(
-                    Forms\Components\Section::make(__('Client Information'))
-                        ->schema([
+                Forms\Components\Section::make(__('Client Information'))
+                    ->schema([
+                        TranslatableContainer::make(
                             TextInput::make('name')
                                 ->label(__('Name'))
                                 ->required()
-                                ->maxLength(255),
+                                ->maxLength(255)
+                        ),
 
-                            TextInput::make('email')
-                                ->label(__('Email'))
-                                ->email()
-                                ->required()
-                                ->maxLength(255),
+                        TextInput::make('email')
+                            ->label(__('Email'))
+                            ->email()
+                            ->required()
+                            ->maxLength(255),
 
-                            TextInput::make('phone')
-                                ->label(__('Phone'))
-                                ->tel()
-                                ->required()
-                                ->maxLength(255),
+                        TextInput::make('phone')
+                            ->label(__('Phone'))
+                            ->tel()
+                            ->required()
+                            ->maxLength(255),
 
-                            TextInput::make('address')
-                                ->label(__('Address'))
-                                ->maxLength(255),
+                        TextInput::make('address')
+                            ->label(__('Address'))
+                            ->maxLength(255),
 
-                            Select::make('city_id')
-                                ->label(__('City'))
-                                ->relationship('city', 'name')
-                                ->required(),
+                        Select::make('city_id')
+                            ->label(__('City'))
+                            ->relationship('city', 'name')
+                            ->required(),
 
-                            Select::make('country_id')
-                                ->label(__('Country'))
-                                ->relationship('country', 'name')
-                                ->required(),
+                        Select::make('country_id')
+                            ->label(__('Country'))
+                            ->relationship('country', 'name')
+                            ->required(),
 
-                            Select::make('nationality_id')
-                                ->label(__('Nationality'))
-                                ->relationship('nationality', 'name')
-                                ->required(),
+                        Select::make('nationality_id')
+                            ->label(__('Nationality'))
+                            ->relationship('nationality', 'name')
+                            ->required(),
 
+                        Select::make('category_id')
+                            ->label(__('Category'))
+                            ->options(function (callable $get) {
+                                return Category::where('type', 'client')->pluck('name', 'id');
+                            })
+                            ->required(),
+
+                        TranslatableContainer::make(
                             Textarea::make('notes')
                                 ->label(__('Notes'))
-                                ->columnSpanFull(),
-                        ])->columns(2),
-                )->columnSpanFull(),
+                                ->columnSpanFull()
+                        ),
+                    ])->columns(2),
             ]);
     }
 
@@ -106,6 +116,10 @@ class ClientResource extends Resource
 
                 TextColumn::make('country.name')
                     ->label(__('Country'))
+                    ->sortable(),
+
+                TextColumn::make('category.name')
+                    ->label(__('Category'))
                     ->sortable(),
 
                 TextColumn::make('created_at')

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Models\Expense;
+use App\Models\Category;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Resources\Resource;
@@ -36,58 +37,41 @@ class ExpenseResource extends Resource
     {
         return $form
             ->schema([
-                TranslatableContainer::make(
-                    Forms\Components\Section::make(__('Expense Information'))
-                        ->schema([
-                            Select::make('category_id')
-                                ->label(__('Category'))
-                                ->relationship('category', 'name')
-                                ->required(),
+                Forms\Components\Section::make(__('Expense Information'))
+                    ->schema([
+Select::make('category_id')
+    ->label(__('Category'))
+    ->options(function (callable $get) {
+        return Category::where('type', 'expense')->pluck('name', 'id');
+    })
+    ->required(),
 
-                            Select::make('status_id')
-                                ->label(__('Status'))
-                                ->relationship('status', 'name')
-                                ->required(),
+                        Select::make('client_id')
+                            ->label(__('Client'))
+                            ->relationship('client', 'name')
+                            ->required(),
 
-                            Select::make('currency_id')
-                                ->label(__('Currency'))
-                                ->relationship('currency', 'name')
-                                ->required(),
+                        DatePicker::make('date')
+                            ->label(__('Date'))
+                            ->required(),
 
-                            Select::make('pay_method_id')
-                                ->label(__('Payment Method'))
-                                ->relationship('payMethod', 'name')
-                                ->required(),
+                        TextInput::make('amount')
+                            ->label(__('Amount'))
+                            ->numeric()
+                            ->required(),
 
-                            Select::make('payment_id')
-                                ->label(__('Payment'))
-                                ->relationship('payment', 'name'),
+                        TranslatableContainer::make(
+                            TextInput::make('description')
+                                ->label(__('Description'))
+                                ->maxLength(255)
+                        ),
 
-                            TextInput::make('name')
-                                ->label(__('Name'))
-                                ->required()
-                                ->maxLength(255),
-
-                            TextInput::make('receipt_number')
-                                ->label(__('Receipt Number'))
-                                ->maxLength(255),
-
-                            Textarea::make('reason')
-                                ->label(__('Reason'))
-                                ->required()
-                                ->columnSpanFull(),
-
-                            DatePicker::make('date_time')
-                                ->label(__('Date & Time'))
-                                ->required(),
-
-                            FileUpload::make('file_path')
-                                ->label(__('Receipt File'))
-                                ->directory('expenses')
-                                ->maxSize(5120) // 5MB
-                                ->acceptedFileTypes(['application/pdf', 'image/*']),
-                        ])->columns(2),
-                )->columnSpanFull(),
+                        TranslatableContainer::make(
+                            Textarea::make('notes')
+                                ->label(__('Notes'))
+                                ->columnSpanFull()
+                        ),
+                    ])->columns(2),
             ]);
     }
 

@@ -32,4 +32,22 @@ class Client extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    // Relationship with City
+    public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    // Relationship with Country
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    // Relationship with Nationality
+    public function nationality()
+    {
+        return $this->belongsTo(Nationality::class);
+    }
 }
