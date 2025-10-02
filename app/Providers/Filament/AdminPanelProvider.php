@@ -20,6 +20,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Althinect\FilamentSpatieRolesPermissions\FilamentSpatieRolesPermissionsPlugin;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -42,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                // Custom Dashboard will be auto-discovered
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
@@ -65,15 +66,20 @@ class AdminPanelProvider extends PanelProvider
                 TranslationManagerPlugin::make(),
                 SpatieLaravelTranslatablePlugin::make()
                     ->defaultLocales(['ar', 'en']),
+                FilamentFullCalendarPlugin::make()
+                    ->selectable()
+                    ->editable(),
             ])
             ->authMiddleware([
                 Authenticate::class,
             ])
             ->navigationGroups([
-                'Law Management',
+                'Legal Management',
+                'Client Management', 
                 'Financial Management',
+                'Location Management',
                 'User Management',
-                'Settings',
+                'System Settings',
             ]);
     }
 }

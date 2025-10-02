@@ -31,4 +31,10 @@ class Address extends Model
     {
         return $this->belongsTo(Country::class);
     }
+
+    // Relationship with Nationality
+    public function nationality()
+    {
+        return $this->belongsTo(Nationality::class);
+    }
 }

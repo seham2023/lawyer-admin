@@ -4,6 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Models\Client;
 use App\Models\Category;
+use App\Models\Country;
+use App\Models\State;
+use App\Models\City;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Resources\Resource;
@@ -12,7 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use App\Filament\Resources\ClientResource\Pages;
-use Mvenghaus\FilamentPluginTranslatableInline\Forms\Components\TranslatableContainer;
+use Illuminate\Database\Eloquent\Builder;
 
 class ClientResource extends Resource
 {
@@ -20,6 +23,8 @@ class ClientResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationGroup = 'Client Management';
+
+    protected static ?int $navigationSort = 1;
 
     public static function getNavigationLabel(): string
     {
@@ -37,56 +42,106 @@ class ClientResource extends Resource
             ->schema([
                 Forms\Components\Section::make(__('Client Information'))
                     ->schema([
-                        TranslatableContainer::make(
-                            TextInput::make('name')
-                                ->label(__('Name'))
-                                ->required()
-                                ->maxLength(255)
-                        ),
+                        TextInput::make('name')
+                            ->label(__('Name'))
+                            ->required()
+                            ->maxLength(255),
 
                         TextInput::make('email')
                             ->label(__('Email'))
                             ->email()
                             ->required()
+                            ->unique(ignoreRecord: true)
                             ->maxLength(255),
 
-                        TextInput::make('phone')
-                            ->label(__('Phone'))
+                        TextInput::make('mobile')
+                            ->label(__('Mobile'))
                             ->tel()
                             ->required()
                             ->maxLength(255),
 
-                        TextInput::make('address')
-                            ->label(__('Address'))
+                        Forms\Components\Select::make('gender')
+                            ->label(__('Gender'))
+                            ->options([
+                                'male' => __('Male'),
+                                'female' => __('Female'),
+                            ])
+                            ->required()
+                            ->native(false),
+
+                        TextInput::make('company')
+                            ->label(__('Company'))
                             ->maxLength(255),
-
-                        Select::make('city_id')
-                            ->label(__('City'))
-                            ->relationship('city', 'name')
-                            ->required(),
-
-                        Select::make('country_id')
-                            ->label(__('Country'))
-                            ->relationship('country', 'name')
-                            ->required(),
-
-                        Select::make('nationality_id')
-                            ->label(__('Nationality'))
-                            ->relationship('nationality', 'name')
-                            ->required(),
 
                         Select::make('category_id')
                             ->label(__('Category'))
-                            ->options(function (callable $get) {
-                                return Category::where('type', 'client')->pluck('name', 'id');
-                            })
-                            ->required(),
+                            ->relationship('category', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->native(false),
 
-                        TranslatableContainer::make(
-                            Textarea::make('notes')
-                                ->label(__('Notes'))
-                                ->columnSpanFull()
-                        ),
+                        Textarea::make('notes')
+                            ->label(__('Notes'))
+                            ->columnSpanFull(),
+                    ])->columns(2),
+
+                // Address section using relationship
+                Forms\Components\Section::make(__('Address Information'))
+                    ->relationship('address')
+                    ->schema([
+                        TextInput::make('address')
+                            ->label(__('Address'))
+                            ->required()
+                            ->maxLength(500)
+                            ->default('test'),
+
+                        TextInput::make('street')
+                            ->label(__('Street'))
+                            ->maxLength(255),
+
+                        Select::make('country_id')
+                            ->label(__('Country'))
+                            ->options(Country::all()->pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function (callable $set) {
+                                $set('state_id', null);
+                                $set('city_id', null);
+                            })
+                            ->native(false),
+
+                        Select::make('state_id')
+                            ->label(__('State'))
+                            ->options(function (callable $get) {
+                                $countryId = $get('country_id');
+                                if (!$countryId) {
+                                    return [];
+                                }
+                                return State::where('country_id', $countryId)->pluck('name', 'id');
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn (callable $set) => $set('city_id', null))
+                            ->native(false),
+
+                        Select::make('city_id')
+                            ->label(__('City'))
+                            ->options(function (callable $get) {
+                                $stateId = $get('state_id');
+                                if (!$stateId) {
+                                    return [];
+                                }
+                                return City::where('state_id', $stateId)->pluck('name', 'id');
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->native(false),
                     ])->columns(2),
             ]);
     }
@@ -105,18 +160,32 @@ class ClientResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('phone')
-                    ->label(__('Phone'))
+                TextColumn::make('mobile')
+                    ->label(__('Mobile'))
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('city.name')
-                    ->label(__('City'))
-                    ->sortable(),
+                TextColumn::make('gender')
+                    ->label(__('Gender'))
+                    ->sortable()
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'male' => 'info',
+                        'female' => 'success',
+                        default => 'gray',
+                    }),
 
-                TextColumn::make('country.name')
-                    ->label(__('Country'))
-                    ->sortable(),
+                TextColumn::make('company')
+                    ->label(__('Company'))
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('address.address')
+                    ->label(__('Address'))
+                    ->sortable()
+                    ->limit(50)
+                    ->toggleable(),
 
                 TextColumn::make('category.name')
                     ->label(__('Category'))
@@ -129,11 +198,48 @@ class ClientResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('gender')
+                    ->label(__('Gender'))
+                    ->options([
+                        'male' => __('Male'),
+                        'female' => __('Female'),
+                    ]),
+                    
+                Tables\Filters\SelectFilter::make('category')
+                    ->label(__('Category'))
+                    ->relationship('category', 'name')
+                    ->searchable(),
+                    
+                Tables\Filters\Filter::make('name')
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label(__('Search by Name')),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['name'],
+                                fn(Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
+                            );
+                    }),
+                    
+                Tables\Filters\Filter::make('mobile')
+                    ->form([
+                        Forms\Components\TextInput::make('mobile')
+                            ->label(__('Search by Mobile')),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['mobile'],
+                                fn(Builder $query, $mobile): Builder => $query->where('mobile', 'like', "%{$mobile}%"),
+                            );
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
