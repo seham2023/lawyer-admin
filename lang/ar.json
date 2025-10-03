@@ -1,5 +1,4 @@
 {
-
     "category": "فئة",
     "categories": "فئات",
     "client": "عميل",
@@ -7,5 +6,17 @@
     "case": "حالة",
     "cases": "حالات",
     "expense": "مصروف",
-    "expenses": "مصاريف"
+    "expenses": "مصاريف",
+    "case_number": "رقم القضية",
+    "title": "العنوان",
+    "details": "التفاصيل",
+    "datetime": "التاريخ والوقت",
+    "priority": "الأولوية",
+    "priority_low": "منخفض",
+    "priority_medium": "متوسط",
+    "priority_high": "عالي",
+    "case_record_id": "معرف سجل القضية",
+    "name": "الاسم",
+    "description": "الوصف",
+    "file_path": "مسار الملف"
 }

@@ -66,4 +66,19 @@ class CaseRecord extends Model
     {
         return $this->belongsTo(Category::class, 'client_type_id');
     }
+
+    public function sessions()
+    {
+        return $this->hasMany(Session::class, 'case_record_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class, 'case_record_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'case_record_id');
+    }
 }
