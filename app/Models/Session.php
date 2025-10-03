@@ -17,4 +17,8 @@ class Session extends Model
         'case_record_id',
         'client_id'
     ];
+
+    protected $casts = [
+    'datetime' => 'datetime',
+    ];
 }

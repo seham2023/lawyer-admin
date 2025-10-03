@@ -26,7 +26,9 @@ class CaseRecord extends Model
         'contract',
         'client_type_id',
     ];
-
+protected $casts = [
+    'start_date' => 'date',
+];
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -80,5 +82,10 @@ class CaseRecord extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class, 'case_record_id');
+    }
+
+    public function paymentDetails()
+    {
+        return $this->hasMany(PaymentDetail::class, 'case_record_id');
     }
 }

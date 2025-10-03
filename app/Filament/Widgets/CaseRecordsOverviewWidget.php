@@ -54,9 +54,9 @@ class CaseRecordsOverviewWidget extends BaseWidget
                     ->sortable(),
             ])
             ->actions([
-                Tables\Actions\Action::make('view')
-                    ->icon('heroicon-m-eye')
-                    ->url(fn (CaseRecord $record): string => route('filament.admin.resources.case-records.edit', $record)),
+                // Tables\Actions\Action::make('view')
+                //     ->icon('heroicon-m-eye')
+                //     ->url(fn (CaseRecord $record): string => route('filament.admin.resources.case-records.edit', $record)),
             ]);
     }
 }

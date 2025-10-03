@@ -245,14 +245,15 @@ class CaseResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            RelationManagers\SessionsRelationManager::class,
-            RelationManagers\DocumentsRelationManager::class,
-            RelationManagers\PaymentsRelationManager::class,
-        ];
-    }
+public static function getRelations(): array
+{
+    return [
+        RelationManagers\SessionsRelationManager::class,
+        RelationManagers\DocumentsRelationManager::class,
+        // RelationManagers\PaymentsRelationManager::class,
+        RelationManagers\PaymentDetailRelationManager::class,
+    ];
+}
 
     public static function getPages(): array
     {

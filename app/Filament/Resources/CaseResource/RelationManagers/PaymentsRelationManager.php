@@ -18,18 +18,18 @@ class PaymentsRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('case_record_id')
-                    ->required()
-                    ->maxLength(255),
+                // Forms\Components\TextInput::make('case_record_id')
+                //     ->required()
+                //     ->maxLength(255),
             ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('case_record_id')
+            // ->recordTitleAttribute('case_record_id')
             ->columns([
-                Tables\Columns\TextColumn::make('case_record_id'),
+                // Tables\Columns\TextColumn::make('case_record_id'),
             ])
             ->filters([
                 //

@@ -27,11 +27,20 @@ class NoteResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('body')
                     ->columnSpanFull(),
-                Forms\Components\Toggle::make('is_office')
-                    ->required(),
-                Forms\Components\TextInput::make('type')
+                Forms\Components\Radio::make('is_office')
+                    ->options([
+                        1 => 'Team',
+                        0 => 'Self',
+                    ])
                     ->required()
-                    ->numeric()
+                    ->inline(),
+                Forms\Components\Radio::make('type')
+                    ->options([
+                        0 => 'Work',
+                        1 => 'Social',
+                    ])
+                    ->required()
+                    ->inline()
                     ->default(0),
             ]);
     }
@@ -42,10 +51,30 @@ class NoteResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('is_office')
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('is_office')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        '1' => 'Team',
+                        '0' => 'Self',
+                        default => 'Unknown'
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        '1' => 'success',
+                        '0' => 'gray',
+                        default => 'danger'
+                    }),
                 Tables\Columns\TextColumn::make('type')
-                    ->numeric()
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        '0' => 'Work',
+                        '1' => 'Social',
+                        default => 'Unknown'
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        '0' => 'info',
+                        '1' => 'warning',
+                        default => 'danger'
+                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

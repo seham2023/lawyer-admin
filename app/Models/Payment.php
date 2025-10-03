@@ -23,8 +23,8 @@ class Payment extends Model
         // Total amount paid via paymentDetails
         $paidAmount = $this->paymentDetails()->sum('amount');
 
-        // Remaining amount is the payment's total amount minus the paid amount
-        return $this->amount - $paidAmount;
+        // Remaining amount is the payment's total amount minus the paid amount, ensuring it doesn't go negative
+        return max(0, $this->amount - $paidAmount);
     }
 
     public function getTotalPaidAttribute()
