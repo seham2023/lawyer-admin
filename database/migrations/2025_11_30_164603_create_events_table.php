@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('events', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->dateTime('start');
+            $table->dateTime('end')->nullable();
+            $table->string('type')->default('general'); // general, meeting, holiday, etc.
+            $table->string('color')->default('#3b82f6');
+            $table->boolean('all_day')->default(false);
             $table->timestamps();
         });
     }

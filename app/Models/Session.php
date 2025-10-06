@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Session extends Model
 {
@@ -21,4 +22,10 @@ class Session extends Model
     protected $casts = [
     'datetime' => 'datetime',
     ];
+
+
+    public function caseRecord(): BelongsTo
+    {
+        return $this->belongsTo(CaseRecord::class);
+    }
 }

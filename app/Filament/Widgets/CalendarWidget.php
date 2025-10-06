@@ -2,17 +2,21 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\CaseRecord;
 use App\Models\Session;
+use App\Models\Event;
+use App\Models\CaseRecord;
+use Illuminate\Database\Eloquent\Model;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
+use Saade\FilamentFullCalendar\Actions;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Actions\CreateAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
+use Carbon\Carbon;
 
 class CalendarWidget extends FullCalendarWidget
 {
+    // Handle both Event and Session models
+    public Model | string | null $model = Event::class;
+    
     protected static ?string $heading = 'Legal Calendar';
     
     protected int | string | array $columnSpan = 'full';
@@ -21,72 +25,343 @@ class CalendarWidget extends FullCalendarWidget
 
     public function fetchEvents(array $fetchInfo): array
     {
-        // Fetch case records with start dates
-        $caseRecords = CaseRecord::query()
-            ->with(['client', 'category', 'status'])
-            ->whereBetween('start_date', [$fetchInfo['start'], $fetchInfo['end']])
-            ->get();
-
-        // Fetch sessions with datetime
+        // Fetch sessions
         $sessions = Session::query()
             ->whereBetween('datetime', [$fetchInfo['start'], $fetchInfo['end']])
             ->get();
 
-        $events = [];
+        // Fetch events 
+        $events = Event::query()
+            ->where(function ($query) use ($fetchInfo) {
+                $query->whereBetween('start', [$fetchInfo['start'], $fetchInfo['end']])
+                      ->orWhereBetween('end', [$fetchInfo['start'], $fetchInfo['end']]);
+            })
+            ->get();
 
-        // Add case records to events
-        foreach ($caseRecords as $case) {
-            $events[] = EventData::make()
-                ->id('case-' . $case->id)
-                ->title('Case: ' . ($case->client->name ?? 'Unknown Client'))
-                ->start($case->start_date->format('Y-m-d'))
-                ->backgroundColor('#10b981')
-                ->borderColor('#059669')
-                ->textColor('#ffffff')
-                ->url(route('filament.admin.resources.cases.edit', $case->id))
-                ->extendedProps([
-                    'type' => 'case',
-                    'court' => $case->court_name,
-                    'subject' => $case->subject,
-                    'client' => $case->client->name ?? 'Unknown',
-                    'category' => $case->category->name ?? 'No Category',
-                    'status' => $case->status->name ?? 'No Status',
-                ]);
-        }
+        $calendarEvents = [];
 
-        // Add sessions to events - Fixed datetime format
+        // Add sessions to calendar
         foreach ($sessions as $session) {
-            $events[] = EventData::make()
-                ->id('session-' . $session->id)
-                ->title('Session: ' . $session->title)
-                ->start($session->datetime->format('Y-m-d\TH:i:s'))
-                ->backgroundColor('#3b82f6')
-                ->borderColor('#1d4ed8')
-                ->textColor('#ffffff')
-                ->extendedProps([
+            $sessionDateTime = is_string($session->datetime)
+                ? Carbon::parse($session->datetime)
+                : $session->datetime;
+
+            $calendarEvents[] = [
+                'id' => $session->id, // Use direct ID for proper resolution
+                'title' => 'Session: ' . $session->title,
+                'start' => $sessionDateTime->format('Y-m-d\TH:i:s'),
+                'backgroundColor' => $this->getSessionColor($session->priority),
+                'borderColor' => $this->getSessionBorderColor($session->priority),
+                'textColor' => '#ffffff',
+                'extendedProps' => [
                     'type' => 'session',
                     'case_number' => $session->case_number,
                     'details' => $session->details,
                     'priority' => $session->priority,
-                ]);
+                    'model_id' => $session->id,
+                ]
+            ];
         }
 
-        // Debug logging
-        \Log::info('Calendar Events Generated', [
-            'case_count' => count($caseRecords),
-            'session_count' => count($sessions),
-            'total_events' => count($events),
-            'events_sample' => array_slice($events, 0, 2)
-        ]);
+        // Add general events to calendar  
+        foreach ($events as $event) {
+            $startDateTime = is_string($event->start)
+                ? Carbon::parse($event->start)
+                : $event->start;
 
-        return $events;
+            $endDateTime = $event->end 
+                ? (is_string($event->end) ? Carbon::parse($event->end) : $event->end)
+                : null;
+
+            $calendarEvents[] = [
+                'id' => $event->id, // Use direct ID for actionable events
+                'title' => $event->title,
+                'start' => $event->all_day 
+                    ? $startDateTime->format('Y-m-d')
+                    : $startDateTime->format('Y-m-d\TH:i:s'),
+                'end' => $endDateTime 
+                    ? ($event->all_day 
+                        ? $endDateTime->format('Y-m-d') 
+                        : $endDateTime->format('Y-m-d\TH:i:s'))
+                    : null,
+                'backgroundColor' => $event->color,
+                'borderColor' => $event->color,
+                'textColor' => '#ffffff',
+                'allDay' => $event->all_day,
+                'extendedProps' => [
+                    'type' => 'event',
+                    'description' => $event->description,
+                    'event_type' => $event->type,
+                ]
+            ];
+        }
+
+        return $calendarEvents;
     }
 
-    public function getViewData(): array
+    // Separate form schemas for events and sessions
+    public function getEventFormSchema(): array
     {
         return [
-            'plugins' => ['dayGridPlugin', 'timeGridPlugin', 'interactionPlugin'],
-            'timeZone' => 'local',
+            Forms\Components\TextInput::make('title')
+                ->required()
+                ->label('Event Title'),
+
+            Forms\Components\Textarea::make('description')
+                ->label('Event Description')
+                ->rows(3),
+
+            Forms\Components\DateTimePicker::make('start')
+                ->required()
+                ->label('Start Date & Time'),
+
+            Forms\Components\DateTimePicker::make('end')
+                ->label('End Date & Time')
+                ->nullable(),
+
+            Forms\Components\Select::make('type')
+                ->options([
+                    'general' => 'General',
+                    'meeting' => 'Meeting',
+                    'holiday' => 'Holiday',
+                    'deadline' => 'Deadline',
+                    'appointment' => 'Appointment',
+                ])
+                ->default('general'),
+
+            Forms\Components\ColorPicker::make('color')
+                ->label('Event Color')
+                ->default('#3b82f6'),
+
+            Forms\Components\Toggle::make('all_day')
+                ->label('All Day Event')
+                ->default(false),
+        ];
+    }
+
+    public function getSessionFormSchema(): array
+    {
+        return [
+            Forms\Components\TextInput::make('title')
+                ->required()
+                ->label('Session Title'),
+
+            Forms\Components\Textarea::make('details')
+                ->label('Session Details')
+                ->rows(3),
+
+            Forms\Components\DateTimePicker::make('datetime')
+                ->required()
+                ->label('Session Date & Time'),
+
+            Forms\Components\Select::make('case_record_id')
+                ->label('Case')
+                ->options(function () {
+                    return CaseRecord::with('client')
+                        ->get()
+                        ->mapWithKeys(function ($case) {
+                            $clientName = $case->client?->name ?? 'Unknown Client';
+                            return [$case->id => "Case #{$case->id} - {$clientName}"];
+                        });
+                })
+                ->required()
+                ->searchable()
+                ->preload(),
+
+            Forms\Components\Select::make('priority')
+                ->options([
+                    'low' => 'Low',
+                    'normal' => 'Normal',
+                    'high' => 'High',
+                ])
+                ->default('normal'),
+
+            Forms\Components\Hidden::make('case_number')
+                ->default(fn ($get) => CaseRecord::find($get('case_record_id'))?->id),
+        ];
+    }
+
+    // Header actions for creating events and sessions separately
+    protected function headerActions(): array
+    {
+        return [
+            Actions\CreateAction::make('add_event')
+                ->label('Add Event')
+                ->form($this->getEventFormSchema())
+                ->mutateFormDataUsing(function (array $data): array {
+                    return $data;
+                })
+                ->mountUsing(function (Forms\Form $form, array $arguments) {
+                    $form->fill([
+                        'start' => $arguments['start'] ?? now(),
+                        'end' => $arguments['end'] ?? now()->addHour(),
+                    ]);
+                })
+                ->action(function (array $data) {
+                    $this->createEvent($data);
+                }),
+
+            Actions\CreateAction::make('add_session')
+                ->label('Add Session')
+                ->form($this->getSessionFormSchema())
+                ->mutateFormDataUsing(function (array $data): array {
+                    return $data;
+                })
+                ->mountUsing(function (Forms\Form $form, array $arguments) {
+                    $form->fill([
+                        'datetime' => $arguments['start'] ?? now(),
+                    ]);
+                })
+                ->action(function (array $data) {
+                    $this->createSession($data);
+                }),
+        ];
+    }
+
+    // Modal actions for events and sessions
+    protected function modalActions(): array
+    {
+        return [
+            Actions\ViewAction::make()
+                ->label('View Details'),
+
+            Actions\EditAction::make()
+                ->form(function ($record) {
+                    // Return the appropriate form schema based on record type
+                    if ($record instanceof Session) {
+                        return $this->getSessionFormSchema();
+                    }
+                    return $this->getEventFormSchema();
+                })
+                ->mountUsing(function ($record, Forms\Form $form, array $arguments) {
+                    // Determine if this is a session or event based on the record type
+                    if ($record instanceof Session) {
+                        $form->fill([
+                            'title' => $record->title,
+                            'details' => $record->details,
+                            'datetime' => $record->datetime,
+                            'case_record_id' => $record->case_record_id,
+                            'priority' => $record->priority,
+                        ]);
+                    } else {
+                        $eventData = $arguments['event'] ?? [];
+                        $form->fill([
+                            'title' => $record->title,
+                            'description' => $record->description,
+                            'type' => $record->type,
+                            'color' => $record->color,
+                            'all_day' => $record->all_day,
+                            'start' => $eventData['start'] ?? $record->start,
+                            'end' => $eventData['end'] ?? $record->end,
+                        ]);
+                    }
+                })
+                ->action(function ($record, array $data) {
+                    // Use the appropriate update method based on record type
+                    if ($record instanceof Session) {
+                        return $this->updateSession($record, $data);
+                    } else {
+                        return $this->updateEvent($record, $data);
+                    }
+                }),
+
+            Actions\DeleteAction::make(),
+        ];
+    }
+
+    protected function viewAction(): Action
+    {
+        return Actions\ViewAction::make()
+            ->form(function ($record) {
+                if ($record instanceof Session) {
+                    return $this->getSessionViewSchema($record);
+                }
+                return $this->getEventViewSchema($record);
+            })
+            ->modalHeading(function ($record) {
+                if ($record instanceof Session) {
+                    return 'Session Details';
+                }
+                return 'Event Details';
+            });
+    }
+
+    // View schemas for display-only
+    public function getEventViewSchema($record): array
+    {
+        return [
+            Forms\Components\Section::make('Event Details')
+                ->schema([
+                    Forms\Components\Placeholder::make('title')
+                        ->label('Event Title')
+                        ->content($record->title),
+
+                    Forms\Components\Placeholder::make('description')
+                        ->label('Description')
+                        ->content($record->description ?: 'No description'),
+
+                    Forms\Components\Placeholder::make('start')
+                        ->label('Start Date & Time')
+                        ->content($record->start?->format('Y-m-d H:i:s') ?: 'Not set'),
+
+                    Forms\Components\Placeholder::make('end')
+                        ->label('End Date & Time')
+                        ->content($record->end?->format('Y-m-d H:i:s') ?: 'Not set'),
+
+                    Forms\Components\Placeholder::make('type')
+                        ->label('Event Type')
+                        ->content(ucfirst($record->type ?: 'general')),
+
+                    Forms\Components\Placeholder::make('all_day')
+                        ->label('All Day Event')
+                        ->content($record->all_day ? 'Yes' : 'No'),
+                ])
+        ];
+    }
+
+    public function getSessionViewSchema($record): array
+    {
+        $caseRecord = CaseRecord::with('client')->find($record->case_record_id);
+        $caseInfo = $caseRecord && $caseRecord->client
+            ? "Case #{$caseRecord->id} - {$caseRecord->client->name}"
+            : "Case #{$record->case_record_id}";
+
+        return [
+            Forms\Components\Section::make('Session Details')
+                ->schema([
+                    Forms\Components\Placeholder::make('title')
+                        ->label('Session Title')
+                        ->content($record->title),
+
+                    Forms\Components\Placeholder::make('details')
+                        ->label('Details')
+                        ->content($record->details ?: 'No details'),
+
+                    Forms\Components\Placeholder::make('datetime')
+                        ->label('Date & Time')
+                        ->content($record->datetime?->format('Y-m-d H:i:s') ?: 'Not set'),
+
+                    Forms\Components\Placeholder::make('case_record_id')
+                        ->label('Case')
+                        ->content($caseInfo),
+
+                    Forms\Components\Placeholder::make('priority')
+                        ->label('Priority')
+                        ->content(function () use ($record) {
+                            return match($record->priority) {
+                                'high' => '🔴 High',
+                                'normal' => '🔵 Normal',
+                                'low' => '🟢 Low',
+                                default => '🔵 Normal',
+                            };
+                        }),
+                ])
+        ];
+    }
+
+    public function config(): array
+    {
+        return [
             'initialView' => 'dayGridMonth',
             'headerToolbar' => [
                 'left' => 'prev,next today',
@@ -95,77 +370,21 @@ class CalendarWidget extends FullCalendarWidget
             ],
             'height' => 'auto',
             'navLinks' => true,
-            'editable' => false,
+            'editable' => true,
+            'selectable' => true,
+            'selectMirror' => true,
             'dayMaxEvents' => true,
-            'selectable' => false,
             'displayEventTime' => true,
             'eventTimeFormat' => [
                 'hour' => 'numeric',
                 'minute' => '2-digit',
-                'omitZeroMinute' => false,
                 'meridiem' => 'short'
             ],
-            'slotLabelFormat' => [
-                'hour' => 'numeric',
-                'minute' => '2-digit',
-                'omitZeroMinute' => false,
-                'meridiem' => 'short'
-            ],
+            // Custom event click - let Filament handle all modals
             'eventClick' => [
                 'callback' => 'function(info) {
-                    const event = info.event;
-                    const props = event.extendedProps;
-                    
-                    let content = "";
-                    if (props.type === "case") {
-                        content = `
-                            <div class="space-y-2 p-4">
-                                <h3 class="font-semibold text-lg text-gray-900">${event.title}</h3>
-                                <div class="grid grid-cols-1 gap-2">
-                                    <p><span class="font-medium">Court:</span> ${props.court || "N/A"}</p>
-                                    <p><span class="font-medium">Subject:</span> ${props.subject || "N/A"}</p>
-                                    <p><span class="font-medium">Category:</span> ${props.category}</p>
-                                    <p><span class="font-medium">Status:</span> ${props.status}</p>
-                                    <p><span class="font-medium">Date:</span> ${event.start.toLocaleDateString()}</p>
-                                </div>
-                            </div>
-                        `;
-                    } else if (props.type === "session") {
-                        content = `
-                            <div class="space-y-2 p-4">
-                                <h3 class="font-semibold text-lg text-gray-900">${event.title}</h3>
-                                <div class="grid grid-cols-1 gap-2">
-                                    <p><span class="font-medium">Case Number:</span> ${props.case_number || "N/A"}</p>
-                                    <p><span class="font-medium">Details:</span> ${props.details || "No details"}</p>
-                                    <p><span class="font-medium">Priority:</span> ${props.priority || "Normal"}</p>
-                                    <p><span class="font-medium">Date & Time:</span> ${event.start.toLocaleDateString()} ${event.start.toLocaleTimeString()}</p>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    // Enhanced modal display
-                    const modal = document.createElement("div");
-                    modal.className = "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50";
-                    modal.innerHTML = `
-                        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                            ${content}
-                            <div class="px-4 pb-4">
-                                <button onclick="this.closest(\".fixed\").remove()" 
-                                        class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded">
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    document.body.appendChild(modal);
-                    
-                    // Close on outside click
-                    modal.addEventListener("click", function(e) {
-                        if (e.target === modal) {
-                            modal.remove();
-                        }
-                    });
+                    // Let Filament handle the modal for both events and sessions
+                    // The viewAction and modalActions will determine the display
                 }'
             ]
         ];
@@ -178,39 +397,143 @@ class CalendarWidget extends FullCalendarWidget
                 const event = info.event;
                 const props = event.extendedProps;
                 
-                // Add enhanced tooltips
-                if (props.type === "case") {
+                if (props.type === "session") {
                     info.el.setAttribute("title", 
-                        "Case: " + props.subject + " - Court: " + props.court + 
-                        " - Status: " + props.status
+                        "Session: " + (props.details || "No details") + 
+                        " - Priority: " + props.priority
                     );
-                } else if (props.type === "session") {
+                    info.el.style.cursor = "help";
+                } else if (props.type === "event") {
                     info.el.setAttribute("title", 
-                        "Session: " + props.details + " - Priority: " + props.priority +
-                        " - Case: " + props.case_number
+                        (props.description || "No description") + 
+                        " - Type: " + props.event_type
                     );
+                    info.el.style.cursor = "pointer";
                 }
                 
-                // Add custom CSS classes for styling
+                // Priority styling for sessions
                 if (props.priority === "high") {
                     info.el.style.border = "2px solid #dc2626";
+                    info.el.style.fontWeight = "bold";
                 } else if (props.priority === "low") {
-                    info.el.style.border = "2px solid #16a34a";
+                    info.el.style.border = "2px solid #10b981";
                 }
             }
         ';
     }
 
-    // Optional: Add refresh functionality
-    protected function getListeners(): array
+    // Resolve both Event and Session models for actions
+    public function resolveRecord($key): Model
     {
-        return [
-            'refreshCalendar' => 'refreshEvents',
-        ];
+        // Handle session IDs (prefixed with 'session-')
+        if (is_string($key) && str_starts_with($key, 'session-')) {
+            $sessionId = str_replace('session-', '', $key);
+            return Session::findOrFail($sessionId);
+        }
+
+        // Handle direct event IDs
+        if (is_numeric($key)) {
+            $event = Event::find($key);
+            if ($event) {
+                return $event;
+            }
+
+            // If not found as event, try as session
+            $session = Session::find($key);
+            if ($session) {
+                return $session;
+            }
+
+            // If neither found, throw exception
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException("Record not found");
+        }
+
+        // Return empty event model as fallback
+        return new Event();
     }
 
-    public function refreshEvents(): void
+    public static function canView(): bool
     {
-        $this->dispatch('refresh-calendar');
+        return true;
+    }
+
+    // Handle creation of Events
+    public function createEvent(array $data): Model
+    {
+        return Event::create([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'start' => $data['start'],
+            'end' => $data['end'] ?? null,
+            'type' => $data['type'] ?? 'general',
+            'color' => $data['color'] ?? '#3b82f6',
+            'all_day' => $data['all_day'] ?? false,
+        ]);
+    }
+
+    // Handle creation of Sessions
+    public function createSession(array $data): Model
+    {
+        return Session::create([
+            'title' => $data['title'],
+            'details' => $data['details'] ?? null,
+            'datetime' => $data['datetime'],
+            'case_record_id' => $data['case_record_id'],
+            'priority' => $data['priority'] ?? 'normal',
+            'case_number' => $data['case_record_id'], // Use case_record_id as case_number
+        ]);
+    }
+
+    // Handle updates of Events
+    public function updateEvent($record, array $data): Model
+    {
+        $record->update([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'start' => $data['start'],
+            'end' => $data['end'] ?? null,
+            'type' => $data['type'] ?? 'general',
+            'color' => $data['color'] ?? '#3b82f6',
+            'all_day' => $data['all_day'] ?? false,
+        ]);
+
+        return $record;
+    }
+
+    // Handle updates of Sessions
+    public function updateSession($record, array $data): Model
+    {
+        $record->update([
+            'title' => $data['title'],
+            'details' => $data['details'] ?? null,
+            'datetime' => $data['datetime'],
+            'case_record_id' => $data['case_record_id'],
+            'priority' => $data['priority'] ?? 'normal',
+            'case_number' => $data['case_record_id'],
+        ]);
+
+        return $record;
+    }
+
+    // Helper method to get session color based on priority
+    private function getSessionColor(string $priority): string
+    {
+        return match($priority) {
+            'high' => '#dc2626',     // Red for high priority
+            'normal' => '#3b82f6',   // Blue for normal priority
+            'low' => '#10b981',      // Green for low priority
+            default => '#3b82f6',    // Default blue
+        };
+    }
+
+    // Helper method to get session border color based on priority
+    private function getSessionBorderColor(string $priority): string
+    {
+        return match($priority) {
+            'high' => '#b91c1c',     // Dark red for high priority
+            'normal' => '#1d4ed8',   // Dark blue for normal priority
+            'low' => '#059669',      // Dark green for low priority
+            default => '#1d4ed8',    // Default dark blue
+        };
     }
 }

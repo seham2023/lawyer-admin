@@ -68,6 +68,8 @@ class AdminPanelProvider extends PanelProvider
                     ->defaultLocales(['ar', 'en']),
                 FilamentFullCalendarPlugin::make()
                     ->selectable()
+                    ->editable()
+                    ->timezone('auto')
                     ->editable(),
             ])
             ->authMiddleware([

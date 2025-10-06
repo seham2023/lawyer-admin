@@ -17,6 +17,10 @@ class Expense extends Model
         'receipt_number',
         'reason',
         'date_time',
+        'check_number',
+        'bank_name',
+        'clearance_date',
+        'deposit_account',
     ];
 
     public function category()

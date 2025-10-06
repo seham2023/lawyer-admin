@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Models\Email;
+use App\Models\Client;
+use App\Models\EmailTemplate;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Resources\Resource;
@@ -12,8 +14,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use App\Filament\Resources\EmailResource\Pages;
 use Mvenghaus\FilamentPluginTranslatableInline\Forms\Components\TranslatableContainer;
+use Illuminate\Support\Facades\Auth;
 
 class EmailResource extends Resource
 {
@@ -36,44 +40,61 @@ class EmailResource extends Resource
     {
         return $form
             ->schema([
-                TranslatableContainer::make(
-                    Forms\Components\Section::make(__('Email Information'))
-                        ->schema([
-                            Select::make('email_template_id')
-                                ->label(__('Email Template'))
-                                ->relationship('emailTemplate', 'name')
-                                ->required(),
+                Forms\Components\Section::make(__('Email Information'))
+                    ->schema([
+                        Select::make('client_id')
+                            ->label(__('Client'))
+                            ->relationship('client', 'name')
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $clientId = $get('client_id');
+                                $templateId = $get('email_template_id');
+                                if ($clientId && $templateId) {
+                                    self::updateEmailPreview($set, $clientId, $templateId);
+                                }
+                            }),
 
-                            Select::make('client_id')
-                                ->label(__('Client'))
-                                ->relationship('client', 'name')
-                                ->required(),
+                        Select::make('email_template_id')
+                            ->label(__('Email Template'))
+                            ->relationship('emailTemplate', 'name')
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $clientId = $get('client_id');
+                                $templateId = $get('email_template_id');
+                                if ($clientId && $templateId) {
+                                    self::updateEmailPreview($set, $clientId, $templateId);
+                                }
+                            }),
 
-                            TextInput::make('subject')
-                                ->label(__('Subject'))
-                                ->required()
-                                ->maxLength(255),
+                        TextInput::make('subject')
+                            ->label(__('Subject'))
+                            ->required()
+                            ->maxLength(255),
 
-                            Textarea::make('content')
-                                ->label(__('Content'))
-                                ->required()
-                                ->columnSpanFull(),
+                        RichEditor::make('content')
+                            ->label(__('Content'))
+                            ->columnSpanFull(),
 
-                            Textarea::make('notes')
-                                ->label(__('Notes'))
-                                ->columnSpanFull(),
+                        Textarea::make('notes')
+                            ->label(__('Notes'))
+                            ->columnSpanFull(),
 
-                            Toggle::make('is_starred')
-                                ->label(__('Starred'))
-                                ->default(false),
+                        FileUpload::make('file_path')
+                            ->label(__('File'))
+                            ->directory('emails'),
 
-                            FileUpload::make('file_path')
-                                ->label(__('Attachment'))
-                                ->directory('emails')
-                                ->maxSize(10240) // 10MB
-                                ->acceptedFileTypes(['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']),
-                        ])->columns(2),
-                )->columnSpanFull(),
+                        Select::make('priority')
+                            ->label(__('Priority'))
+                            ->options([
+                                'low' => __('Low'),
+                                'medium' => __('Medium'),
+                                'high' => __('High'),
+                            ])
+                            ->default('low')
+                            ->required(),
+                    ])->columns(2),
             ]);
     }
 
@@ -94,14 +115,6 @@ class EmailResource extends Resource
                     ->label(__('Template'))
                     ->sortable(),
 
-                TextColumn::make('is_starred')
-                    ->label(__('Starred'))
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        '1' => 'success',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (bool $state): string => $state ? __('Yes') : __('No')),
 
                 TextColumn::make('created_at')
                     ->label(__('Created At'))
@@ -128,6 +141,33 @@ class EmailResource extends Resource
         return [
             //
         ];
+    }
+
+    protected static function updateEmailPreview(callable $set, $clientId, $templateId)
+    {
+        $client = Client::find($clientId);
+        $template = EmailTemplate::find($templateId);
+
+        if ($client && $template) {
+            $templateContent = $template->content;
+            $admin = Auth::user();
+
+            $body = str_replace(
+                ['{{name}}', '{{date}}', '{{country}}', '{{city}}', '{{admin_name}}', '{{phone}}'],
+                [
+                    $client->name,
+                    now()->format('Y-m-d'),
+                    $client->country?->name ?? '',
+                    $client->city?->name ?? '',
+                    $admin->name ?? 'Admin',
+                    $admin->phone ?? '123456789'
+                ],
+                $templateContent
+            );
+
+            $set('subject', $template->subject);
+            $set('content', $body);
+        }
     }
 
     public static function getPages(): array

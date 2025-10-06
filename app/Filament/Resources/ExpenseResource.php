@@ -11,9 +11,13 @@ use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\FileUpload;
 use App\Filament\Resources\ExpenseResource\Pages;
+use App\Models\Status;
+use App\Models\Currency;
+use App\Models\PayMethod;
 use Mvenghaus\FilamentPluginTranslatableInline\Forms\Components\TranslatableContainer;
 
 class ExpenseResource extends Resource
@@ -37,41 +41,97 @@ class ExpenseResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make(__('Expense Information'))
+                Forms\Components\Section::make(__('Expense Details'))
                     ->schema([
-Select::make('category_id')
-    ->label(__('Category'))
-    ->options(function (callable $get) {
-        return Category::where('type', 'expense')->pluck('name', 'id');
-    })
-    ->required(),
-
-                        Select::make('client_id')
-                            ->label(__('Client'))
-                            ->relationship('client', 'name')
+                        Select::make('category_id')
+                            ->label(__('Category'))
+                            ->options(Category::where('type', 'expense')->pluck('name', 'id'))
                             ->required(),
 
-                        DatePicker::make('date')
-                            ->label(__('Date'))
+                        Select::make('status_id')
+                            ->label(__('Expense Status'))
+                            ->options(Status::where('type', 'expense')->pluck('name', 'id'))
+                            ->required(),
+
+                        Select::make('currency_id')
+                            ->label(__('Currency'))
+                            ->options(Currency::pluck('name', 'id'))
+                            ->required(),
+
+                        Select::make('pay_method_id')
+                            ->label(__('Payment Method'))
+                            ->options(PayMethod::pluck('name', 'id'))
                             ->required(),
 
                         TextInput::make('amount')
                             ->label(__('Amount'))
                             ->numeric()
+                            ->step(0.01)
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $amount = $get('amount') ?? 0;
+                                $taxPercent = $get('tax') ?? 0;
+                                $taxAmount = ($amount * $taxPercent) / 100;
+                                $set('total_after_tax', $amount + $taxAmount);
+                            }),
+
+                        TextInput::make('tax')
+                            ->label(__('Tax (%)'))
+                            ->numeric()
+                            ->step(0.01)
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $amount = $get('amount') ?? 0;
+                                $taxPercent = $get('tax') ?? 0;
+                                $taxAmount = ($amount * $taxPercent) / 100;
+                                $set('total_after_tax', $amount + $taxAmount);
+                            }),
+
+                        TextInput::make('total_after_tax')
+                            ->label(__('Total After Tax'))
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated(false),
+
+                        TextInput::make('name')
+                            ->label(__('Name'))
                             ->required(),
 
-                        TranslatableContainer::make(
-                            TextInput::make('description')
-                                ->label(__('Description'))
-                                ->maxLength(255)
-                        ),
+                        TextInput::make('receipt_number')
+                            ->label(__('Receipt Number')),
 
-                        TranslatableContainer::make(
-                            Textarea::make('notes')
-                                ->label(__('Notes'))
-                                ->columnSpanFull()
-                        ),
+                        DateTimePicker::make('date_time')
+                            ->label(__('Date and Time'))
+                            ->required(),
+
+                        FileUpload::make('file_path')
+                            ->label(__('File Path'))
+                            ->directory('expenses'),
+
+                        Textarea::make('reason')
+                            ->label(__('Reason'))
+                            ->columnSpanFull(),
                     ])->columns(2),
+
+                Forms\Components\Section::make(__('Check Details'))
+                    ->schema([
+                        TextInput::make('check_number')
+                            ->label(__('Check Number')),
+
+                        TextInput::make('bank_name')
+                            ->label(__('Bank Name')),
+
+                        Select::make('check_status_id')
+                            ->label(__('Status'))
+                            ->options(Status::where('type', 'check')->pluck('name', 'id')),
+
+                        DatePicker::make('clearance_date')
+                            ->label(__('Clearance Date')),
+
+                        TextInput::make('deposit_account')
+                            ->label(__('Deposit Account')),
+                    ])->columns(2)->collapsible(),
             ]);
     }
 

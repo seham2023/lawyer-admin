@@ -14,7 +14,6 @@ class Email extends Model
         'priority',
         'notes',
         'file_path',
-        'is_starred',
     ];
     protected $casts = [
         'is_starred' => 'boolean',
