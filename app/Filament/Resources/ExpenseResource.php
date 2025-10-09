@@ -25,16 +25,25 @@ class ExpenseResource extends Resource
     protected static ?string $model = Expense::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
-    protected static ?string $navigationGroup = 'Financial Management';
 
     public static function getNavigationLabel(): string
     {
-        return __('Expenses');
+        return __('expenses');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('financial_management');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Expense');
+        return __('expenses');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('expense');
     }
 
     public static function form(Forms\Form $form): Forms\Form

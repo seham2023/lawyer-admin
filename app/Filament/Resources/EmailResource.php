@@ -24,16 +24,25 @@ class EmailResource extends Resource
     protected static ?string $model = Email::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
-    protected static ?string $navigationGroup = 'Communication';
 
     public static function getNavigationLabel(): string
     {
-        return __('Emails');
+        return __('emails');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('legal_management');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Email');
+        return __('emails');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('email');
     }
 
     public static function form(Forms\Form $form): Forms\Form

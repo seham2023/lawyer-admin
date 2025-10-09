@@ -18,16 +18,25 @@ class CityResource extends Resource
     protected static ?string $model = City::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
-    protected static ?string $navigationGroup = 'Settings';
 
     public static function getNavigationLabel(): string
     {
-        return __('Cities');
+        return __('cities');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('location_management');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('City');
+        return __('cities');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('city');
     }
 
     public static function form(Forms\Form $form): Forms\Form

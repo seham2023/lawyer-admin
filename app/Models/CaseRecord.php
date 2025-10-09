@@ -88,4 +88,9 @@ protected $casts = [
     {
         return $this->hasMany(PaymentDetail::class, 'case_record_id');
     }
+
+    public function __toString()
+    {
+        return $this->subject;
+    }
 }

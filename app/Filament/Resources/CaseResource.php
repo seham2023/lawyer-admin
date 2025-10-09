@@ -27,16 +27,25 @@ class CaseResource extends Resource
     protected static ?string $model = CaseRecord::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
-    protected static ?string $navigationGroup = 'Case Management';
 
     public static function getNavigationLabel(): string
     {
-        return __('Cases');
+        return __('cases');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('legal_management');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Case');
+        return __('cases');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('case');
     }
 
     public static function form(Forms\Form $form): Forms\Form
@@ -178,11 +187,25 @@ class CaseResource extends Resource
                                         TextInput::make('amount')
                                             ->label(__('amount'))
                                             ->numeric()
-                                            ->required(),
+                                            ->required()
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                                $tax = $get('tax') ?? 0;
+                                                $amount = $state ?? 0;
+                                                $total = $amount + ($amount * $tax / 100);
+                                                $set('total_after_tax', $total);
+                                            }),
 
                                         TextInput::make('tax')
                                             ->label(__('tax'))
-                                            ->numeric(),
+                                            ->numeric()
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                                $amount = $get('amount') ?? 0;
+                                                $tax = $state ?? 0;
+                                                $total = $amount + ($amount * $tax / 100);
+                                                $set('total_after_tax', $total);
+                                            }),
 
                                         TextInput::make('total_after_tax')
                                             ->label(__('total_after_tax'))

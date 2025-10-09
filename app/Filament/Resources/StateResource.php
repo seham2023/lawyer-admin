@@ -18,16 +18,26 @@ class StateResource extends Resource
     protected static ?string $model = State::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-map';
-    protected static ?string $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 3;
 
     public static function getNavigationLabel(): string
     {
-        return __('States');
+        return __('states');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('location_management');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('State');
+        return __('states');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('state');
     }
 
     public static function form(Forms\Form $form): Forms\Form

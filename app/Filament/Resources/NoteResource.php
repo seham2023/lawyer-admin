@@ -16,9 +16,28 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class NoteResource extends Resource
 {
     protected static ?string $model = Note::class;
-    protected static ?string $navigationGroup = 'Settings';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('notes');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('legal_management');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('notes');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('note');
+    }
 
     public static function form(Form $form): Form
     {

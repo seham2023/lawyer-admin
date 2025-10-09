@@ -33,5 +33,8 @@ class Client extends Model
         return $this->belongsTo(Category::class);
     }
 
-   
+    public function __toString()
+    {
+        return $this->name;
+    }
 }

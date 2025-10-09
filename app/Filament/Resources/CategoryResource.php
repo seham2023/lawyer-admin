@@ -21,14 +21,23 @@ class CategoryResource extends Resource
     protected static ?string $model = Category::class;
 
     protected static ?string $navigationIcon = '';
-    protected static ?string $navigationGroup = 'Settings';
 
     public static function getNavigationLabel(): string
     {
         return __('categories');
     }
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('system_settings');
+    }
+
     public static function getPluralModelLabel(): string
+    {
+        return __('categories');
+    }
+
+    public static function getModelLabel(): string
     {
         return __('category');
     }

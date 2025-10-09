@@ -47,7 +47,7 @@ class CalendarWidget extends FullCalendarWidget
                 : $session->datetime;
 
             $calendarEvents[] = [
-                'id' => $session->id, // Use direct ID for proper resolution
+                'id' => 'session_' . $session->id, // Prefix to distinguish from events
                 'title' => 'Session: ' . $session->title,
                 'start' => $sessionDateTime->format('Y-m-d\TH:i:s'),
                 'backgroundColor' => $this->getSessionColor($session->priority),
@@ -74,7 +74,7 @@ class CalendarWidget extends FullCalendarWidget
                 : null;
 
             $calendarEvents[] = [
-                'id' => $event->id, // Use direct ID for actionable events
+                'id' => 'event_' . $event->id, // Prefix to distinguish from sessions
                 'title' => $event->title,
                 'start' => $event->all_day 
                     ? $startDateTime->format('Y-m-d')
@@ -92,11 +92,45 @@ class CalendarWidget extends FullCalendarWidget
                     'type' => 'event',
                     'description' => $event->description,
                     'event_type' => $event->type,
+                    'model_id' => $event->id,
                 ]
             ];
         }
 
         return $calendarEvents;
+    }
+
+    // Resolve both Event and Session models for actions
+    public function resolveRecord($key): Model
+    {
+        // Handle session IDs (prefixed with 'session_')
+        if (is_string($key) && str_starts_with($key, 'session_')) {
+            $sessionId = str_replace('session_', '', $key);
+            return Session::findOrFail($sessionId);
+        }
+
+        // Handle event IDs (prefixed with 'event_')
+        if (is_string($key) && str_starts_with($key, 'event_')) {
+            $eventId = str_replace('event_', '', $key);
+            return Event::findOrFail($eventId);
+        }
+
+        // Handle direct numeric IDs as fallback
+        if (is_numeric($key)) {
+            $event = Event::find($key);
+            if ($event) {
+                return $event;
+            }
+
+            $session = Session::find($key);
+            if ($session) {
+                return $session;
+            }
+
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException("Record not found");
+        }
+
+        return new Event();
     }
 
     // Separate form schemas for events and sessions
@@ -218,23 +252,35 @@ class CalendarWidget extends FullCalendarWidget
         ];
     }
 
-    // Modal actions for events and sessions
+    // Modal actions for events and sessions - set ViewAction as default
     protected function modalActions(): array
     {
         return [
-            Actions\ViewAction::make()
-                ->label('View Details'),
+            // Actions\ViewAction::make()
+            //     ->label('View Details')
+            //     ->modalHeading(function ($record) {
+            //         if ($record instanceof Session) {
+            //             return 'Session Details: ' . $record->title;
+            //         }
+            //         return 'Event Details: ' . $record->title;
+            //     })
+            //     ->form(function ($record) {
+            //         if ($record instanceof Session) {
+            //             return $this->getSessionViewSchema($record);
+            //         }
+            //         return $this->getEventViewSchema($record);
+            //     })
+            //     ->modalSubmitAction(false)
+            //     ->modalCancelActionLabel('Close'),
 
             Actions\EditAction::make()
                 ->form(function ($record) {
-                    // Return the appropriate form schema based on record type
                     if ($record instanceof Session) {
                         return $this->getSessionFormSchema();
                     }
                     return $this->getEventFormSchema();
                 })
                 ->mountUsing(function ($record, Forms\Form $form, array $arguments) {
-                    // Determine if this is a session or event based on the record type
                     if ($record instanceof Session) {
                         $form->fill([
                             'title' => $record->title,
@@ -257,7 +303,6 @@ class CalendarWidget extends FullCalendarWidget
                     }
                 })
                 ->action(function ($record, array $data) {
-                    // Use the appropriate update method based on record type
                     if ($record instanceof Session) {
                         return $this->updateSession($record, $data);
                     } else {
@@ -265,25 +310,34 @@ class CalendarWidget extends FullCalendarWidget
                     }
                 }),
 
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->modalHeading(function ($record) {
+                    if ($record instanceof Session) {
+                        return 'Delete Session: ' . $record->title;
+                    }
+                    return 'Delete Event: ' . $record->title;
+                }),
         ];
     }
 
+    // Override the default viewAction to work with multi-models
     protected function viewAction(): Action
     {
         return Actions\ViewAction::make()
+            ->modalHeading(function ($record) {
+                if ($record instanceof Session) {
+                    return 'Session Details: ' . $record->title;
+                }
+                return 'Event Details: ' . $record->title;
+            })
             ->form(function ($record) {
                 if ($record instanceof Session) {
                     return $this->getSessionViewSchema($record);
                 }
                 return $this->getEventViewSchema($record);
             })
-            ->modalHeading(function ($record) {
-                if ($record instanceof Session) {
-                    return 'Session Details';
-                }
-                return 'Event Details';
-            });
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Close');
     }
 
     // View schemas for display-only
@@ -380,13 +434,7 @@ class CalendarWidget extends FullCalendarWidget
                 'minute' => '2-digit',
                 'meridiem' => 'short'
             ],
-            // Custom event click - let Filament handle all modals
-            'eventClick' => [
-                'callback' => 'function(info) {
-                    // Let Filament handle the modal for both events and sessions
-                    // The viewAction and modalActions will determine the display
-                }'
-            ]
+            // Remove custom eventClick to let Filament handle it
         ];
     }
 
@@ -402,7 +450,7 @@ class CalendarWidget extends FullCalendarWidget
                         "Session: " + (props.details || "No details") + 
                         " - Priority: " + props.priority
                     );
-                    info.el.style.cursor = "help";
+                    info.el.style.cursor = "pointer";
                 } else if (props.type === "event") {
                     info.el.setAttribute("title", 
                         (props.description || "No description") + 
@@ -420,36 +468,6 @@ class CalendarWidget extends FullCalendarWidget
                 }
             }
         ';
-    }
-
-    // Resolve both Event and Session models for actions
-    public function resolveRecord($key): Model
-    {
-        // Handle session IDs (prefixed with 'session-')
-        if (is_string($key) && str_starts_with($key, 'session-')) {
-            $sessionId = str_replace('session-', '', $key);
-            return Session::findOrFail($sessionId);
-        }
-
-        // Handle direct event IDs
-        if (is_numeric($key)) {
-            $event = Event::find($key);
-            if ($event) {
-                return $event;
-            }
-
-            // If not found as event, try as session
-            $session = Session::find($key);
-            if ($session) {
-                return $session;
-            }
-
-            // If neither found, throw exception
-            throw new \Illuminate\Database\Eloquent\ModelNotFoundException("Record not found");
-        }
-
-        // Return empty event model as fallback
-        return new Event();
     }
 
     public static function canView(): bool
@@ -480,7 +498,7 @@ class CalendarWidget extends FullCalendarWidget
             'datetime' => $data['datetime'],
             'case_record_id' => $data['case_record_id'],
             'priority' => $data['priority'] ?? 'normal',
-            'case_number' => $data['case_record_id'], // Use case_record_id as case_number
+            'case_number' => $data['case_record_id'],
         ]);
     }
 

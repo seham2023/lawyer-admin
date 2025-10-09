@@ -118,5 +118,14 @@
     "unknown": "Unknown",
     "password": "Password",
     "roles": "Roles",
-    "client_management": "Client Management"
+    "client_management": "Client Management",
+    "legal_management": "Legal Management",
+    "financial_management": "Financial Management",
+    "location_management": "Location Management",
+    "user_management": "User Management",
+    "system_settings": "System Settings",
+    "users": "Users",
+    "user": "User",
+    "notes": "Notes",
+    "note": "Note"
 }

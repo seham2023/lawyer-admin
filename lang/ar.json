@@ -123,6 +123,14 @@
     "Clients": "العملاء",
     "sessions": "الجلسات",
     "documents": "المستندات",
-    "payments": "المدفوعات"
-
+    "payments": "المدفوعات",
+    "legal_management": "إدارة القانونية",
+    "financial_management": "إدارة المالية",
+    "location_management": "إدارة المواقع",
+    "user_management": "إدارة المستخدمين",
+    "system_settings": "إعدادات النظام",
+    "users": "المستخدمون",
+    "user": "مستخدم",
+    "notes": "الملاحظات",
+    "note": "ملاحظة"
 }

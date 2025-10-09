@@ -24,11 +24,15 @@ class ClientResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationGroup = 'Client Management';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = -1;
 
     public static function getNavigationLabel(): string
     {
         return __('Clients');
+    }
+    public static function getNavigationGroup(): ?string
+    {
+        return __('client_management');
     }
 
     public static function getPluralModelLabel(): string
@@ -128,7 +132,7 @@ class ClientResource extends Resource
                             ->preload()
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(fn (callable $set) => $set('city_id', null))
+                            ->afterStateUpdated(fn(callable $set) => $set('city_id', null))
                             ->native(false),
 
                         Select::make('city_id')

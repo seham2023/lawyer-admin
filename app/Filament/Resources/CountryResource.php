@@ -18,16 +18,25 @@ class CountryResource extends Resource
     protected static ?string $model = Country::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-flag';
-    protected static ?string $navigationGroup = 'Settings';
 
     public static function getNavigationLabel(): string
     {
-        return __('Countries');
+        return __('countries');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('location_management');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Country');
+        return __('countries');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('country');
     }
 
     public static function form(Forms\Form $form): Forms\Form
