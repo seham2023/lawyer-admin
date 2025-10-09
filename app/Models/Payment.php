@@ -17,7 +17,10 @@ class Payment extends Model
     {
         return $this->hasMany(PaymentDetail::class);
     }
-
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class);
+    }
     public function getRemainingPaymentAttribute()
     {
         // Total amount paid via paymentDetails
@@ -30,5 +33,10 @@ class Payment extends Model
     public function getTotalPaidAttribute()
     {
         return $this->paymentDetails()->sum('amount');
+    }
+
+    public function case()
+    {
+        return $this->hasOne(CaseRecord::class);
     }
 }
