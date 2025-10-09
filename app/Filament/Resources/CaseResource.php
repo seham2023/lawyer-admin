@@ -46,146 +46,146 @@ class CaseResource extends Resource
                 Forms\Components\Wizard::make()
                     ->columnSpanFull()
                     ->schema([
-                        Forms\Components\Wizard\Step::make(__('Client Information'))
+                        Forms\Components\Wizard\Step::make(__('client_information'))
                             ->schema([
                                 Select::make('client_id')
-                                    ->label(__('Client'))
+                                    ->label(__('client'))
                                     ->options(Client::all()->pluck('name', 'id'))
                                     ->searchable()
                                     ->required(),
 
                                 Select::make('client_type_id')
-                                    ->label(__('Client Type'))
+                                    ->label(__('client_type'))
                                     ->relationship('category', 'name')
                                     ->options(Category::where('type', 'client_type')->pluck('name', 'id'))
 
                                     ->searchable(),
                             ]),
 
-                        Forms\Components\Wizard\Step::make(__('Opponent Information'))
+                        Forms\Components\Wizard\Step::make(__('opponent_information'))
                             ->schema([
                                 TextInput::make('opponent_name')
-                                    ->label(__('Opponent Name'))
+                                    ->label(__('opponent_name'))
                                     ->maxLength(255),
 
                                 TextInput::make('opponent_mobile')
-                                    ->label(__('Opponent Mobile'))
+                                    ->label(__('opponent_mobile'))
                                     ->tel()
                                     ->maxLength(255),
 
                                 TextInput::make('opponent_email')
-                                    ->label(__('Opponent Email'))
+                                    ->label(__('opponent_email'))
                                     ->email()
                                     ->maxLength(255),
 
                                 TextInput::make('opponent_location')
-                                    ->label(__('Opponent Location'))
+                                    ->label(__('opponent_location'))
                                     ->maxLength(255),
 
                                 Select::make('opponent_nationality_id')
-                                    ->label(__('Opponent Nationality'))
+                                    ->label(__('opponent_nationality'))
                                     ->options(Nationality::all()->pluck('name', 'id'))
                                     ->searchable(),
                             ]),
 
-                        Forms\Components\Wizard\Step::make(__('Opponent Lawyer'))
+                        Forms\Components\Wizard\Step::make(__('opponent_lawyer'))
                             ->schema([
                                 TextInput::make('opponent_lawyer_name')
-                                    ->label(__('Lawyer Name'))
+                                    ->label(__('lawyer_name'))
                                     ->maxLength(255),
 
                                 TextInput::make('opponent_lawyer_mobile')
-                                    ->label(__('Lawyer Mobile'))
+                                    ->label(__('lawyer_mobile'))
                                     ->tel()
                                     ->maxLength(255),
 
                                 TextInput::make('opponent_lawyer_email')
-                                    ->label(__('Lawyer Email'))
+                                    ->label(__('lawyer_email'))
                                     ->email()
                                     ->maxLength(255),
                             ]),
 
-                        Forms\Components\Wizard\Step::make(__('Case Details'))
+                        Forms\Components\Wizard\Step::make(__('case_details'))
                             ->schema([
                                 DatePicker::make('start_date')
-                                    ->label(__('Start Date'))
+                                    ->label(__('start_date'))
                                     ->required(),
 
                                 Select::make('category_id')
-                                    ->label(__('Category'))
+                                    ->label(__('category'))
                                     ->options(Category::where('type', 'case')->pluck('name', 'id'))
                                     ->searchable()
                                     ->required(),
 
                                 Select::make('level_id')
-                                    ->label(__('Level'))
+                                    ->label(__('level'))
                                     ->options(Level::all()->pluck('name', 'id'))
                                     ->searchable()
                                     ->required(),
 
                                 Select::make('status_id')
-                                    ->label(__('Status'))
+                                    ->label(__('status'))
                                     ->options(Status::all()->pluck('name', 'id'))
                                     ->searchable()
                                     ->required(),
 
                                 TextInput::make('court_name')
-                                    ->label(__('Court Name'))
+                                    ->label(__('court_name'))
                                     ->required()
                                     ->maxLength(255),
 
                                 TextInput::make('court_number')
-                                    ->label(__('Court Number'))
+                                    ->label(__('court_number'))
                                     ->maxLength(255),
 
                                 TextInput::make('lawyer_name')
-                                    ->label(__('Lawyer Name'))
+                                    ->label(__('lawyer_name'))
                                     ->maxLength(255),
 
                                 TextInput::make('judge_name')
-                                    ->label(__('Judge Name'))
+                                    ->label(__('judge_name'))
                                     ->maxLength(255),
 
                                 TextInput::make('location')
-                                    ->label(__('Location'))
+                                    ->label(__('location'))
                                     ->maxLength(255),
 
                                 TextInput::make('subject')
-                                    ->label(__('Subject'))
+                                    ->label(__('subject'))
                                     ->required()
                                     ->maxLength(255),
 
                                 Textarea::make('subject_description')
-                                    ->label(__('Subject Description'))
+                                    ->label(__('subject_description'))
                                     ->columnSpanFull(),
 
                                 RichEditor::make('notes')
-                                    ->label(__('Notes'))
+                                    ->label(__('notes'))
                                     ->columnSpanFull(),
 
                                 RichEditor::make('contract')
-                                    ->label(__('Contract'))
+                                    ->label(__('contract'))
                                     ->columnSpanFull(),
 
-                                Forms\Components\Section::make(__('Financial Details'))
+                                Forms\Components\Section::make(__('financial_details'))
                                     ->schema([
                                         Select::make('currency_id')
-                                            ->label(__('Currency'))
+                                            ->label(__('currency'))
                                             ->options(Currency::all()->pluck('name', 'id'))
                                             ->searchable()
                                             ->required(),
 
                                         TextInput::make('amount')
-                                            ->label(__('Amount'))
+                                            ->label(__('amount'))
                                             ->numeric()
                                             ->required(),
 
                                         TextInput::make('tax')
-                                            ->label(__('Tax (%)'))
+                                            ->label(__('tax'))
                                             ->numeric(),
 
                                         TextInput::make('total_after_tax')
-                                            ->label(__('Total After Tax'))
+                                            ->label(__('total_after_tax'))
                                             ->numeric()
                                             ->disabled(),
                                     ]),
@@ -199,34 +199,34 @@ class CaseResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('category.name')
-                    ->label(__('Category'))
+                    ->label(__('category'))
                     ->sortable(),
 
                 TextColumn::make('client.name')
-                    ->label(__('Client'))
+                    ->label(__('client'))
                     ->sortable(),
 
                 TextColumn::make('subject')
-                    ->label(__('Subject'))
+                    ->label(__('subject'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('court_name')
-                    ->label(__('Court Name'))
+                    ->label(__('court_name'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('start_date')
-                    ->label(__('Start Date'))
+                    ->label(__('start_date'))
                     ->date()
                     ->sortable(),
 
                 TextColumn::make('status.name')
-                    ->label(__('Status'))
+                    ->label(__('status'))
                     ->sortable(),
 
                 TextColumn::make('created_at')
-                    ->label(__('Created At'))
+                    ->label(__('created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -263,4 +263,15 @@ public static function getRelations(): array
             'edit' => Pages\EditCase::route('/{record}/edit'),
         ];
     }
+
+
+    public function getTabs(): array
+{
+    return [
+        'details' => __('Details'),
+        'sessions' => __('sessions'),
+        'documents' => __('Documents'),
+        'payments' => __('Payments'),
+    ];
+}
 }

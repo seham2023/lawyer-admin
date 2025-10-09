@@ -21,7 +21,7 @@ class CategoryResource extends Resource
     protected static ?string $model = Category::class;
 
     protected static ?string $navigationIcon = '';
-    protected static ?string $navigationGroup = 'Law Management';
+    protected static ?string $navigationGroup = 'Settings';
 
     public static function getNavigationLabel(): string
     {

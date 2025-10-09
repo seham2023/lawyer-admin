@@ -33,48 +33,51 @@ class ClientResource extends Resource
 
     public static function getPluralModelLabel(): string
     {
+        return __('Clients');
+    }
+    public static function getModelLabel(): string
+    {
         return __('Client');
     }
-
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make(__('Client Information'))
+                Forms\Components\Section::make(__('client_information'))
                     ->schema([
                         TextInput::make('name')
-                            ->label(__('Name'))
+                            ->label(__('name'))
                             ->required()
                             ->maxLength(255),
 
                         TextInput::make('email')
-                            ->label(__('Email'))
+                            ->label(__('email'))
                             ->email()
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
 
                         TextInput::make('mobile')
-                            ->label(__('Mobile'))
+                            ->label(__('mobile'))
                             ->tel()
                             ->required()
                             ->maxLength(255),
 
                         Forms\Components\Select::make('gender')
-                            ->label(__('Gender'))
+                            ->label(__('gender'))
                             ->options([
-                                'male' => __('Male'),
-                                'female' => __('Female'),
+                                'male' => __('male'),
+                                'female' => __('female'),
                             ])
                             ->required()
                             ->native(false),
 
                         TextInput::make('company')
-                            ->label(__('Company'))
+                            ->label(__('company'))
                             ->maxLength(255),
 
                         Select::make('category_id')
-                            ->label(__('Category'))
+                            ->label(__('category'))
                             ->relationship('category', 'name')
                             ->searchable()
                             ->preload()
@@ -82,26 +85,25 @@ class ClientResource extends Resource
                             ->native(false),
 
                         Textarea::make('notes')
-                            ->label(__('Notes'))
+                            ->label(__('notes'))
                             ->columnSpanFull(),
                     ])->columns(2),
 
                 // Address section using relationship
-                Forms\Components\Section::make(__('Address Information'))
+                Forms\Components\Section::make(__('address_information'))
                     ->relationship('address')
                     ->schema([
                         TextInput::make('address')
-                            ->label(__('Address'))
+                            ->label(__('address'))
                             ->required()
-                            ->maxLength(500)
-                            ->default('test'),
+                            ->maxLength(500),
 
                         TextInput::make('street')
-                            ->label(__('Street'))
+                            ->label(__('street'))
                             ->maxLength(255),
 
                         Select::make('country_id')
-                            ->label(__('Country'))
+                            ->label(__('country'))
                             ->options(Country::all()->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
@@ -114,7 +116,7 @@ class ClientResource extends Resource
                             ->native(false),
 
                         Select::make('state_id')
-                            ->label(__('State'))
+                            ->label(__('state'))
                             ->options(function (callable $get) {
                                 $countryId = $get('country_id');
                                 if (!$countryId) {
@@ -130,7 +132,7 @@ class ClientResource extends Resource
                             ->native(false),
 
                         Select::make('city_id')
-                            ->label(__('City'))
+                            ->label(__('city'))
                             ->options(function (callable $get) {
                                 $stateId = $get('state_id');
                                 if (!$stateId) {
@@ -151,22 +153,22 @@ class ClientResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label(__('Name'))
+                    ->label(__('name'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('email')
-                    ->label(__('Email'))
+                    ->label(__('email'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('mobile')
-                    ->label(__('Mobile'))
+                    ->label(__('mobile'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('gender')
-                    ->label(__('Gender'))
+                    ->label(__('gender'))
                     ->sortable()
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
@@ -176,44 +178,44 @@ class ClientResource extends Resource
                     }),
 
                 TextColumn::make('company')
-                    ->label(__('Company'))
+                    ->label(__('company'))
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
 
                 TextColumn::make('address.address')
-                    ->label(__('Address'))
+                    ->label(__('address'))
                     ->sortable()
                     ->limit(50)
                     ->toggleable(),
 
                 TextColumn::make('category.name')
-                    ->label(__('Category'))
+                    ->label(__('category'))
                     ->sortable(),
 
                 TextColumn::make('created_at')
-                    ->label(__('Created At'))
+                    ->label(__('created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('gender')
-                    ->label(__('Gender'))
+                    ->label(__('gender'))
                     ->options([
-                        'male' => __('Male'),
-                        'female' => __('Female'),
+                        'male' => __('male'),
+                        'female' => __('female'),
                     ]),
-                    
+
                 Tables\Filters\SelectFilter::make('category')
-                    ->label(__('Category'))
+                    ->label(__('category'))
                     ->relationship('category', 'name')
                     ->searchable(),
-                    
+
                 Tables\Filters\Filter::make('name')
                     ->form([
                         Forms\Components\TextInput::make('name')
-                            ->label(__('Search by Name')),
+                            ->label(__('search_by_name')),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -222,11 +224,11 @@ class ClientResource extends Resource
                                 fn(Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
                             );
                     }),
-                    
+
                 Tables\Filters\Filter::make('mobile')
                     ->form([
                         Forms\Components\TextInput::make('mobile')
-                            ->label(__('Search by Mobile')),
+                            ->label(__('search_by_mobile')),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query

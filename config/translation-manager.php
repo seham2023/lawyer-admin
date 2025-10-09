@@ -15,7 +15,7 @@ return [
     'available_locales' => [
         ['code' => 'en', 'name' => 'English', 'flag' => 'gb'],
         ['code' => 'ar', 'name' => 'Arabic', 'flag' => 'sa'],
-      
+
     ],
 
     /*
@@ -103,7 +103,7 @@ return [
     |
     */
 
-    'dont_register_navigation_on_panel_ids' => [],
+    'dont_register_navigation_on_panel_ids' => ['admin'],
 
     /*
     |--------------------------------------------------------------------------

@@ -25,18 +25,23 @@ class UserResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label(__('name'))
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
+                    ->label(__('email'))
                     ->email()
                     ->required()
                     ->maxLength(255),
                     Forms\Components\TextInput::make('password')
-                   
+                    ->label(__('password'))
                     ->required()
                     ->maxLength(255),
 
-                Select::make('roles')->multiple()->relationship('roles', 'name')
+                Select::make('roles')
+                    ->label(__('roles'))
+                    ->multiple()
+                    ->relationship('roles', 'name')
 
             ]);
     }
@@ -46,20 +51,24 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label(__('name'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
+                    ->label(__('email'))
                     ->searchable(),
-             
+
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label(__('created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                    
+
             ])
             ->filters([
                 //

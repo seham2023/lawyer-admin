@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class NoteResource extends Resource
 {
     protected static ?string $model = Note::class;
+    protected static ?string $navigationGroup = 'Settings';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -24,20 +25,24 @@ class NoteResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('title')
+                    ->label(__('title'))
                     ->maxLength(255),
                 Forms\Components\Textarea::make('body')
+                    ->label(__('details'))
                     ->columnSpanFull(),
                 Forms\Components\Radio::make('is_office')
+                    ->label(__('type'))
                     ->options([
-                        1 => 'Team',
-                        0 => 'Self',
+                        1 => __('team'),
+                        0 => __('self'),
                     ])
                     ->required()
                     ->inline(),
                 Forms\Components\Radio::make('type')
+                    ->label(__('category'))
                     ->options([
-                        0 => 'Work',
-                        1 => 'Social',
+                        0 => __('work'),
+                        1 => __('social'),
                     ])
                     ->required()
                     ->inline()
@@ -50,13 +55,15 @@ class NoteResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('title')
+                    ->label(__('title'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('is_office')
+                    ->label(__('type'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        '1' => 'Team',
-                        '0' => 'Self',
-                        default => 'Unknown'
+                        '1' => __('team'),
+                        '0' => __('self'),
+                        default => __('unknown')
                     })
                     ->color(fn (string $state): string => match ($state) {
                         '1' => 'success',
@@ -64,11 +71,12 @@ class NoteResource extends Resource
                         default => 'danger'
                     }),
                 Tables\Columns\TextColumn::make('type')
+                    ->label(__('category'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        '0' => 'Work',
-                        '1' => 'Social',
-                        default => 'Unknown'
+                        '0' => __('work'),
+                        '1' => __('social'),
+                        default => __('unknown')
                     })
                     ->color(fn (string $state): string => match ($state) {
                         '0' => 'info',
@@ -77,10 +85,12 @@ class NoteResource extends Resource
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label(__('created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

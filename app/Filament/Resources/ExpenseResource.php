@@ -41,30 +41,30 @@ class ExpenseResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make(__('Expense Details'))
+                Forms\Components\Section::make(__('expense_details'))
                     ->schema([
                         Select::make('category_id')
-                            ->label(__('Category'))
+                            ->label(__('category'))
                             ->options(Category::where('type', 'expense')->pluck('name', 'id'))
                             ->required(),
 
                         Select::make('status_id')
-                            ->label(__('Expense Status'))
+                            ->label(__('expense_status'))
                             ->options(Status::where('type', 'expense')->pluck('name', 'id'))
                             ->required(),
 
                         Select::make('currency_id')
-                            ->label(__('Currency'))
+                            ->label(__('currency'))
                             ->options(Currency::pluck('name', 'id'))
                             ->required(),
 
                         Select::make('pay_method_id')
-                            ->label(__('Payment Method'))
+                            ->label(__('payment_method'))
                             ->options(PayMethod::pluck('name', 'id'))
                             ->required(),
 
                         TextInput::make('amount')
-                            ->label(__('Amount'))
+                            ->label(__('amount'))
                             ->numeric()
                             ->step(0.01)
                             ->required()
@@ -77,7 +77,7 @@ class ExpenseResource extends Resource
                             }),
 
                         TextInput::make('tax')
-                            ->label(__('Tax (%)'))
+                            ->label(__('tax'))
                             ->numeric()
                             ->step(0.01)
                             ->reactive()
@@ -89,48 +89,48 @@ class ExpenseResource extends Resource
                             }),
 
                         TextInput::make('total_after_tax')
-                            ->label(__('Total After Tax'))
+                            ->label(__('total_after_tax'))
                             ->numeric()
                             ->disabled()
                             ->dehydrated(false),
 
                         TextInput::make('name')
-                            ->label(__('Name'))
+                            ->label(__('name'))
                             ->required(),
 
                         TextInput::make('receipt_number')
-                            ->label(__('Receipt Number')),
+                            ->label(__('receipt_number')),
 
                         DateTimePicker::make('date_time')
-                            ->label(__('Date and Time'))
+                            ->label(__('date_time'))
                             ->required(),
 
                         FileUpload::make('file_path')
-                            ->label(__('File Path'))
+                            ->label(__('file_path'))
                             ->directory('expenses'),
 
                         Textarea::make('reason')
-                            ->label(__('Reason'))
+                            ->label(__('reason'))
                             ->columnSpanFull(),
                     ])->columns(2),
 
-                Forms\Components\Section::make(__('Check Details'))
+                Forms\Components\Section::make(__('check_details'))
                     ->schema([
                         TextInput::make('check_number')
-                            ->label(__('Check Number')),
+                            ->label(__('check_number')),
 
                         TextInput::make('bank_name')
-                            ->label(__('Bank Name')),
+                            ->label(__('bank_name')),
 
                         Select::make('check_status_id')
-                            ->label(__('Status'))
+                            ->label(__('status'))
                             ->options(Status::where('type', 'check')->pluck('name', 'id')),
 
                         DatePicker::make('clearance_date')
-                            ->label(__('Clearance Date')),
+                            ->label(__('clearance_date')),
 
                         TextInput::make('deposit_account')
-                            ->label(__('Deposit Account')),
+                            ->label(__('deposit_account')),
                     ])->columns(2)->collapsible(),
             ]);
     }
@@ -140,34 +140,34 @@ class ExpenseResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label(__('Name'))
+                    ->label(__('name'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('category.name')
-                    ->label(__('Category'))
+                    ->label(__('category'))
                     ->sortable(),
 
                 TextColumn::make('currency.name')
-                    ->label(__('Currency'))
+                    ->label(__('currency'))
                     ->sortable(),
 
                 TextColumn::make('receipt_number')
-                    ->label(__('Receipt Number'))
+                    ->label(__('receipt_number'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('date_time')
-                    ->label(__('Date & Time'))
+                    ->label(__('date_time'))
                     ->dateTime()
                     ->sortable(),
 
                 TextColumn::make('status.name')
-                    ->label(__('Status'))
+                    ->label(__('status'))
                     ->sortable(),
 
                 TextColumn::make('created_at')
-                    ->label(__('Created At'))
+                    ->label(__('created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

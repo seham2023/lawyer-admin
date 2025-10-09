@@ -3,17 +3,21 @@
 namespace App\Filament\Resources\CaseResource\RelationManagers;
 
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Resources\RelationManagers\RelationManager;
 
 class SessionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'sessions';
-
+public static function getTitle(Model $ownerRecord, string $pageClass): string
+{
+    return __('sessions');
+}
     public function form(Form $form): Form
     {
         return $form

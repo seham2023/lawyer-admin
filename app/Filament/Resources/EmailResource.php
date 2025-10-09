@@ -40,10 +40,10 @@ class EmailResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make(__('Email Information'))
+                Forms\Components\Section::make(__('email_information'))
                     ->schema([
                         Select::make('client_id')
-                            ->label(__('Client'))
+                            ->label(__('client'))
                             ->relationship('client', 'name')
                             ->required()
                             ->reactive()
@@ -56,7 +56,7 @@ class EmailResource extends Resource
                             }),
 
                         Select::make('email_template_id')
-                            ->label(__('Email Template'))
+                            ->label(__('email_template'))
                             ->relationship('emailTemplate', 'name')
                             ->required()
                             ->reactive()
@@ -69,28 +69,28 @@ class EmailResource extends Resource
                             }),
 
                         TextInput::make('subject')
-                            ->label(__('Subject'))
+                            ->label(__('subject'))
                             ->required()
                             ->maxLength(255),
 
                         RichEditor::make('content')
-                            ->label(__('Content'))
+                            ->label(__('content'))
                             ->columnSpanFull(),
 
                         Textarea::make('notes')
-                            ->label(__('Notes'))
+                            ->label(__('notes'))
                             ->columnSpanFull(),
 
                         FileUpload::make('file_path')
-                            ->label(__('File'))
+                            ->label(__('file'))
                             ->directory('emails'),
 
                         Select::make('priority')
-                            ->label(__('Priority'))
+                            ->label(__('priority'))
                             ->options([
-                                'low' => __('Low'),
-                                'medium' => __('Medium'),
-                                'high' => __('High'),
+                                'low' => __('low'),
+                                'medium' => __('medium'),
+                                'high' => __('high'),
                             ])
                             ->default('low')
                             ->required(),
@@ -103,21 +103,21 @@ class EmailResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('client.name')
-                    ->label(__('Client'))
+                    ->label(__('client'))
                     ->sortable(),
 
                 TextColumn::make('subject')
-                    ->label(__('Subject'))
+                    ->label(__('subject'))
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('emailTemplate.name')
-                    ->label(__('Template'))
+                    ->label(__('template'))
                     ->sortable(),
 
 
                 TextColumn::make('created_at')
-                    ->label(__('Created At'))
+                    ->label(__('created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
