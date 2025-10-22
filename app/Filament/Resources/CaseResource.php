@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\SendTabbyPaymentLinkAction;
 use App\Models\CaseRecord;
 use App\Models\Category;
 use App\Models\Currency;
@@ -260,6 +261,7 @@ class CaseResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                SendTabbyPaymentLinkAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -275,6 +277,7 @@ public static function getRelations(): array
         RelationManagers\DocumentsRelationManager::class,
         // RelationManagers\PaymentsRelationManager::class,
         RelationManagers\PaymentDetailRelationManager::class,
+        RelationManagers\PaymentSessionsRelationManager::class,
     ];
 }
 
