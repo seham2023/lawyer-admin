@@ -49,7 +49,7 @@ class CategorySeeder extends Seeder
         }
 
         $expense_categories = [
-            ['en' => 'Catering', 'ar' => 'الوجبات الكارثية'],
+           // ['en' => 'Catering', 'ar' => 'الوجبات الكارثية'],
             ['en' => 'Transport', 'ar' => 'المواصلات'],
             ['en' => 'Water and Electricity', 'ar' => 'الماء والكهرباء'],
             ['en' => 'Rent', 'ar' => 'الإيجار'],
@@ -77,18 +77,6 @@ class CategorySeeder extends Seeder
             ]);
         }
 
-        // $clientCategories = [
-        //     ['en' => 'Complainant', 'ar' => 'المشتكي'],
-        //     ['en' => 'Complained Against', 'ar' => 'المشتكى به'],
-        //     ['en' => 'Plaintiff', 'ar' => 'المدعي'],
-        //     ['en' => 'Defendant', 'ar' => 'المدعى عليه'],
-        //     ['en' => 'Appellant', 'ar' => 'المستأنف'],
-        // ];
-        // foreach ($clientCategories as $category) {
-        //     Category::create([
-        //         'name' => $category,
-        //         'type' => 'client_category',
-        //     ]);
-        // }
+       
     }
 }

@@ -15,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use App\Filament\Resources\ClientResource\Pages;
+use App\Filament\Resources\ClientResource\RelationManagers;
 use Illuminate\Database\Eloquent\Builder;
 
 class ClientResource extends Resource
@@ -82,7 +83,7 @@ class ClientResource extends Resource
 
                         Select::make('category_id')
                             ->label(__('category'))
-                            ->relationship('category', 'name')
+                            ->options(Category::where('type', 'client_type')->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()
@@ -213,7 +214,7 @@ class ClientResource extends Resource
 
                 Tables\Filters\SelectFilter::make('category')
                     ->label(__('category'))
-                    ->relationship('category', 'name')
+                    ->options(Category::where('type', 'client')->pluck('name', 'id'))
                     ->searchable(),
 
                 Tables\Filters\Filter::make('name')
@@ -257,7 +258,8 @@ class ClientResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\CaseRecordsRelationManager::class,
+            // RelationManagers\PaymentsRelationManager::class,
         ];
     }
 

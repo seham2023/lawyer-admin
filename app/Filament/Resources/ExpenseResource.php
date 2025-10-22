@@ -140,7 +140,7 @@ class ExpenseResource extends Resource
 
                         TextInput::make('deposit_account')
                             ->label(__('deposit_account')),
-                    ])->columns(2)->collapsible(),
+                    ])->columns(2)->collapsible()->visible(fn (callable $get) => $get('pay_method_id') === 2), // '2' is the ID for check payment method based on seeder order
             ]);
     }
 

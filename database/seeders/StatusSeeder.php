@@ -18,16 +18,16 @@ class StatusSeeder extends Seeder
 
         Status::truncate();
         $caseStatuses = [
-            ['en' => 'Approved', 'ar' => 'موافقة'],
-            ['en' => 'Open', 'ar' => 'مفتوحة'],
-            ['en' => 'Pending', 'ar' => 'في الانتظار'],
-            ['en' => 'Under Review', 'ar' => 'في الانتظار المراجعة'],
-            ['en' => 'In Lawsuits', 'ar' => 'في الدعاوى القضائية'],
-            ['en' => 'Negotiations', 'ar' => 'مفاوضات التسوية'],
-            ['en' => 'Awaiting Payment', 'ar' => 'في انتظار الدفع'],
-            ['en' => 'Archived', 'ar' => 'المؤرشفة'],
+            ['en' => 'Approved', 'ar' => 'مقبول'],
+            ['en' => 'Open', 'ar' => 'مفتوح'],
+            ['en' => 'Pending', 'ar' => 'قيد الانتظار'],
+            ['en' => 'Under Review', 'ar' => 'قيد المراجعة'],
+            ['en' => 'In Lawsuits', 'ar' => 'في القضايا'],
+            ['en' => 'Negotiations', 'ar' => 'في المفاوضات'],
+            ['en' => 'Awaiting Payment', 'ar' => 'في انتظار السداد'],
+            ['en' => 'Archived', 'ar' => 'مؤرشف'],
             ['en' => 'Reopened', 'ar' => 'أعيد فتحه'],
-            ['en' => 'Closed', 'ar' => 'أغلقت'],
+            ['en' => 'Closed', 'ar' => 'مغلق'],
         ];
 
         foreach ($caseStatuses as $status) {
@@ -41,15 +41,15 @@ class StatusSeeder extends Seeder
         $expenseStatuses = [
             ['en' => 'Pending', 'ar' => 'قيد الانتظار'],
             ['en' => 'Empty', 'ar' => 'فارغ'],
-            ['en' => 'Delayed', 'ar' => 'متأخرة'],
-            ['en' => 'Partial Payment', 'ar' => 'الدفع الجزئي'],
-            ['en' => 'Confirmed', 'ar' => 'أثبت'],
-            ['en' => 'Under Review', 'ar' => 'للمراجعة'],
-            ['en' => 'Approved', 'ar' => 'تم الموافقة'],
-            ['en' => 'Paid', 'ar' => 'المدفوع'],
-            ['en' => 'Rejected', 'ar' => 'تم الرفض'],
-            ['en' => 'In Process', 'ar' => 'جاري المعالجة'],
-            ['en' => 'Settled', 'ar' => 'المسددة'],
+            ['en' => 'Delayed', 'ar' => 'مؤجل'],
+            ['en' => 'Partial Payment', 'ar' => 'دفع جزئي'],
+            ['en' => 'Confirmed', 'ar' => 'مؤكد'],
+            ['en' => 'Under Review', 'ar' => 'قيد المراجعة'],
+            ['en' => 'Approved', 'ar' => 'مقبول'],
+            ['en' => 'Paid', 'ar' => 'مدفوع'],
+            ['en' => 'Rejected', 'ar' => 'مرفوض'],
+            ['en' => 'In Process', 'ar' => 'قيد المعالجة'],
+            ['en' => 'Settled', 'ar' => 'تمت التسوية'],
         ];
         foreach ($expenseStatuses as $status) {
             Status::create([
@@ -62,15 +62,15 @@ class StatusSeeder extends Seeder
         $checkStatuses=   [
             ['en' => 'Pending', 'ar' => 'قيد الانتظار'],
             ['en' => 'Empty', 'ar' => 'فارغ'],
-            ['en' => 'Delayed', 'ar' => 'متأخرة'],
-            ['en' => 'Partial Payment', 'ar' => 'الدفع الجزئي'],
-            ['en' => 'Confirmed', 'ar' => 'أثبت'],
-            ['en' => 'Under Review', 'ar' => 'للمراجعة'],
-            ['en' => 'Approved', 'ar' => 'تم الموافقة'],
-            ['en' => 'Paid', 'ar' => 'المدفوع'],
-            ['en' => 'Rejected', 'ar' => 'تم الرفض'],
-            ['en' => 'In Process', 'ar' => 'جاري المعالجة'],
-            ['en' => 'Settled', 'ar' => 'المسددة'],
+            ['en' => 'Delayed', 'ar' => 'مؤجل'],
+            ['en' => 'Partial Payment', 'ar' => 'دفع جزئي'],
+            ['en' => 'Confirmed', 'ar' => 'مؤكد'],
+            ['en' => 'Under Review', 'ar' => 'قيد المراجعة'],
+            ['en' => 'Approved', 'ar' => 'مقبول'],
+            ['en' => 'Paid', 'ar' => 'مدفوع'],
+            ['en' => 'Rejected', 'ar' => 'مرفوض'],
+            ['en' => 'In Process', 'ar' => 'قيد المعالجة'],
+            ['en' => 'Settled', 'ar' => 'تمت التسوية'],
         ];
 
         foreach ($checkStatuses as $status) {

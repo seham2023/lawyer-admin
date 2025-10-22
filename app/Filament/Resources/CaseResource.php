@@ -134,7 +134,7 @@ class CaseResource extends Resource
 
                                 Select::make('status_id')
                                     ->label(__('status'))
-                                    ->options(Status::all()->pluck('name', 'id'))
+                                    ->options(Status::where('type', 'case')->pluck('name', 'id'))
                                     ->searchable()
                                     ->required(),
 
