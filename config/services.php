@@ -31,4 +31,10 @@ return [
         ],
     ],
 
+    'opentok' => [
+        'node_server_url' => env('OPENTOK_NODE_SERVER_URL', 'https://localhost:4722'),
+        'api_key' => env('OPENTOK_API_KEY'),
+        'api_secret' => env('OPENTOK_API_SECRET'),
+    ],
+
 ];

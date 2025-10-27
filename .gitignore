@@ -19,3 +19,5 @@ yarn-error.log
 /.vscode
 admin-dash-v1
 .black*
+backend
+android
