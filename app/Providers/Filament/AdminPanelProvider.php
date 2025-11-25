@@ -7,7 +7,11 @@ use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Illuminate\Support\Facades\Blade;
+use App\Filament\Resources\CaseResource;
+use App\Filament\Resources\ClientResource;
 use Filament\Http\Middleware\Authenticate;
+use Filament\Support\Facades\FilamentView;
 use Filament\SpatieLaravelTranslatablePlugin;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -18,11 +22,9 @@ use Kenepa\TranslationManager\TranslationManagerPlugin;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Althinect\FilamentSpatieRolesPermissions\FilamentSpatieRolesPermissionsPlugin;
-use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
-use App\Filament\Resources\CaseResource;
-use App\Filament\Resources\ClientResource;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -79,5 +81,14 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ;
+    }
+
+
+      public function register(): void
+    {
+        parent::register();
+        FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/css/admin.scss')"));
+        // FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/css/demo.scss')"));
+        FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/js/app.js')"));
     }
 }
