@@ -261,7 +261,7 @@ class CaseResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                SendTabbyPaymentLinkAction::make(),
+                // SendTabbyPaymentLinkAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

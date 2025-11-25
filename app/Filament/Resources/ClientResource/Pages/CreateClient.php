@@ -25,7 +25,9 @@ class CreateClient extends CreateRecord
 
         // Remove the address fields from data as they are not in clients table
         unset($data['country_id'], $data['state_id'], $data['city_id']);
-
+        $data['appointmentBookingType'] = 'client';
+        $data['type'] = 'user';
+        $data['parent_id'] = auth()->id();
         return $data;
     }
 

@@ -16,11 +16,12 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use App\Filament\Resources\ClientResource\Pages;
 use App\Filament\Resources\ClientResource\RelationManagers;
+use App\Models\Qestass\User;
 use Illuminate\Database\Eloquent\Builder;
 
 class ClientResource extends Resource
 {
-    protected static ?string $model = Client::class;
+    protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationGroup = 'Client Management';
@@ -44,17 +45,33 @@ class ClientResource extends Resource
     {
         return __('Client');
     }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('type', 'user')
+            ->where('parent_id', auth()->id());
+    }
+
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
             ->schema([
                 Forms\Components\Section::make(__('client_information'))
                     ->schema([
-                        TextInput::make('name')
-                            ->label(__('name'))
+                        // TextInput::make('name')
+                        //     ->label(__('name'))
+                        //     ->required()
+                        //     ->maxLength(255),
+
+                        TextInput::make('first_name')
+                            ->label(__('first_name'))
                             ->required()
                             ->maxLength(255),
-
+                        TextInput::make('last_name')
+                            ->label(__('last_name'))
+                            ->required()
+                            ->maxLength(255),
                         TextInput::make('email')
                             ->label(__('email'))
                             ->email()
@@ -62,7 +79,7 @@ class ClientResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
 
-                        TextInput::make('mobile')
+                        TextInput::make('phone')
                             ->label(__('mobile'))
                             ->tel()
                             ->required()
@@ -76,18 +93,21 @@ class ClientResource extends Resource
                             ])
                             ->required()
                             ->native(false),
-
-                        TextInput::make('company')
-                            ->label(__('company'))
-                            ->maxLength(255),
-
-                        Select::make('category_id')
-                            ->label(__('category'))
-                            ->options(Category::where('type', 'client_type')->pluck('name', 'id'))
-                            ->searchable()
-                            ->preload()
+                        TextInput::make('address')
+                            ->label(__('address'))
                             ->required()
-                            ->native(false),
+                            ->maxLength(500),
+                        // TextInput::make('company')
+                        //     ->label(__('company'))
+                        //     ->maxLength(255),
+
+                        // Select::make('category_id')
+                        //     ->label(__('category'))
+                        //     ->options(Category::where('type', 'client_type')->pluck('name', 'id'))
+                        //     ->searchable()
+                        //     ->preload()
+                        //     ->required()
+                        //     ->native(false),
 
                         Textarea::make('notes')
                             ->label(__('notes'))
@@ -95,61 +115,61 @@ class ClientResource extends Resource
                     ])->columns(2),
 
                 // Address section using relationship
-                Forms\Components\Section::make(__('address_information'))
-                    ->relationship('address')
-                    ->schema([
-                        TextInput::make('address')
-                            ->label(__('address'))
-                            ->required()
-                            ->maxLength(500),
+                //     Forms\Components\Section::make(__('address_information'))
+                //         ->relationship('address')
+                //         ->schema([
+                //             TextInput::make('address')
+                //                 ->label(__('address'))
+                //                 ->required()
+                //                 ->maxLength(500),
 
-                        TextInput::make('street')
-                            ->label(__('street'))
-                            ->maxLength(255),
+                //             TextInput::make('street')
+                //                 ->label(__('street'))
+                //                 ->maxLength(255),
 
-                        Select::make('country_id')
-                            ->label(__('country'))
-                            ->options(Country::all()->pluck('name', 'id'))
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function (callable $set) {
-                                $set('state_id', null);
-                                $set('city_id', null);
-                            })
-                            ->native(false),
+                //             Select::make('country_id')
+                //                 ->label(__('country'))
+                //                 ->options(Country::all()->pluck('name', 'id'))
+                //                 ->searchable()
+                //                 ->preload()
+                //                 ->required()
+                //                 ->reactive()
+                //                 ->afterStateUpdated(function (callable $set) {
+                //                     $set('state_id', null);
+                //                     $set('city_id', null);
+                //                 })
+                //                 ->native(false),
 
-                        Select::make('state_id')
-                            ->label(__('state'))
-                            ->options(function (callable $get) {
-                                $countryId = $get('country_id');
-                                if (!$countryId) {
-                                    return [];
-                                }
-                                return State::where('country_id', $countryId)->pluck('name', 'id');
-                            })
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(fn(callable $set) => $set('city_id', null))
-                            ->native(false),
+                //             Select::make('state_id')
+                //                 ->label(__('state'))
+                //                 ->options(function (callable $get) {
+                //                     $countryId = $get('country_id');
+                //                     if (!$countryId) {
+                //                         return [];
+                //                     }
+                //                     return State::where('country_id', $countryId)->pluck('name', 'id');
+                //                 })
+                //                 ->searchable()
+                //                 ->preload()
+                //                 ->required()
+                //                 ->reactive()
+                //                 ->afterStateUpdated(fn(callable $set) => $set('city_id', null))
+                //                 ->native(false),
 
-                        Select::make('city_id')
-                            ->label(__('city'))
-                            ->options(function (callable $get) {
-                                $stateId = $get('state_id');
-                                if (!$stateId) {
-                                    return [];
-                                }
-                                return City::where('state_id', $stateId)->pluck('name', 'id');
-                            })
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->native(false),
-                    ])->columns(2),
+                //             Select::make('city_id')
+                //                 ->label(__('city'))
+                //                 ->options(function (callable $get) {
+                //                     $stateId = $get('state_id');
+                //                     if (!$stateId) {
+                //                         return [];
+                //                     }
+                //                     return City::where('state_id', $stateId)->pluck('name', 'id');
+                //                 })
+                //                 ->searchable()
+                //                 ->preload()
+                //                 ->required()
+                //                 ->native(false),
+                //         ])->columns(2),
             ]);
     }
 
@@ -157,8 +177,13 @@ class ClientResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->label(__('name'))
+                TextColumn::make('first_name')
+                    ->label(__('first_name'))
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('last_name')
+                    ->label(__('last_name'))
                     ->sortable()
                     ->searchable(),
 
@@ -167,7 +192,7 @@ class ClientResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('mobile')
+                TextColumn::make('phone')
                     ->label(__('mobile'))
                     ->sortable()
                     ->searchable(),
@@ -182,11 +207,11 @@ class ClientResource extends Resource
                         default => 'gray',
                     }),
 
-                TextColumn::make('company')
-                    ->label(__('company'))
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
+                // TextColumn::make('company')
+                //     ->label(__('company'))
+                //     ->sortable()
+                //     ->searchable()
+                //     ->toggleable(),
 
                 TextColumn::make('address.address')
                     ->label(__('address'))
