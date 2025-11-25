@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Qestass;
 
 use App\Traits\DeviceTrait;
 use App\Traits\ReportTrait;
@@ -15,14 +15,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\SMS;
+use Filament\Models\Contracts\HasName;
 
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasName
 {
-    use HasApiTokens, HasFactory, Notifiable, Uploadable, ReportTrait, SoftDeletes, DeviceTrait, SmsTrait;
+    use HasFactory, Notifiable,SoftDeletes;
 
     protected $fillable = ['first_name', 'last_name', 'email', 'country_key', 'phone', 'changed_phone', 'block', 'password', 'email_verified_at', 'phone_verified_at', 'avatar', 'status', 'active', 'gender', 'completed_info', 'type', 'code', 'pin_code', 'lat', 'long', 'address', 'wallet', 'total_bills', 'total_delivery_fees', 'num_orders', 'num_comments', 'num_rating', 'rate', 'parent_id', 'approve', 'bank_iban_number', 'specialist_type', 'available', 'bank_name', 'bank_account_number', 'experience_year', 'identity_number', 'bio', 'work_license', 'connected', 'stage', 'app_commission', 'nafath_accepted', 'license_number', 'license_start_date', 'license_expire_date', 'appointmentBookingType'];
 
+    protected $connection = 'qestass_app';
     const ADMIN_ID = 1;
     const ADMIN_TYPE = 'admin';
 
@@ -50,6 +52,7 @@ class User extends Authenticatable
         'phone_verified_at' => 'datetime',
     ];
 
+    
     public function getFullPhoneAttribute()
     {
         return '0' . $this->phone;
@@ -421,5 +424,26 @@ class User extends Authenticatable
     {
         $newValue = isset($value) && $value ? $value : $this->phone;
         $this->attributes['phone'] = $newValue;
+    }
+
+    public function getFilamentName(): string
+    {
+        // Return the full name if both first_name and last_name are available
+        if (!empty($this->first_name) && !empty($this->last_name)) {
+            return trim($this->first_name . ' ' . $this->last_name);
+        }
+        
+        // If only first_name is available
+        if (!empty($this->first_name)) {
+            return trim($this->first_name);
+        }
+        
+        // If only last_name is available
+        if (!empty($this->last_name)) {
+            return trim($this->last_name);
+        }
+        
+        // Fallback to email if no name is available
+        return $this->email ?? 'Unknown User';
     }
 }
