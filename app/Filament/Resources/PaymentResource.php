@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
-use App\Models\Client;
+use App\Models\User;
 use App\Models\Payment;
 use App\Models\Currency;
 use App\Models\CaseRecord;
@@ -46,9 +46,9 @@ class PaymentResource extends Resource
             ->schema([
                 Forms\Components\Section::make(__('payment_information'))
                     ->schema([
-                        Select::make('client_id')
-                            ->label(__('client'))
-                            ->options(Client::all()->pluck('name', 'id'))
+                        Select::make('user_id')
+                            ->label(__('user'))
+                            ->options(User::all()->pluck('name', 'id'))
                             ->searchable()
                             ->required()
                             ->reactive()
@@ -59,11 +59,11 @@ class PaymentResource extends Resource
                         Select::make('case_record_id')
                             ->label(__('case'))
                             ->options(function (callable $get) {
-                                $clientId = $get('client_id');
-                                if (!$clientId) {
+                                $userId = $get('user_id');
+                                if (!$userId) {
                                     return [];
                                 }
-                                return CaseRecord::where('client_id', $clientId)->pluck('subject', 'id');
+                                return CaseRecord::where('user_id', $userId)->pluck('subject', 'id');
                             })
                             ->searchable()
                             ->required(),
@@ -109,8 +109,8 @@ class PaymentResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('case.client.name')
-                    ->label(__('client'))
+                TextColumn::make('case.user.name')
+                    ->label(__('user'))
                     ->sortable()
                     ->searchable(),
 
@@ -122,26 +122,26 @@ class PaymentResource extends Resource
                 TextColumn::make('amount')
                     ->label(__('amount'))
                     ->sortable()
-                    // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
-                    ,
+                // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
+                ,
 
                 TextColumn::make('total_paid')
                     ->label(__('total_paid'))
                     ->sortable()
-                    // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
-                    ,
+                // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
+                ,
 
                 TextColumn::make('remaining_payment')
                     ->label(__('remaining'))
                     ->sortable()
-                    // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
-                    ,
+                // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
+                ,
 
                 // TextColumn::make('paymentDetails_count')
                 //     ->label(__('payment_details_count'))
                 //     ->counts('paymentDetails')
                 //     ->sortable()
-                
+
 
                 TextColumn::make('currency.name')
                     ->label(__('currency'))
@@ -167,13 +167,13 @@ class PaymentResource extends Resource
             ]);
     }
 
-   public static function getRelations(): array
-{
-    return [
-  
-        PaymentDetailRelationManager::class,
-    ];
-}
+    public static function getRelations(): array
+    {
+        return [
+
+            PaymentDetailRelationManager::class,
+        ];
+    }
 
     public static function getPages(): array
     {

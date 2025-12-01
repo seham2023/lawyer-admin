@@ -8,7 +8,7 @@ use App\Models\Category;
 use App\Models\Currency;
 use App\Models\Level;
 use App\Models\Status;
-use App\Models\Client;
+use App\Models\User;
 use App\Models\Nationality;
 use Filament\Forms;
 use Filament\Tables;
@@ -59,8 +59,8 @@ class CaseResource extends Resource
                         Forms\Components\Wizard\Step::make(__('client_information'))
                             ->schema([
                                 Select::make('client_id')
-                                    ->label(__('client'))
-                                    ->options(Client::all()->pluck('name', 'id'))
+                                    ->label(__('user'))
+                                    ->options(User::all()->pluck('name', 'id'))
                                     ->searchable()
                                     ->required(),
 
@@ -226,8 +226,8 @@ class CaseResource extends Resource
                     ->label(__('category'))
                     ->sortable(),
 
-                TextColumn::make('client.name')
-                    ->label(__('client'))
+                TextColumn::make('user.name')
+                    ->label(__('user'))
                     ->sortable(),
 
                 TextColumn::make('subject')
@@ -270,16 +270,16 @@ class CaseResource extends Resource
             ]);
     }
 
-public static function getRelations(): array
-{
-    return [
-        RelationManagers\SessionsRelationManager::class,
-        RelationManagers\DocumentsRelationManager::class,
-        // RelationManagers\PaymentsRelationManager::class,
-        RelationManagers\PaymentDetailRelationManager::class,
-        RelationManagers\PaymentSessionsRelationManager::class,
-    ];
-}
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\SessionsRelationManager::class,
+            RelationManagers\DocumentsRelationManager::class,
+            // RelationManagers\PaymentsRelationManager::class,
+            RelationManagers\PaymentDetailRelationManager::class,
+            RelationManagers\PaymentSessionsRelationManager::class,
+        ];
+    }
 
     public static function getPages(): array
     {
@@ -292,12 +292,12 @@ public static function getRelations(): array
 
 
     public function getTabs(): array
-{
-    return [
-        'details' => __('Details'),
-        'sessions' => __('sessions'),
-        'documents' => __('Documents'),
-        'payments' => __('Payments'),
-    ];
-}
+    {
+        return [
+            'details' => __('Details'),
+            'sessions' => __('sessions'),
+            'documents' => __('Documents'),
+            'payments' => __('Payments'),
+        ];
+    }
 }

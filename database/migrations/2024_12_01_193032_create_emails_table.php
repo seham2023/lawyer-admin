@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('email_template_id')->constrained()->onDelete('cascade');
              $table->unsignedBigInteger('user_id')->nullable();
+             $table->unsignedBigInteger('client_id')->nullable();
             $table->text('subject');
             $table->text('content');
             $table->enum('priority', ['low', 'medium', 'high'])->default('medium');

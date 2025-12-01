@@ -34,7 +34,7 @@ class SessionResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('case_record_id')
                     ->numeric(),
-                Forms\Components\TextInput::make('client_id')
+                Forms\Components\TextInput::make('user_id')
                     ->numeric(),
             ]);
     }
@@ -54,7 +54,7 @@ class SessionResource extends Resource
                 Tables\Columns\TextColumn::make('case_record_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('client_id')
+                Tables\Columns\TextColumn::make('user_id')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')

@@ -22,20 +22,21 @@ class CreateCaseRecord extends CreateRecord
                 ->description('Basic case and client details')
                 ->icon('heroicon-m-information-circle')
                 ->schema([
-                    Forms\Components\Select::make('client_id')
-                        ->label('Client')
-                        ->relationship('client', 'name')
+                    Forms\Components\Select::make('user_id')
+                        ->label('User')
+                        ->relationship('user', 'name')
                         ->required()
                         ->searchable()
                         ->preload()
-                        ->placeholder('Select a client for this case')
+                        ->placeholder('Select a user for this case')
                         ->createOptionForm([
                             Forms\Components\TextInput::make('name')
                                 ->required(),
                             Forms\Components\TextInput::make('email')
                                 ->email()
                                 ->required(),
-                            Forms\Components\TextInput::make('mobile')
+                            Forms\Components\TextInput::make('password')
+                                ->password()
                                 ->required(),
                         ]),
                     Forms\Components\Select::make('category_id')

@@ -3,7 +3,7 @@
 namespace App\Filament\Actions;
 
 use App\Models\CaseRecord;
-use App\Models\Client;
+use App\Models\User;
 use App\Services\TabbyPaymentService;
 use Closure;
 use Filament\Actions\Action;
@@ -23,23 +23,23 @@ class SendTabbyPaymentLinkAction
             ->color('success')
             ->requiresConfirmation()
             ->form([
-                Select::make('client_id')
-                    ->label('Client')
+                Select::make('user_id')
+                    ->label('User')
                     ->options(function (Model $record) {
                         if ($record instanceof CaseRecord) {
-                            return [$record->client_id => $record->client->name];
+                            return [$record->user_id => $record->user->name];
                         }
                         return [];
                     })
                     ->default(function (Model $record) {
                         if ($record instanceof CaseRecord) {
-                            return $record->client_id;
+                            return $record->user_id;
                         }
                         return null;
                     })
                     ->required()
                     ->reactive(),
-                
+
                 TextInput::make('amount')
                     ->label('Amount')
                     ->numeric()
@@ -48,7 +48,7 @@ class SendTabbyPaymentLinkAction
                     ->minValue(0.01)
                     ->step(0.01)
                     ->helperText('Enter the amount to charge the client'),
-                
+
                 TextInput::make('order_reference')
                     ->label('Order Reference')
                     ->required()
@@ -67,29 +67,29 @@ class SendTabbyPaymentLinkAction
                         ->body('This action can only be used on Case records.')
                         ->danger()
                         ->send();
-                    
+
                     return;
                 }
 
-                $client = Client::find($data['client_id']);
-                if (!$client) {
+                $user = User::find($data['user_id']);
+                if (!$user) {
                     Notification::make()
                         ->title('Error')
-                        ->body('Selected client not found.')
+                        ->body('Selected user not found.')
                         ->danger()
                         ->send();
-                    
+
                     return;
                 }
 
-                // Validate that client has a phone number
-                if (empty($client->phone)) {
+                // Validate that user has a phone number
+                if (empty($user->phone)) {
                     Notification::make()
                         ->title('Error')
-                        ->body('Client does not have a phone number. Please update client information first.')
+                        ->body('User does not have a phone number. Please update user information first.')
                         ->danger()
                         ->send();
-                    
+
                     return;
                 }
 
@@ -105,12 +105,12 @@ class SendTabbyPaymentLinkAction
 
                 // Initialize Tabby service
                 $tabbyService = new TabbyPaymentService();
-                
+
                 // Create payment session
                 $result = $tabbyService->createSession(
                     amount: (float) $data['amount'],
                     currency: 'SAR', // Saudi Arabia currency
-                    buyerPhone: $client->phone,
+                    buyerPhone: $user->phone,
                     orderReferenceId: $data['order_reference'],
                     items: $items
                 );
@@ -121,13 +121,13 @@ class SendTabbyPaymentLinkAction
                         ->body($result['error'] ?? 'Unknown error occurred')
                         ->danger()
                         ->send();
-                    
+
                     return;
                 }
 
                 // Send payment link to customer
                 $linkSent = $tabbyService->sendPaymentLink($result['session_id']);
-                
+
                 if ($linkSent) {
                     Notification::make()
                         ->title('Payment Link Sent Successfully')

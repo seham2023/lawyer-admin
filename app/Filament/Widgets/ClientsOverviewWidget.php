@@ -2,14 +2,14 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Client;
+use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
 class ClientsOverviewWidget extends BaseWidget
 {
-    protected static ?string $heading = 'Recent Clients';
+    protected static ?string $heading = 'Recent Users';
 
     protected int | string | array $columnSpan = 'full';
 
@@ -17,7 +17,7 @@ class ClientsOverviewWidget extends BaseWidget
     {
         return $table
             ->query(
-                Client::query()
+                User::query()
                     ->with(['category', 'address'])
                     ->latest()
                     ->limit(5)
@@ -37,7 +37,7 @@ class ClientsOverviewWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('gender')
                     ->label('Gender')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'male' => 'info',
                         'female' => 'success',
                         default => 'gray',
@@ -58,7 +58,7 @@ class ClientsOverviewWidget extends BaseWidget
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->icon('heroicon-m-eye')
-                    ->url(fn (Client $record): string => route('filament.admin.resources.clients.edit', $record)),
+                    ->url(fn(User $record): string => route('filament.admin.resources.clients.edit', $record)),
             ]);
     }
 }

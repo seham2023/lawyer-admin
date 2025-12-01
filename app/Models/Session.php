@@ -16,7 +16,7 @@ class Session extends Model
         'datetime',
         'priority',
         'case_record_id',
-        'client_id'
+        'user_id'
     ];
 
     protected $casts = [
