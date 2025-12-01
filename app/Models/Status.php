@@ -9,9 +9,14 @@ class Status extends Model
 {
     use HasTranslations;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'type', 'user_id'];
 
     public $translatable = ['name'];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\Qestass\User::class);
+    }
 
 
     public function scopeCase($query)

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('tax');
             $table->foreignId('currency_id')->constrained('currencies');
              $table->unsignedBigInteger('user_id')->nullable();
+             $table->unsignedBigInteger('client_id')->nullable();
             $table->timestamps();
         });
     }

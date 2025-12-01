@@ -2,24 +2,25 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Actions\SendTabbyPaymentLinkAction;
-use App\Models\CaseRecord;
-use App\Models\Category;
-use App\Models\Currency;
-use App\Models\Level;
-use App\Models\Status;
-use App\Models\User;
-use App\Models\Nationality;
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Level;
+use App\Models\Status;
+use App\Models\Category;
+use App\Models\Currency;
+use App\Models\CaseRecord;
+use App\Models\Nationality;
+use App\Models\Qestass\User;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\RichEditor;
 use App\Filament\Resources\CaseResource\Pages;
+use App\Filament\Actions\SendTabbyPaymentLinkAction;
 use App\Filament\Resources\CaseResource\RelationManagers;
 use Mvenghaus\FilamentPluginTranslatableInline\Forms\Components\TranslatableContainer;
 
@@ -60,8 +61,9 @@ class CaseResource extends Resource
                             ->schema([
                                 Select::make('client_id')
                                     ->label(__('user'))
-                                    ->options(User::all()->pluck('name', 'id'))
+                                    ->options(User::where('parent_id', auth()->user()->id)->pluck('first_name', 'id'))
                                     ->searchable()
+                                    ->preload()
                                     ->required(),
 
                                 Select::make('client_type_id')
@@ -215,6 +217,10 @@ class CaseResource extends Resource
                                     ]),
                             ]),
                     ]),
+
+
+                Hidden::make('user_id')
+                    ->default(auth()->id())
             ]);
     }
 

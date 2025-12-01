@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 class Category extends Model
 {
     use HasTranslations;
-    protected $fillable = ['name', 'image', 'parent_id', 'type','user_id'];
+    protected $fillable = ['name', 'image', 'parent_id', 'type', 'user_id'];
     protected $translatable = ['name'];
 
     public function parent()
@@ -44,6 +44,6 @@ class Category extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\Qestass\User::class);
     }
 }

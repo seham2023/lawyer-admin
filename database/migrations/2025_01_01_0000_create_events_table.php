@@ -11,11 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('case_record_audits', function (Blueprint $table) {
+        Schema::create('events', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('case_record_id')->constrained('case_records');
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->dateTime('start');
+            $table->dateTime('end')->nullable();
+            $table->string('type')->default('general'); // general, meeting, holiday, etc.
+            $table->string('color')->default('#3b82f6');
+            $table->boolean('all_day')->default(false);
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('action');
             $table->timestamps();
         });
     }
@@ -25,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('case_record_audits');
+        Schema::dropIfExists('events');
     }
 };

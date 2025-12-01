@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Qestass\User;
 use Illuminate\Database\Eloquent\Model;
 
 class CaseRecord extends Model
@@ -25,6 +26,7 @@ class CaseRecord extends Model
         'notes',
         'contract',
         'client_type_id',
+        'client_id'
     ];
     protected $casts = [
         'start_date' => 'date',
@@ -48,7 +50,10 @@ class CaseRecord extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-
+  public function client()
+    {
+        return $this->belongsTo(User::class, 'client_id', 'id');
+    }
     public function opponent()
     {
         return $this->belongsTo(Opponent::class);

@@ -3,8 +3,8 @@
 namespace App\Filament\Resources;
 
 use Filament\Forms;
-use Filament\Tables;
 use App\Models\User;
+use Filament\Tables;
 use App\Models\Payment;
 use App\Models\Currency;
 use App\Models\CaseRecord;
@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Filament\Resources\CaseResource\RelationManagers\PaymentDetailRelationManager;
 
@@ -174,7 +175,14 @@ class PaymentResource extends Resource
             PaymentDetailRelationManager::class,
         ];
     }
-
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id())
+            ->orWhereHas('case', function ($query) {
+                $query->where('user_id', auth()->id());
+            });
+    }
     public static function getPages(): array
     {
         return [
