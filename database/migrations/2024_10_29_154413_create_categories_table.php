@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->foreignId('parent_id')->nullable()->constrained('categories');
             $table->string('type')->nullable();
+             $table->unsignedBigInteger('user_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

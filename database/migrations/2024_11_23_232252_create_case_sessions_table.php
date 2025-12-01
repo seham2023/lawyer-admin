@@ -19,7 +19,7 @@ return new class extends Migration
             $table->dateTime('datetime')->nullable();
             $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
             $table->foreignId('case_record_id')->nullable()->constrained('case_records');
-            $table->foreignId('client_id')->nullable()->constrained('clients');
+             $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
         });
     }

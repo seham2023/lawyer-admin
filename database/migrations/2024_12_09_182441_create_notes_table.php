@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('title')->nullable();
             $table->text('body')->nullable();
             $table->boolean('is_office')->default(1);

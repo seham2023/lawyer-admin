@@ -22,7 +22,8 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('receipt_number')->nullable();
             $table->text('reason')->nullable();
-            $table->timestamp('date_time')->nullable(); 
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->timestamp('date_time')->nullable();
             $table->timestamps();
         });
     }

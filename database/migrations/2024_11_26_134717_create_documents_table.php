@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('file_path');
             $table->text('description');
             $table->foreignId('case_record_id')->constrained('case_records');
-            $table->foreignId('client_id')->nullable()->constrained('clients');
+             $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
         });
     }

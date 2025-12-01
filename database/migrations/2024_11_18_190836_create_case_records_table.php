@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('status_id')->nullable()->constrained('statuses');
             $table->foreignId('level_id')->nullable()->constrained('levels');
             $table->foreignId('payment_id')->nullable()->constrained('payments');
-            $table->foreignId('client_id')->constrained('clients');
+             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreignId('opponent_id')->constrained('opponents');
             $table->foreignId('opponent_lawyer_id')->nullable()->constrained('opponent_lawyers');
             $table->date('start_date');

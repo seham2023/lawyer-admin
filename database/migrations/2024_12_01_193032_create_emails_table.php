@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('emails', function (Blueprint $table) {
             $table->id();
             $table->foreignId('email_template_id')->constrained()->onDelete('cascade');
-            $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
+             $table->unsignedBigInteger('user_id')->nullable();
             $table->text('subject');
             $table->text('content');
             $table->enum('priority', ['low', 'medium', 'high'])->default('medium');

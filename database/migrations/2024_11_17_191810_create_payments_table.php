@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('amount');
             $table->string('tax');
             $table->foreignId('currency_id')->constrained('currencies');
-            // $table->morphs('paymentable');
+             $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
         });
     }
