@@ -6,10 +6,12 @@ use Filament\Forms;
 use Filament\Tables;
 use App\Models\Category;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Filters\SelectFilter;
@@ -67,6 +69,11 @@ class CategoryResource extends Resource
                         'client_type' => __('Client Type'),
                     ])
                     ->required(),
+
+
+                Hidden::make('user_id')
+                    ->default(auth()->id())
+
             ]);
     }
 
@@ -93,6 +100,15 @@ class CategoryResource extends Resource
             ]);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->whereNull('parent_id')
+            ->orWhere('user_id', auth()->id());
+    }
+
+
+    
     public static function getPages(): array
     {
         return [

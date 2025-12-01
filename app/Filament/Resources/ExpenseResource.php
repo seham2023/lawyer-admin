@@ -2,22 +2,24 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\Expense;
-use App\Models\Category;
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Status;
+use App\Models\Expense;
+use App\Models\Category;
+use App\Models\Currency;
+use App\Models\PayMethod;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\FileUpload;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\DateTimePicker;
 use App\Filament\Resources\ExpenseResource\Pages;
-use App\Models\Status;
-use App\Models\Currency;
-use App\Models\PayMethod;
 use Mvenghaus\FilamentPluginTranslatableInline\Forms\Components\TranslatableContainer;
 
 class ExpenseResource extends Resource
@@ -45,7 +47,11 @@ class ExpenseResource extends Resource
     {
         return __('expense');
     }
-
+   public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id());
+    }
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
@@ -141,6 +147,10 @@ class ExpenseResource extends Resource
                         TextInput::make('deposit_account')
                             ->label(__('deposit_account')),
                     ])->columns(2)->collapsible()->visible(fn (callable $get) => $get('pay_method_id') === 2), // '2' is the ID for check payment method based on seeder order
+
+
+                      Hidden::make('user_id')
+                    ->default(auth()->id())
             ]);
     }
 

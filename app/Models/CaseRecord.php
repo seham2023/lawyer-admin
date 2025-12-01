@@ -10,7 +10,7 @@ class CaseRecord extends Model
         'category_id',
         'status_id',
         'payment_id',
-        'client_id',
+        'user_id',
         'opponent_id',
         'opponent_lawyer_id',
         'start_date',
@@ -26,44 +26,44 @@ class CaseRecord extends Model
         'contract',
         'client_type_id',
     ];
-protected $casts = [
-    'start_date' => 'date',
-];
+    protected $casts = [
+        'start_date' => 'date',
+    ];
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
-    
+
     public function status()
     {
         return $this->belongsTo(Status::class);
     }
-    
+
     public function payment()
     {
         return $this->belongsTo(Payment::class);
     }
-    
-    public function client()
+
+    public function user()
     {
-        return $this->belongsTo(Client::class, 'client_id','id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
-    
+
     public function opponent()
     {
         return $this->belongsTo(Opponent::class);
     }
-    
+
     public function opponent_lawyer()
     {
         return $this->belongsTo(OpponentLawyer::class);
     }
-    
+
     public function level()
     {
         return $this->belongsTo(Level::class);
     }
-    
+
     public function client_type()
     {
         return $this->belongsTo(Category::class, 'client_type_id');

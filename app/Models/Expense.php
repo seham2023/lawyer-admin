@@ -21,6 +21,7 @@ class Expense extends Model
         'bank_name',
         'clearance_date',
         'deposit_account',
+        'user_id',
     ];
 
     public function category()

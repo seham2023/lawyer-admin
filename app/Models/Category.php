@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 class Category extends Model
 {
     use HasTranslations;
-    protected $fillable = ['name', 'image', 'parent_id', 'type'];
+    protected $fillable = ['name', 'image', 'parent_id', 'type','user_id'];
     protected $translatable = ['name'];
 
     public function parent()
@@ -40,5 +40,10 @@ class Category extends Model
     public function scopeClientType(Builder $query): Builder
     {
         return $query->where('type', 'client_type');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
