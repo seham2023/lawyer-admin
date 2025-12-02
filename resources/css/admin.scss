@@ -78,7 +78,9 @@ body.fi-body {
 }
 
 aside.fi-sidebar {
-    margin: 20px 0px 20px 20px;
+    margin-block: 20px;
+    margin-inline-start: 20px;
+    margin-inline-end: 0;
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 0 22px 0px rgb(0 0 0 / 5%);
@@ -89,7 +91,7 @@ aside.fi-sidebar {
         margin: 0px 0px 20px 0px;
 
         &.fi-sidebar-open {
-            margin: 0px 0px 20px 20px;
+            margin-inline-start: 20px;
         }
     }
 }
@@ -104,16 +106,24 @@ aside.fi-sidebar {
 
 .fi-page-sub-navigation-sidebar {
     background-color: #fff;
-    padding: 15px 15px 15px 0px;
+    padding-block: 15px;
+    padding-inline-end: 15px;
+    padding-inline-start: 0;
     border-radius: 15px;
 
     .fi-sidebar-item {
-        padding: 0 10px 0 0;
+        padding-inline-end: 10px;
+        padding-inline-start: 0;
 
         .fi-sidebar-item-button {
-            border-radius: 0 20px 20px 0;
+            border-start-end-radius: 20px;
+            border-end-end-radius: 20px;
+            border-start-start-radius: 0;
+            border-end-start-radius: 0;
             position: relative;
-            padding: 10px 15px 10px 20px;
+            padding-block: 10px;
+            padding-inline-end: 15px;
+            padding-inline-start: 20px;
             overflow: hidden;
             transition: color 0.3s ease-in-out;
 
@@ -121,7 +131,7 @@ aside.fi-sidebar {
                 content: "";
                 position: absolute;
                 top: 0;
-                left: 0;
+                inset-inline-start: 0;
                 width: 4px;
                 height: 100%;
                 background-color: #9333ea;
@@ -133,13 +143,17 @@ aside.fi-sidebar {
                 content: "";
                 position: absolute;
                 top: 0;
-                left: 0;
+                inset-inline-start: 0;
                 width: 100%;
                 height: 100%;
                 background-color: #9333ea21;
                 transform: scaleX(0);
                 transform-origin: left;
                 transition: transform 0.4s ease-in-out;
+            }
+
+            html[dir="rtl"] &::after {
+                transform-origin: right;
             }
 
             &:hover {
@@ -178,19 +192,27 @@ aside.fi-sidebar {
 
 nav.fi-sidebar-nav {
     background-color: #ffffff;
-    padding: 20px 0px 0px 9px;
+    padding-block-start: 20px;
+    padding-inline-start: 9px;
+    padding-inline-end: 0;
 
     .fi-sidebar-group-items {
         row-gap: 10px;
     }
 
     .fi-sidebar-item {
-        padding: 0 10px 0 0;
+        padding-inline-end: 10px;
+        padding-inline-start: 0;
 
         .fi-sidebar-item-button {
-            border-radius: 0 20px 20px 0;
+            border-start-end-radius: 20px;
+            border-end-end-radius: 20px;
+            border-start-start-radius: 0;
+            border-end-start-radius: 0;
             position: relative;
-            padding: 10px 15px 10px 20px;
+            padding-block: 10px;
+            padding-inline-end: 15px;
+            padding-inline-start: 20px;
             overflow: hidden;
             transition: color 0.3s ease-in-out;
 
@@ -198,7 +220,7 @@ nav.fi-sidebar-nav {
                 content: "";
                 position: absolute;
                 top: 0;
-                left: 0;
+                inset-inline-start: 0;
                 width: 4px;
                 height: 100%;
                 background-color: #9333ea;
@@ -210,13 +232,17 @@ nav.fi-sidebar-nav {
                 content: "";
                 position: absolute;
                 top: 0;
-                left: 0;
+                inset-inline-start: 0;
                 width: 100%;
                 height: 100%;
                 background-color: #9333ea21;
                 transform: scaleX(0);
                 transform-origin: left;
                 transition: transform 0.4s ease-in-out;
+            }
+
+            html[dir="rtl"] &::after {
+                transform-origin: right;
             }
 
             &:hover {
