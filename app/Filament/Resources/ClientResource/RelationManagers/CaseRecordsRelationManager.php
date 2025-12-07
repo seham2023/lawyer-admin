@@ -26,12 +26,12 @@ class CaseRecordsRelationManager extends RelationManager
                     ->preload()
                     ->required(),
                 
-                Forms\Components\Select::make('status_id')
-                    ->label(__('status'))
-                    ->relationship('status', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
+                // Forms\Components\Select::make('status_id')
+                //     ->label(__('status'))
+                //     ->relationship('status', 'name')
+                //     ->searchable()
+                //     ->preload()
+                //     ->required(),
                 
                 Forms\Components\DatePicker::make('start_date')
                     ->label(__('start_date'))
@@ -78,10 +78,10 @@ class CaseRecordsRelationManager extends RelationManager
                     ->date()
                     ->sortable(),
                 
-                Tables\Columns\TextColumn::make('status.name')
-                    ->label(__('status'))
-                    ->badge()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('status.name')
+                //     ->label(__('status'))
+                //     ->badge()
+                //     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('created_at'))
@@ -90,9 +90,9 @@ class CaseRecordsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status_id')
-                    ->relationship('status', 'name')
-                    ->label(__('status')),
+                // Tables\Filters\SelectFilter::make('status_id')
+                //     ->relationship('status', 'name')
+                //     ->label(__('status')),
                 
                 Tables\Filters\SelectFilter::make('category_id')
                     ->relationship('category', 'name')

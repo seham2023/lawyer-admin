@@ -11,6 +11,7 @@ class Visit extends Model
     protected $fillable = [
         'user_id',
         'client_id',
+        'payment_id',
         'visit_date',
         'purpose',
         'notes'
@@ -24,5 +25,10 @@ class Visit extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
+    }
+
+    public function payment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class, 'payment_id');
     }
 }

@@ -19,22 +19,37 @@ class PaymentsRelationManager extends RelationManager
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('case_record_id')
+                    ->label(__('case'))
+                    ->relationship('caseRecord', 'subject', function ($query) {
+                        return $query->where('client_id', $this->getOwnerRecord()->id);
+                    })
+                    ->searchable()
+                    ->preload()
+                    ->nullable(),
+
                 Forms\Components\TextInput::make('amount')
                     ->label(__('amount'))
                     ->numeric()
                     ->required(),
-                
+
                 Forms\Components\TextInput::make('tax')
                     ->label(__('tax'))
                     ->numeric()
+                    ->default(0)
                     ->required(),
-                
+
                 Forms\Components\Select::make('currency_id')
                     ->label(__('currency'))
                     ->relationship('currency', 'name')
                     ->searchable()
                     ->preload()
                     ->required(),
+
+                Forms\Components\DatePicker::make('payment_date')
+                    ->label(__('payment_date'))
+                    ->native(false)
+                    ->default(now()),
             ]);
     }
 
@@ -43,20 +58,34 @@ class PaymentsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('amount')
             ->columns([
+                Tables\Columns\TextColumn::make('caseRecord.subject')
+                    ->label(__('case'))
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('payment_date')
+                    ->label(__('payment_date'))
+                    ->date()
+                    ->sortable()
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('amount')
                     ->label(__('amount'))
                     ->money('default')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('tax')
                     ->label(__('tax'))
                     ->numeric()
-                    ->sortable(),
-                
+                    ->sortable()
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('currency.name')
                     ->label(__('currency'))
-                    ->sortable(),
-                
+                    ->sortable()
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('total_paid')
                     ->label(__('total_paid'))
                     ->money('default')
@@ -64,7 +93,7 @@ class PaymentsRelationManager extends RelationManager
                         return $record->totalPaid;
                     })
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('remaining_payment')
                     ->label(__('remaining'))
                     ->money('default')
@@ -72,7 +101,7 @@ class PaymentsRelationManager extends RelationManager
                         return $record->remainingPayment;
                     })
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('created_at'))
                     ->dateTime()

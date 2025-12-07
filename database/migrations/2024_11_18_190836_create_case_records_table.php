@@ -23,10 +23,11 @@ return new class extends Migration
             $table->foreignId('opponent_lawyer_id')->nullable()->constrained('opponent_lawyers');
             $table->date('start_date');
             $table->unsignedBigInteger('client_id')->nullable();
+            $table->foreignId('status_id')->nullable()->constrained('statuses');
 
             $table->string('court_name');
             $table->string('court_number');
-            $table->string('lawyer_name');
+            $table->unsignedBigInteger('lawyer_id')->nullable();
             $table->string('judge_name');
             $table->string('location');
             $table->string('subject');

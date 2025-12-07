@@ -20,7 +20,7 @@ use Filament\Models\Contracts\HasName;
 
 class User extends Authenticatable implements HasName
 {
-    use HasFactory, Notifiable,SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = ['first_name', 'last_name', 'email', 'country_key', 'phone', 'changed_phone', 'block', 'password', 'email_verified_at', 'phone_verified_at', 'avatar', 'status', 'active', 'gender', 'completed_info', 'type', 'code', 'pin_code', 'lat', 'long', 'address', 'wallet', 'total_bills', 'total_delivery_fees', 'num_orders', 'num_comments', 'num_rating', 'rate', 'parent_id', 'approve', 'bank_iban_number', 'specialist_type', 'available', 'bank_name', 'bank_account_number', 'experience_year', 'identity_number', 'bio', 'work_license', 'connected', 'stage', 'app_commission', 'nafath_accepted', 'license_number', 'license_start_date', 'license_expire_date', 'appointmentBookingType'];
 
@@ -52,7 +52,7 @@ class User extends Authenticatable implements HasName
         'phone_verified_at' => 'datetime',
     ];
 
-    
+
     public function getFullPhoneAttribute()
     {
         return '0' . $this->phone;
@@ -108,8 +108,8 @@ class User extends Authenticatable implements HasName
             $this->attributes['avatar'] = $this->uploadFile($value, 'users', true, 250, null);
         }
 
-//            File::delete(public_path('assets/uploads/users/' . $this->avatar));
-//            $this->attributes['avatar'] = $this->uploadFile($value, 'users', true, 250, null);
+        //            File::delete(public_path('assets/uploads/users/' . $this->avatar));
+        //            $this->attributes['avatar'] = $this->uploadFile($value, 'users', true, 250, null);
 
     }
 
@@ -128,8 +128,6 @@ class User extends Authenticatable implements HasName
             }
             $this->attributes['work_license'] = $this->uploadFile($value, 'users', true, 250, null);
         }
-
-
     }
 
     public static function boot()
@@ -139,7 +137,6 @@ class User extends Authenticatable implements HasName
 
         self::deleted(function ($model) {
             $model->deleteFile($model->attributes['avatar'], 'users');
-
         });
     }
 
@@ -159,10 +156,10 @@ class User extends Authenticatable implements HasName
         return $this->hasMany(Complain::class);
     }
 
-//     public function notifications()
-//     {
-//         return $this->hasMany(Notification::class);
-//     }
+    //     public function notifications()
+    //     {
+    //         return $this->hasMany(Notification::class);
+    //     }
 
     public function devices()
     {
@@ -344,16 +341,16 @@ class User extends Authenticatable implements HasName
         }
     }
 
-//    public function sendVerificationCode($has_changed_phone = 'false')
-//    {
-//       $code = mt_rand(111111, 999999);
-//        $code = '123456';
-//        $data['code'] = $code;
-//
-//        // Mail::to($this->email)->send(new PassCode($code));
-//
-//        $this->update(['code' => $code]);
-//    }
+    //    public function sendVerificationCode($has_changed_phone = 'false')
+    //    {
+    //       $code = mt_rand(111111, 999999);
+    //        $code = '123456';
+    //        $data['code'] = $code;
+    //
+    //        // Mail::to($this->email)->send(new PassCode($code));
+    //
+    //        $this->update(['code' => $code]);
+    //    }
 
     public function getFullSmsPhoneAttribute()
     {
@@ -363,7 +360,7 @@ class User extends Authenticatable implements HasName
     public function sendVerificationCode($has_changed_phone = 'false')
     {
         $code = mt_rand(111111, 999999);
-//        $code = '123456';
+        //        $code = '123456';
         $package = SMS::where('active', '1')->first();
 
         // Mail::to($this->email)->send(new PassCode($code));
@@ -412,7 +409,7 @@ class User extends Authenticatable implements HasName
 
     public function categories()
     {
-        return $this->hasMany(UserCategory::class);
+        return $this->belongsToMany(\App\Models\Category::class, 'user_categories', 'user_id', 'category_id');
     }
 
     public function consultants()
@@ -426,23 +423,45 @@ class User extends Authenticatable implements HasName
         $this->attributes['phone'] = $newValue;
     }
 
+    // Lawyer Admin Relationships (Cross-database connections)
+    public function caseRecords()
+    {
+        $defaultDb = config('database.connections.' . config('database.default') . '.database');
+        return $this->hasMany(\App\Models\CaseRecord::class, 'client_id', 'id')
+            ->from($defaultDb . '.case_records');
+    }
+
+    public function payments()
+    {
+        $defaultDb = config('database.connections.' . config('database.default') . '.database');
+        return $this->hasMany(\App\Models\Payment::class, 'client_id', 'id')
+            ->from($defaultDb . '.payments');
+    }
+
+    public function visits()
+    {
+        $defaultDb = config('database.connections.' . config('database.default') . '.database');
+        return $this->hasMany(\App\Models\Visit::class, 'client_id', 'id')
+            ->from($defaultDb . '.visits');
+    }
+
     public function getFilamentName(): string
     {
         // Return the full name if both first_name and last_name are available
         if (!empty($this->first_name) && !empty($this->last_name)) {
             return trim($this->first_name . ' ' . $this->last_name);
         }
-        
+
         // If only first_name is available
         if (!empty($this->first_name)) {
             return trim($this->first_name);
         }
-        
+
         // If only last_name is available
         if (!empty($this->last_name)) {
             return trim($this->last_name);
         }
-        
+
         // Fallback to email if no name is available
         return $this->email ?? 'Unknown User';
     }

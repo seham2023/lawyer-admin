@@ -15,11 +15,11 @@ class EditClient extends EditRecord
     {
         $data = $this->record->toArray();
 
-        if ($this->record->address) {
-            $data['country_id'] = $this->record->address->country_id;
-            $data['state_id'] = $this->record->address->state_id;
-            $data['city_id'] = $this->record->address->city_id;
-        }
+        // if ($this->record->address) {
+        //     $data['country_id'] = $this->record->address->country_id;
+        //     $data['state_id'] = $this->record->address->state_id;
+        //     $data['city_id'] = $this->record->address->city_id;
+        // }
 
         $this->form->fill($data);
     }

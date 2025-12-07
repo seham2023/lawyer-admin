@@ -17,6 +17,7 @@ use Filament\Forms\Components\Textarea;
 use App\Filament\Resources\ClientResource\Pages;
 use App\Filament\Resources\ClientResource\RelationManagers;
 use App\Models\Qestass\User;
+use App\Models\Currency;
 use Illuminate\Database\Eloquent\Builder;
 
 class ClientResource extends Resource
@@ -271,6 +272,149 @@ class ClientResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('add_visit')
+                    ->label(__('Add Visit'))
+                    ->icon('heroicon-o-calendar')
+                    ->color('success')
+                    ->form([
+                        Forms\Components\DateTimePicker::make('visit_date')
+                            ->label(__('Visit Date'))
+                            ->required()
+                            ->default(now()),
+                        Forms\Components\TextInput::make('purpose')
+                            ->label(__('Purpose'))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Textarea::make('notes')
+                            ->label(__('Notes'))
+                            ->rows(3)
+                            ->columnSpanFull(),
+                        
+                        Forms\Components\Section::make(__('financial_details'))
+                            ->schema([
+                                Select::make('currency_id')
+                                    ->label(__('currency'))
+                                    ->options(Currency::all()->pluck('name', 'id')->mapWithKeys(fn($name, $id) => [$id => $name])->toArray())
+                                    ->searchable()
+                                    ->required(),
+
+                                TextInput::make('amount')
+                                    ->label(__('amount'))
+                                    ->numeric()
+                                    ->required()
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        $tax = $get('tax') ?? 0;
+                                        $amount = $state ?? 0;
+                                        $total = $amount + ($amount * $tax / 100);
+                                        $set('total_after_tax', $total);
+                                    }),
+
+                                TextInput::make('tax')
+                                    ->label(__('tax'))
+                                    ->numeric()
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        $amount = $get('amount') ?? 0;
+                                        $tax = $state ?? 0;
+                                        $total = $amount + ($amount * $tax / 100);
+                                        $set('total_after_tax', $total);
+                                    }),
+
+                                TextInput::make('total_after_tax')
+                                    ->label(__('total_after_tax'))
+                                    ->numeric()
+                                    ->disabled(),
+                            ])
+                            ->columns(2)
+                            ->collapsible(),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        // Create payment if financial details are provided
+                        $paymentId = null;
+                        if (isset($data['amount']) && isset($data['currency_id'])) {
+                            $payment = \App\Models\Payment::create([
+                                'amount' => $data['amount'],
+                                'tax' => $data['tax'] ?? 0,
+                                'currency_id' => $data['currency_id'],
+                                'user_id' => auth()->id(),
+                                'client_id' => $record->id,
+                                'payment_date' => now(),
+                            ]);
+                            
+                            $paymentId = $payment->id;
+                        }
+
+                        \App\Models\Visit::create([
+                            'user_id' => auth()->id(),
+                            'client_id' => $record->id,
+                            'payment_id' => $paymentId,
+                            'visit_date' => $data['visit_date'],
+                            'purpose' => $data['purpose'],
+                            'notes' => $data['notes'] ?? null,
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title(__('Visit created successfully'))
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('add_case')
+                    ->label(__('Add Case'))
+                    ->icon('heroicon-o-briefcase')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\Select::make('category_id')
+                            ->label(__('Category'))
+                            ->options(\App\Models\Category::where('type', 'case')->pluck('name', 'id'))
+                            ->searchable()
+                            ->required()
+                            ->native(false),
+                        Forms\Components\Select::make('status_id')
+                            ->label(__('Status'))
+                            ->options(\App\Models\Status::pluck('name', 'id'))
+                            ->searchable()
+                            ->required()
+                            ->native(false),
+                        Forms\Components\DatePicker::make('start_date')
+                            ->label(__('Start Date'))
+                            ->required()
+                            ->default(now()),
+                        Forms\Components\TextInput::make('subject')
+                            ->label(__('Subject'))
+                            ->required()
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('subject_description')
+                            ->label(__('Description'))
+                            ->rows(3)
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('court_name')
+                            ->label(__('Court Name'))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('court_number')
+                            ->label(__('Court Number'))
+                            ->maxLength(255),
+                    ])
+                    ->action(function (User $record, array $data) {
+                        \App\Models\CaseRecord::create([
+                            'user_id' => auth()->id(),
+                            'client_id' => $record->id,
+                            'client_type_id' => 3,
+                            'category_id' => $data['category_id'],
+                            'status_id' => $data['status_id'],
+                            'start_date' => $data['start_date'],
+                            'subject' => $data['subject'],
+                            'subject_description' => $data['subject_description'] ?? null,
+                            'court_name' => $data['court_name'] ?? null,
+                            'court_number' => $data['court_number'] ?? null,
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title(__('Case created successfully'))
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
@@ -284,7 +428,8 @@ class ClientResource extends Resource
     {
         return [
             RelationManagers\CaseRecordsRelationManager::class,
-            // RelationManagers\PaymentsRelationManager::class,
+            RelationManagers\PaymentsRelationManager::class,
+            RelationManagers\VisitsRelationManager::class,
         ];
     }
 
@@ -293,6 +438,7 @@ class ClientResource extends Resource
         return [
             'index' => Pages\ListClients::route('/'),
             'create' => Pages\CreateClient::route('/create'),
+            'view' => Pages\ViewClient::route('/{record}'),
             'edit' => Pages\EditClient::route('/{record}/edit'),
         ];
     }
