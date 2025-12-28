@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
 {
@@ -13,6 +13,11 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        // Disable foreign key constraints temporarily
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        Category::truncate();
+        
         $client_categories = [
             ['en' => 'Complainant', 'ar' => 'المشتكي'],
             ['en' => 'Defendant', 'ar' => 'المشتكى به'],
@@ -49,7 +54,7 @@ class CategorySeeder extends Seeder
         }
 
         $expense_categories = [
-           // ['en' => 'Catering', 'ar' => 'الوجبات الكارثية'],
+            // ['en' => 'Catering', 'ar' => 'الوجبات الكارثية'],
             ['en' => 'Transport', 'ar' => 'المواصلات'],
             ['en' => 'Water and Electricity', 'ar' => 'الماء والكهرباء'],
             ['en' => 'Rent', 'ar' => 'الإيجار'],
@@ -76,7 +81,25 @@ class CategorySeeder extends Seeder
                 'type' => 'client_type',
             ]);
         }
+        $courtCategories = [
+            ['en' => 'General Court', 'ar' => 'المحكمة العامة'],
+            ['en' => 'Family Court', 'ar' => 'محكمة الأحوال الشخصية'],
+            ['en' => 'Criminal Court', 'ar' => 'المحكمة الجزائية'],
+            ['en' => 'Commercial Court', 'ar' => 'المحكمة التجارية'],
+            ['en' => 'Labor Court', 'ar' => 'المحكمة العمالية'],
+            ['en' => 'Court of Appeal', 'ar' => 'محكمة الاستئناف'],
+            ['en' => 'Supreme Court', 'ar' => 'المحكمة العليا'],
+            ['en' => 'Execution Court', 'ar' => 'محكمة التنفيذ']
+        ];
 
-       
+        foreach ($courtCategories as $category) {
+            Category::create([
+                'name' => $category,
+                'type' => 'court',
+            ]);
+        }
+        
+        // Re-enable foreign key constraints
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

@@ -141,26 +141,45 @@ class CaseResource extends Resource
                                     ->searchable()
                                     ->required(),
 
-                                TextInput::make('court_name')
-                                    ->label(__('court_name'))
-                                    ->required()
-                                    ->maxLength(255),
+                                Select::make('court_id')
+                                    ->label(__('court'))
+                                    ->relationship('court', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->createOptionForm([
+                                        Forms\Components\TextInput::make('name')
+                                            ->label(__('name'))
+                                            ->required()
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('location')
+                                            ->label(__('location'))
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('court_number')
+                                            ->label(__('court_number'))
+                                            ->maxLength(255),
+                                        Forms\Components\Select::make('category_id')
+                                            ->label(__('category'))
+                                            ->relationship('category', 'name')
+                                            ->options(\App\Models\Category::where('type', 'court')->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->preload(),
+                                    ])
+                                    ->createOptionAction(function (Forms\Components\Actions\Action $action) {
+                                        return $action
+                                            ->modalHeading(__('Create Court'))
+                                            ->modalSubmitActionLabel(__('Create'))
+                                            ->modalWidth('lg');
+                                    }),
 
-                                TextInput::make('court_number')
-                                    ->label(__('court_number'))
-                                    ->maxLength(255),
 
-                                TextInput::make('lawyer_name')
-                                    ->label(__('lawyer_name'))
-                                    ->maxLength(255),
 
                                 TextInput::make('judge_name')
                                     ->label(__('judge_name'))
                                     ->maxLength(255),
 
-                                TextInput::make('location')
-                                    ->label(__('location'))
-                                    ->maxLength(255),
+                                // TextInput::make('location')
+                                //     ->label(__('location'))
+                                //     ->maxLength(255),
 
                                 TextInput::make('subject')
                                     ->label(__('subject'))
@@ -178,43 +197,43 @@ class CaseResource extends Resource
                                 RichEditor::make('contract')
                                     ->label(__('contract'))
                                     ->columnSpanFull(),
+                            ]),
 
-                                Forms\Components\Section::make(__('financial_details'))
-                                    ->schema([
-                                        Select::make('currency_id')
-                                            ->label(__('currency'))
-                                            ->options(Currency::all()->pluck('name', 'id'))
-                                            ->searchable()
-                                            ->required(),
+                        Forms\Components\Wizard\Step::make(__('financial_details'))
+                            ->schema([
+                                Select::make('currency_id')
+                                    ->label(__('currency'))
+                                    ->options(Currency::all()->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->required(),
 
-                                        TextInput::make('amount')
-                                            ->label(__('amount'))
-                                            ->numeric()
-                                            ->required()
-                                            ->reactive()
-                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                                $tax = $get('tax') ?? 0;
-                                                $amount = $state ?? 0;
-                                                $total = $amount + ($amount * $tax / 100);
-                                                $set('total_after_tax', $total);
-                                            }),
+                                TextInput::make('amount')
+                                    ->label(__('amount'))
+                                    ->numeric()
+                                    ->required()
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        $tax = $get('tax') ?? 0;
+                                        $amount = $state ?? 0;
+                                        $total = $amount + ($amount * $tax / 100);
+                                        $set('total_after_tax', $total);
+                                    }),
 
-                                        TextInput::make('tax')
-                                            ->label(__('tax'))
-                                            ->numeric()
-                                            ->reactive()
-                                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                                $amount = $get('amount') ?? 0;
-                                                $tax = $state ?? 0;
-                                                $total = $amount + ($amount * $tax / 100);
-                                                $set('total_after_tax', $total);
-                                            }),
+                                TextInput::make('tax')
+                                    ->label(__('tax'))
+                                    ->numeric()
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        $amount = $get('amount') ?? 0;
+                                        $tax = $state ?? 0;
+                                        $total = $amount + ($amount * $tax / 100);
+                                        $set('total_after_tax', $total);
+                                    }),
 
-                                        TextInput::make('total_after_tax')
-                                            ->label(__('total_after_tax'))
-                                            ->numeric()
-                                            ->disabled(),
-                                    ]),
+                                TextInput::make('total_after_tax')
+                                    ->label(__('total_after_tax'))
+                                    ->numeric()
+                                    ->disabled(),
                             ]),
                     ]),
 

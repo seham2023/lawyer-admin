@@ -25,8 +25,7 @@ return new class extends Migration
             $table->unsignedBigInteger('client_id')->nullable();
             $table->foreignId('status_id')->nullable()->constrained('statuses');
 
-            $table->string('court_name');
-            $table->string('court_number');
+    
             $table->unsignedBigInteger('lawyer_id')->nullable();
             $table->string('judge_name');
             $table->string('location');

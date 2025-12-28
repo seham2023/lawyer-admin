@@ -7,6 +7,7 @@ use App\Filament\Resources\CourtResource\RelationManagers;
 use App\Models\Category;
 use App\Models\Court;
 use Filament\Forms;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -52,27 +53,32 @@ class CourtResource extends Resource
                         TextInput::make('name')
                             ->label(__('name'))
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->columnSpanFull(),
 
                         TextInput::make('location')
                             ->label(__('location'))
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->columnSpanFull(),
 
-                        TextInput::make('court_number')
-                            ->label(__('court_number'))
-                            ->maxLength(255),
+                        Grid::make(2)
+                            ->schema([
+                                Select::make('category_id')
+                                    ->label(__('category'))
+                                    ->relationship('category', 'name')
+                                    ->options(Category::where('type', 'court')->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->preload()
+                                    ->required(),
+
+                                TextInput::make('court_number')
+                                    ->label(__('court_number'))
+                                    ->maxLength(255),
+                            ]),
 
                         Textarea::make('description')
                             ->label(__('description'))
                             ->columnSpanFull(),
-
-                        Select::make('category_id')
-                            ->label(__('category'))
-                            ->relationship('category', 'name')
-                            ->options(Category::all()->pluck('name', 'id'))
-                            ->searchable()
-                            ->preload()
-                            ->required(),
                     ])
                     ->columns(2),
             ]);

@@ -428,7 +428,7 @@ class ClientResource extends Resource
     {
         return [
             RelationManagers\CaseRecordsRelationManager::class,
-            RelationManagers\PaymentsRelationManager::class,
+            // RelationManagers\PaymentsRelationManager::class,
             RelationManagers\VisitsRelationManager::class,
         ];
     }

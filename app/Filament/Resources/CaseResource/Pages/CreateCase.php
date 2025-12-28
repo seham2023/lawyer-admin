@@ -15,23 +15,31 @@ class CreateCase extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Create opponent
-        $opponent = Opponent::create([
-            'name' => $data['opponent_name'] ?? null,
-            'email' => $data['opponent_email'] ?? null,
-            'mobile' => $data['opponent_mobile'] ?? null,
-            'location' => $data['opponent_location'] ?? null,
-            'nationality_id' => $data['opponent_nationality_id'] ?? null,
-        ]);
-        $data['opponent_id'] = $opponent->id;
+        // Create opponent only if name is not null
+        if (!empty($data['opponent_name'])) {
+            $opponent = Opponent::create([
+                'name' => $data['opponent_name'],
+                'email' => $data['opponent_email'] ?? null,
+                'mobile' => $data['opponent_mobile'] ?? null,
+                'location' => $data['opponent_location'] ?? null,
+                'nationality_id' => $data['opponent_nationality_id'] ?? null,
+            ]);
+            $data['opponent_id'] = $opponent->id;
+        } else {
+            $data['opponent_id'] = null;
+        }
 
-        // Create opponent lawyer
-        $opponentLawyer = OpponentLawyer::create([
-            'name' => $data['opponent_lawyer_name'] ?? null,
-            'mobile' => $data['opponent_lawyer_mobile'] ?? null,
-            'email' => $data['opponent_lawyer_email'] ?? null,
-        ]);
-        $data['opponent_lawyer_id'] = $opponentLawyer->id;
+        // Create opponent lawyer only if name is not null
+        if (!empty($data['opponent_lawyer_name'])) {
+            $opponentLawyer = OpponentLawyer::create([
+                'name' => $data['opponent_lawyer_name'],
+                'mobile' => $data['opponent_lawyer_mobile'] ?? null,
+                'email' => $data['opponent_lawyer_email'] ?? null,
+            ]);
+            $data['opponent_lawyer_id'] = $opponentLawyer->id;
+        } else {
+            $data['opponent_lawyer_id'] = null;
+        }
 
         // Create payment
         $payment = Payment::create([

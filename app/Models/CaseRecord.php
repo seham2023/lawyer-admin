@@ -16,6 +16,7 @@ class CaseRecord extends Model
         'opponent_lawyer_id',
         'start_date',
         'level_id',
+        'court_id',
         'court_name',
         'court_number',
         'lawyer_name',
@@ -50,7 +51,7 @@ class CaseRecord extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-  public function client()
+    public function client()
     {
         return $this->belongsTo(User::class, 'client_id', 'id');
     }
@@ -72,6 +73,11 @@ class CaseRecord extends Model
     public function client_type()
     {
         return $this->belongsTo(Category::class, 'client_type_id');
+    }
+
+    public function court()
+    {
+        return $this->belongsTo(Court::class);
     }
 
     public function sessions()
