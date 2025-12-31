@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -16,19 +16,16 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('categories');
             $table->foreignId('client_type_id')->constrained('categories');
             $table->foreignId('status_id')->nullable()->constrained('statuses');
-            $table->foreignId('level_id')->nullable()->constrained('levels');
             $table->foreignId('payment_id')->nullable()->constrained('payments');
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreignId('opponent_id')->constrained('opponents');
+            $table->foreignId('opponent_id')->nullable()->constrained('opponents');
             $table->foreignId('opponent_lawyer_id')->nullable()->constrained('opponent_lawyers');
             $table->date('start_date');
             $table->unsignedBigInteger('client_id')->nullable();
-            $table->foreignId('court_id')->nullable()->constrained('courts');
 
-    
             $table->unsignedBigInteger('lawyer_id')->nullable();
             $table->string('judge_name');
-            $table->string('location');
+            $table->string('location')->nullable();
             $table->string('subject');
             $table->text('subject_description')->nullable();
             $table->text('notes')->nullable();

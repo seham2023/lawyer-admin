@@ -15,12 +15,24 @@ class Payment extends Model
         'user_id',
         'client_id',
         'payment_date',
-        'case_record_id',
+        'pay_method_id',
+        'status_id',
+        'image',
+        'payable_type',
+        'payable_id',
     ];
 
     protected $casts = [
         'payment_date' => 'date',
     ];
+
+    /**
+     * Get the owning payable model (CaseRecord, Visit, Expense, etc.)
+     */
+    public function payable()
+    {
+        return $this->morphTo();
+    }
 
     public function paymentDetails()
     {
@@ -42,6 +54,9 @@ class Payment extends Model
         return $this->belongsTo(User::class, 'client_id');
     }
 
+    /**
+     * @deprecated Use payable() morphTo relationship instead
+     */
     public function caseRecord()
     {
         return $this->belongsTo(CaseRecord::class, 'case_record_id');

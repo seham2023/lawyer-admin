@@ -11,7 +11,6 @@ class Visit extends Model
     protected $fillable = [
         'user_id',
         'client_id',
-        'payment_id',
         'visit_date',
         'purpose',
         'notes'
@@ -27,8 +26,19 @@ class Visit extends Model
         return $this->belongsTo(User::class, 'client_id');
     }
 
-    public function payment(): BelongsTo
+    /**
+     * Get the primary payment for this visit.
+     */
+    public function payment()
     {
-        return $this->belongsTo(Payment::class, 'payment_id');
+        return $this->morphOne(Payment::class, 'payable');
+    }
+
+    /**
+     * Get all payments for this visit.
+     */
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
     }
 }

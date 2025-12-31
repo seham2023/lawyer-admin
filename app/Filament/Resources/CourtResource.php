@@ -2,20 +2,22 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Forms;
+use Filament\Tables;
+use App\Models\Court;
+use App\Models\Category;
+use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CourtResource\Pages;
 use App\Filament\Resources\CourtResource\RelationManagers;
-use App\Models\Category;
-use App\Models\Court;
-use Filament\Forms;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 
 class CourtResource extends Resource
 {
@@ -79,6 +81,10 @@ class CourtResource extends Resource
                         Textarea::make('description')
                             ->label(__('description'))
                             ->columnSpanFull(),
+
+                      Hidden::make('user_id')
+                    ->default(auth()->id())
+
                     ])
                     ->columns(2),
             ]);
@@ -131,10 +137,14 @@ class CourtResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\CaseRecordsRelationManager::class,
+           // RelationManagers\CaseRecordsRelationManager::class,
         ];
     }
-
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id());
+    }
     public static function getPages(): array
     {
         return [

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('case_record_id')->constrained('case_records');
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('action');
+            $table->text('action');
             $table->timestamps();
         });
     }

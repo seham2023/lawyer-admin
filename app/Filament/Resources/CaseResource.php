@@ -129,11 +129,11 @@ class CaseResource extends Resource
                                     ->searchable()
                                     ->required(),
 
-                                Select::make('level_id')
-                                    ->label(__('level'))
-                                    ->options(Level::all()->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->required(),
+                                // Select::make('level_id')
+                                //     ->label(__('level'))
+                                //     ->options(Level::all()->pluck('name', 'id'))
+                                //     ->searchable()
+                                //     ->required(),
 
                                 Select::make('status_id')
                                     ->label(__('status'))
@@ -163,6 +163,8 @@ class CaseResource extends Resource
                                             ->options(\App\Models\Category::where('type', 'court')->pluck('name', 'id'))
                                             ->searchable()
                                             ->preload(),
+                                            Hidden::make('user_id')
+                                                ->default(auth()->user()->id),
                                     ])
                                     ->createOptionAction(function (Forms\Components\Actions\Action $action) {
                                         return $action

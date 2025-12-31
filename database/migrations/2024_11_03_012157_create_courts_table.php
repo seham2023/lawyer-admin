@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('court_number')->nullable();
             $table->text('description')->nullable();
             $table->foreignId('category_id')->constrained('categories');
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
         });
     }

@@ -11,7 +11,6 @@ class Expense extends Model
         'status_id',
         'currency_id',
         'pay_method_id',
-        'payment_id',
         'file_path',
         'name',
         'receipt_number',
@@ -44,9 +43,20 @@ class Expense extends Model
         return $this->belongsTo(PayMethod::class);
     }
 
+    /**
+     * Get the primary payment for this expense.
+     */
     public function payment()
     {
-        return $this->belongsTo(Payment::class);
+        return $this->morphOne(Payment::class, 'payable');
+    }
+
+    /**
+     * Get all payments for this expense.
+     */
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
     }
 
     // Relationship with Client
@@ -54,6 +64,7 @@ class Expense extends Model
     {
         return $this->belongsTo(Client::class);
     }
+
     public function check()
     {
         return $this->hasOne(ExpenseCheck::class);

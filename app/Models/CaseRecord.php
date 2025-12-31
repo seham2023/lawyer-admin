@@ -10,7 +10,6 @@ class CaseRecord extends Model
     protected $fillable = [
         'category_id',
         'status_id',
-        'payment_id',
         'user_id',
         'opponent_id',
         'opponent_lawyer_id',
@@ -42,11 +41,6 @@ class CaseRecord extends Model
         return $this->belongsTo(Status::class);
     }
 
-    public function payment()
-    {
-        return $this->belongsTo(Payment::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
@@ -75,9 +69,40 @@ class CaseRecord extends Model
         return $this->belongsTo(Category::class, 'client_type_id');
     }
 
+    /**
+     * Get all court history records for this case.
+     */
+    public function courtHistory()
+    {
+        return $this->hasMany(CaseCourtHistory::class, 'case_record_id');
+    }
+
+    /**
+     * Get the current court for this case.
+     */
+    public function currentCourt()
+    {
+        return $this->hasOne(CaseCourtHistory::class, 'case_record_id')
+            ->where('is_current', true)
+            ->with('court');
+    }
+
+    /**
+     * Legacy court relationship - kept for backward compatibility.
+     * Use currentCourt() or courtHistory() instead.
+     * @deprecated
+     */
     public function court()
     {
         return $this->belongsTo(Court::class);
+    }
+
+    /**
+     * Get the primary payment for this case record.
+     */
+    public function payment()
+    {
+        return $this->morphOne(Payment::class, 'payable');
     }
 
     public function sessions()

@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('payment_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('payment_id')->constrained('payments');
-            $table->foreignId('case_record_id')->nullable()->constrained('case_records');
+            $table->foreignId('payment_id')->constrained('payments')->onDelete('cascade');
             $table->string('name');
             $table->string('payment_type');
             $table->decimal('amount', 10, 2);
-            $table->dateTime('datetime');
+            $table->dateTime('paid_at'); // When this partial payment was made
+            $table->foreignId('pay_method_id')->nullable()->constrained('pay_methods'); // How this partial payment was made
             $table->text('details')->nullable();
             $table->timestamps();
         });
