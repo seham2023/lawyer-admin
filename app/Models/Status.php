@@ -8,6 +8,7 @@ use Spatie\Translatable\HasTranslations;
 class Status extends Model
 {
     use HasTranslations;
+    protected $connection = 'mysql';
 
     protected $fillable = ['name', 'type', 'user_id'];
 

@@ -13,6 +13,9 @@ class CreateCase extends CreateRecord
 {
     protected static string $resource = CaseResource::class;
 
+    protected array $paymentData = [];
+    protected ?int $courtId = null;
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Create opponent only if name is not null
@@ -41,13 +44,17 @@ class CreateCase extends CreateRecord
             $data['opponent_lawyer_id'] = null;
         }
 
-        // Create payment
-        $payment = Payment::create([
+        // Store payment data for after creation (polymorphic relationship)
+        $this->paymentData = [
             'amount' => $data['amount'] ?? 0,
             'currency_id' => $data['currency_id'] ?? null,
             'tax' => $data['tax'] ?? 0,
-        ]);
-        $data['payment_id'] = $payment->id;
+            'pay_method_id' => $data['pay_method_id'] ?? null,
+            'payment_status_id' => $data['payment_status_id'] ?? 1,
+        ];
+
+        // Store court_id for court history creation
+        $this->courtId = $data['court_id'] ?? null;
 
         // Remove the fields that are not in case_records table
         unset(
@@ -62,10 +69,37 @@ class CreateCase extends CreateRecord
             $data['amount'],
             $data['currency_id'],
             $data['tax'],
+            $data['pay_method_id'],
+            $data['payment_status_id'],
             $data['total_after_tax']
         );
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        // Create polymorphic payment for the case
+        if (!empty($this->paymentData) && ($this->paymentData['amount'] > 0 || $this->paymentData['tax'] > 0)) {
+            $this->record->payment()->create([
+                'amount' => $this->paymentData['amount'],
+                'currency_id' => $this->paymentData['currency_id'],
+                'tax' => $this->paymentData['tax'],
+                'user_id' => auth()->id(),
+                'pay_method_id' => $this->paymentData['pay_method_id'] ?? null,
+                'status_id' => $this->paymentData['payment_status_id'] ?? 1, // Default to Pending
+            ]);
+        }
+
+        // Create court history entry if court is assigned
+        if (!empty($this->courtId)) {
+            $this->record->courtHistory()->create([
+                'court_id' => $this->courtId,
+                'transfer_date' => now(),
+                'transfer_reason' => 'Initial Filing',
+                'is_current' => true,
+            ]);
+        }
     }
 
     protected function getRedirectUrl(): string

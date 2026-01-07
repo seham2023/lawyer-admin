@@ -5,16 +5,20 @@ namespace App\Filament\Resources;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
+use App\Models\Visit;
+use App\Models\Status;
 use App\Models\Payment;
 use App\Models\Currency;
+use App\Models\PayMethod;
 use App\Models\CaseRecord;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Columns\BadgeColumn;
 use App\Filament\Resources\PaymentResource\Pages;
-use App\Filament\Resources\CaseResource\RelationManagers\PaymentDetailRelationManager;
+use App\Filament\Resources\PaymentResource\RelationManagers\PaymentDetailsRelationManager;
 
 class PaymentResource extends Resource
 {
@@ -45,38 +49,52 @@ class PaymentResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make(__('payment_information'))
+                Forms\Components\Section::make(__('Payment Information'))
                     ->schema([
-                        Select::make('user_id')
-                            ->label(__('user'))
-                            ->options(User::all()->pluck('name', 'id'))
-                            ->searchable()
+                        Select::make('payable_type')
+                            ->label(__('Payment For'))
+                            ->options([
+                                'App\\Models\\CaseRecord' => __('Case'),
+                                'App\\Models\\Visit' => __('Visit'),
+                            ])
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(function (callable $set) {
-                                $set('case_record_id', null);
+                                $set('payable_id', null);
                             }),
 
-                        Select::make('case_record_id')
-                            ->label(__('case'))
+                        Select::make('payable_id')
+                            ->label(__('Select Record'))
                             ->options(function (callable $get) {
-                                $userId = $get('user_id');
-                                if (!$userId) {
+                                $type = $get('payable_type');
+                                if (!$type) {
                                     return [];
                                 }
-                                return CaseRecord::where('user_id', $userId)->pluck('subject', 'id');
+
+                                if ($type === 'App\\Models\\CaseRecord') {
+                                    return CaseRecord::where('user_id', auth()->id())
+                                        ->pluck('subject', 'id');
+                                } elseif ($type === 'App\\Models\\Visit') {
+                                    return Visit::where('user_id', auth()->id())
+                                        ->get()
+                                        ->pluck('purpose', 'id');
+                                }
+
+                                return [];
                             })
                             ->searchable()
-                            ->required(),
+                            ->required()
+                            ->hidden(fn(callable $get) => !$get('payable_type')),
 
                         Select::make('currency_id')
-                            ->label(__('currency'))
+                            ->label(__('Currency'))
                             ->options(Currency::all()->pluck('name', 'id'))
                             ->searchable()
-                            ->required(),
+                            ->required()
+                            ->default(fn() => Currency::first()?->id),
 
                         TextInput::make('amount')
-                            ->label(__('amount'))
+                            ->label(__('Amount'))
                             ->numeric()
                             ->required()
                             ->reactive()
@@ -88,8 +106,9 @@ class PaymentResource extends Resource
                             }),
 
                         TextInput::make('tax')
-                            ->label(__('tax'))
+                            ->label(__('Tax (%)'))
                             ->numeric()
+                            ->default(0)
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                 $amount = $get('amount') ?? 0;
@@ -99,9 +118,28 @@ class PaymentResource extends Resource
                             }),
 
                         TextInput::make('total_after_tax')
-                            ->label(__('total_after_tax'))
+                            ->label(__('Total After Tax'))
                             ->numeric()
-                            ->disabled(),
+                            ->disabled()
+                            ->dehydrated(false),
+
+                        Select::make('pay_method_id')
+                            ->label(__('Payment Method'))
+                            ->options(PayMethod::all()->pluck('name', 'id'))
+                            ->searchable()
+                            ->required(),
+
+                        Select::make('status_id')
+                            ->label(__('Payment Status'))
+                            ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                            ->searchable()
+                            ->nullable(),
+
+                        Forms\Components\FileUpload::make('image')
+                            ->label(__('Payment Receipt'))
+                            ->image()
+                            ->directory('payment-receipts')
+                            ->nullable(),
                     ])->columns(2),
             ]);
     }
@@ -110,52 +148,94 @@ class PaymentResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('case.user.name')
-                    ->label(__('user'))
+                TextColumn::make('payable_type')
+                    ->label(__('Type'))
+                    ->formatStateUsing(fn($state) => match ($state) {
+                        'App\\Models\\CaseRecord' => __('Case'),
+                        'App\\Models\\Visit' => __('Visit'),
+                        default => __('Unknown'),
+                    })
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                        'App\\Models\\CaseRecord' => 'info',
+                        'App\\Models\\Visit' => 'success',
+                        default => 'gray',
+                    })
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('case.subject')
-                    ->label(__('case'))
-                    ->sortable()
-                    ->searchable(),
+                TextColumn::make('payable.subject')
+                    ->label(__('Related To'))
+                    ->getStateUsing(function ($record) {
+                        if ($record->payable_type === 'App\\Models\\CaseRecord') {
+                            return $record->payable?->subject ?? '-';
+                        } elseif ($record->payable_type === 'App\\Models\\Visit') {
+                            return $record->payable?->purpose ?? '-';
+                        }
+                        return '-';
+                    })
+                    ->searchable()
+                    ->limit(30),
 
                 TextColumn::make('amount')
-                    ->label(__('amount'))
-                    ->sortable()
-                // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
-                ,
+                    ->label(__('Total Amount'))
+                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                    ->sortable(),
 
                 TextColumn::make('total_paid')
-                    ->label(__('total_paid'))
-                    ->sortable()
-                // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
-                ,
+                    ->label(__('Paid'))
+                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                    ->color('success')
+                    ->sortable(),
 
                 TextColumn::make('remaining_payment')
-                    ->label(__('remaining'))
-                    ->sortable()
-                // ->money(fn ($record) => $record->currency ? $record->currency->name : 'USD')
-                ,
-
-                // TextColumn::make('paymentDetails_count')
-                //     ->label(__('payment_details_count'))
-                //     ->counts('paymentDetails')
-                //     ->sortable()
-
+                    ->label(__('Remaining'))
+                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                    ->color(fn($record) => $record->remaining_payment > 0 ? 'danger' : 'success')
+                    ->sortable(),
 
                 TextColumn::make('currency.name')
-                    ->label(__('currency'))
+                    ->label(__('Currency'))
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('payMethod.name')
+                    ->label(__('Payment Method'))
+                    ->sortable()
+                    ->toggleable(),
+
+                TextColumn::make('status.name')
+                    ->label(__('Status'))
+                    ->badge()
+                    ->color(fn($record) => match ($record->status?->name) {
+                        'Paid' => 'success',
+                        'Pending' => 'warning',
+                        'Cancelled' => 'danger',
+                        default => 'gray',
+                    })
                     ->sortable(),
 
                 TextColumn::make('created_at')
-                    ->label(__('created_at'))
+                    ->label(__('Created At'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('payable_type')
+                    ->label(__('Type'))
+                    ->options([
+                        'App\\Models\\CaseRecord' => __('Case'),
+                        'App\\Models\\Visit' => __('Visit'),
+                    ]),
+
+                Tables\Filters\SelectFilter::make('status_id')
+                    ->label(__('Status'))
+                    ->relationship('status', 'name'),
+
+                Tables\Filters\Filter::make('unpaid')
+                    ->label(__('Unpaid'))
+                    ->query(fn($query) => $query->whereRaw('amount > (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)')),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -165,29 +245,30 @@ class PaymentResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array
     {
         return [
-
-            PaymentDetailRelationManager::class,
+            PaymentDetailsRelationManager::class,
         ];
     }
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->where('user_id', auth()->id())
-            ->orWhereHas('case', function ($query) {
-                $query->where('user_id', auth()->id());
-            });
+            ->with(['payable', 'currency', 'payMethod', 'status', 'paymentDetails']);
     }
+
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListPayments::route('/'),
             'create' => Pages\CreatePayment::route('/create'),
+            'view' => Pages\ViewPayment::route('/{record}'),
             'edit' => Pages\EditPayment::route('/{record}/edit'),
         ];
     }

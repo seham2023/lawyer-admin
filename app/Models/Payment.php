@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Status;
+use App\Models\Currency;
+use App\Models\PayMethod;
+use App\Models\CaseRecord;
 use App\Models\PaymentDetail;
 use App\Models\Qestass\User;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    protected $connection = 'mysql';
     protected $fillable = [
         'amount',
         'tax',
@@ -52,6 +57,16 @@ class Payment extends Model
     public function client()
     {
         return $this->belongsTo(User::class, 'client_id');
+    }
+
+    public function payMethod()
+    {
+        return $this->belongsTo(PayMethod::class, 'pay_method_id');
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(Status::class, 'status_id');
     }
 
     /**

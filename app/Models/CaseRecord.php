@@ -15,7 +15,6 @@ class CaseRecord extends Model
         'opponent_lawyer_id',
         'start_date',
         'level_id',
-        'court_id',
         'court_name',
         'court_number',
         'lawyer_name',
@@ -115,19 +114,38 @@ class CaseRecord extends Model
         return $this->hasMany(Document::class, 'case_record_id');
     }
 
-    public function payments()
-    {
-        return $this->hasMany(Payment::class, 'case_record_id');
-    }
+    // public function payments()
+    // {
+    //     return $this->hasMany(Payment::class, 'case_record_id');
+    // }
 
+    /**
+     * Get payment details through the polymorphic payment relationship.
+     */
     public function paymentDetails()
     {
-        return $this->hasMany(PaymentDetail::class, 'case_record_id');
+        // Get payment details through the case's payment
+        return $this->hasManyThrough(
+            PaymentDetail::class,
+            Payment::class,
+            'payable_id', // Foreign key on payments table
+            'payment_id', // Foreign key on payment_details table
+            'id', // Local key on case_records table
+            'id' // Local key on payments table
+        )->where('payments.payable_type', CaseRecord::class);
     }
 
     public function paymentSessions()
     {
         return $this->hasMany(PaymentSession::class, 'case_record_id');
+    }
+
+    /**
+     * Get all audit trail entries for this case.
+     */
+    public function audits()
+    {
+        return $this->hasMany(CaseRecordAudit::class, 'case_record_id');
     }
 
     public function __toString()

@@ -24,7 +24,7 @@ class ClientsOverviewWidget extends BaseWidget
                     ->limit(5)
             )
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('first_name')
                     ->label('Name')
                     ->searchable()
                     ->sortable(),
@@ -32,7 +32,7 @@ class ClientsOverviewWidget extends BaseWidget
                     ->label('Email')
                     ->searchable()
                     ->limit(30),
-                Tables\Columns\TextColumn::make('mobile')
+                Tables\Columns\TextColumn::make('phone')
                     ->label('Mobile')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('gender')
@@ -43,14 +43,14 @@ class ClientsOverviewWidget extends BaseWidget
                         'female' => 'success',
                         default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('company')
-                    ->label('Company')
-                    ->limit(25)
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('category.name')
-                    ->label('Category')
-                    ->badge()
-                    ->color('warning'),
+                // Tables\Columns\TextColumn::make('company')
+                //     ->label('Company')
+                //     ->limit(25)
+                //     ->toggleable(),
+                // Tables\Columns\TextColumn::make('category.name')
+                //     ->label('Category')
+                //     ->badge()
+                //     ->color('warning'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Registered')
                     ->date()

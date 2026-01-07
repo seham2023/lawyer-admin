@@ -131,6 +131,7 @@ class CourtSeeder extends Seeder
                 'court_number' => 'JED-EXE-001',
                 'description' => 'Execution Court of Jeddah - Enforces court judgments',
                 'category_id' => $executionCourtCategory?->id,
+                'user_id' => 11,
             ],
 
             // Dammam Courts
@@ -140,6 +141,7 @@ class CourtSeeder extends Seeder
                 'court_number' => 'DAM-GEN-001',
                 'description' => 'General Court of Dammam - Main judicial authority for general cases',
                 'category_id' => $generalCourtCategory?->id,
+                'user_id' => 11,
             ],
             [
                 'name' => 'محكمة الأحوال الشخصية بالدمام',

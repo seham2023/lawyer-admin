@@ -22,7 +22,9 @@ class DatabaseSeeder extends Seeder
       NewPermissionsSeeder::class,
       StateSeeder::class,
       PaymentSeeder::class,
-      EmailTemplateSeeder::class
+      EmailTemplateSeeder::class,
+      CourtSeeder::class,
+      CaseRecordSeeder::class,
     ]);
   }
 }

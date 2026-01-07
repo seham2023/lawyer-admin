@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Qestass\User;
 use Illuminate\Database\Eloquent\Model;
 
 class Email extends Model
@@ -31,6 +32,6 @@ class Email extends Model
      */
     public function client()
     {
-        return $this->belongsTo(Client::class);
+        return $this->belongsTo(User::class,'client_id','id');
     }
 }

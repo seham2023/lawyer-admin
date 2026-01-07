@@ -19,7 +19,12 @@ return new class extends Migration
             $table->dateTime('datetime')->nullable();
             $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
             $table->foreignId('case_record_id')->nullable()->constrained('case_records');
-             $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('judge_name')->nullable();
+            $table->string('decision')->nullable();
+            $table->date('next_session_date')->nullable();
+            $table->foreignId('court_id')->constrained('courts')->onDelete('cascade');
+
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
         });
     }

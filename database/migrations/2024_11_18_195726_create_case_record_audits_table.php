@@ -15,7 +15,18 @@ return new class extends Migration
             $table->id();
             $table->foreignId('case_record_id')->constrained('case_records');
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->text('action');
+
+            // Add new columns for detailed tracking
+            $table->string('event_type')->default('updated'); // created, updated, deleted
+            $table->string('field_name')->nullable(); // Which field changed
+            $table->text('old_value')->nullable(); // Previous value
+            $table->text('new_value')->nullable(); // New value
+            $table->json('metadata')->nullable(); // Additional context
+            $table->ipAddress('ip_address')->nullable(); // User's IP
+
+            // Add index for better query performance
+            $table->index(['case_record_id', 'created_at']);
+            $table->index('field_name');
             $table->timestamps();
         });
     }

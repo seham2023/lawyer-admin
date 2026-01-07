@@ -41,4 +41,20 @@ class Visit extends Model
     {
         return $this->morphMany(Payment::class, 'payable');
     }
+
+    /**
+     * Get payment details through the primary payment.
+     */
+    public function paymentDetails()
+    {
+        // Get payment details through the visit's payment
+        return $this->hasManyThrough(
+            \App\Models\PaymentDetail::class,
+            Payment::class,
+            'payable_id', // Foreign key on payments table
+            'payment_id', // Foreign key on payment_details table
+            'id', // Local key on visits table
+            'id' // Local key on payments table
+        )->where('payments.payable_type', Visit::class);
+    }
 }

@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignId('status_id')->nullable()->constrained('statuses');
             $table->foreignId('currency_id')->constrained('currencies');
             $table->foreignId('pay_method_id')->constrained('pay_methods');
-            $table->foreignId('payment_id')->nullable()->constrained('payments');
             $table->string('file_path')->nullable();
             $table->string('name')->nullable();
             $table->string('receipt_number')->nullable();

@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
         // Register User Observer
         \App\Models\Qestass\User::observe(\App\Observers\UserObserver::class);
 
+        // Register CaseRecord Observer for audit trail
+        \App\Models\CaseRecord::observe(\App\Observers\CaseRecordObserver::class);
+
         Gate::define('use-translation-manager', function (?User $user) {
             // Your authorization logic
             return true;

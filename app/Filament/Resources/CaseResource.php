@@ -143,7 +143,7 @@ class CaseResource extends Resource
 
                                 Select::make('court_id')
                                     ->label(__('court'))
-                                    ->relationship('court', 'name')
+                                    ->options(\App\Models\Court::all()->pluck('name', 'id'))->dehydrated(false)
                                     ->searchable()
                                     ->preload()
                                     ->createOptionForm([
@@ -163,8 +163,8 @@ class CaseResource extends Resource
                                             ->options(\App\Models\Category::where('type', 'court')->pluck('name', 'id'))
                                             ->searchable()
                                             ->preload(),
-                                            Hidden::make('user_id')
-                                                ->default(auth()->user()->id),
+                                        Hidden::make('user_id')
+                                            ->default(auth()->user()->id),
                                     ])
                                     ->createOptionAction(function (Forms\Components\Actions\Action $action) {
                                         return $action
@@ -175,13 +175,7 @@ class CaseResource extends Resource
 
 
 
-                                TextInput::make('judge_name')
-                                    ->label(__('judge_name'))
-                                    ->maxLength(255),
 
-                                // TextInput::make('location')
-                                //     ->label(__('location'))
-                                //     ->maxLength(255),
 
                                 TextInput::make('subject')
                                     ->label(__('subject'))
@@ -236,6 +230,18 @@ class CaseResource extends Resource
                                     ->label(__('total_after_tax'))
                                     ->numeric()
                                     ->disabled(),
+
+                                Select::make('pay_method_id')
+                                    ->label(__('payment_method'))
+                                    ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->preload(),
+
+                                Select::make('payment_status_id')
+                                    ->label(__('payment_status'))
+                                    ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->default(1), // Default to 'Pending'
                             ]),
                     ]),
 
@@ -253,9 +259,20 @@ class CaseResource extends Resource
                     ->label(__('category'))
                     ->sortable(),
 
-                TextColumn::make('user.name')
-                    ->label(__('user'))
-                    ->sortable(),
+                TextColumn::make('client_name')
+                    ->label(__('client'))
+                    ->getStateUsing(fn($record) => $record->client?->getFilamentName() ?? '-')
+                    ->searchable(query: function ($query, $search) {
+                        return $query->whereHas('client', function ($q) use ($search) {
+                            $q->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('mobile', 'like', "%{$search}%");
+                        });
+                    })
+                    ->sortable(query: function ($query, $direction) {
+                        return $query->join('users', 'case_records.client_id', '=', 'users.id')
+                            ->orderBy('users.first_name', $direction);
+                    }),
 
                 TextColumn::make('subject')
                     ->label(__('subject'))
@@ -302,6 +319,8 @@ class CaseResource extends Resource
         return [
             RelationManagers\SessionsRelationManager::class,
             RelationManagers\DocumentsRelationManager::class,
+            RelationManagers\CourtHistoryRelationManager::class,
+            RelationManagers\AuditsRelationManager::class,
             // RelationManagers\PaymentsRelationManager::class,
             RelationManagers\PaymentDetailRelationManager::class,
             RelationManagers\PaymentSessionsRelationManager::class,
@@ -313,6 +332,7 @@ class CaseResource extends Resource
         return [
             'index' => Pages\ListCases::route('/'),
             'create' => Pages\CreateCase::route('/create'),
+            'view' => Pages\ViewCase::route('/{record}'),
             'edit' => Pages\EditCase::route('/{record}/edit'),
         ];
     }

@@ -2,22 +2,23 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\Email;
-use App\Models\Client;
-use App\Models\EmailTemplate;
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Email;
+use App\Models\Client;
+use App\Models\Qestass\User;
+use App\Models\EmailTemplate;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use App\Filament\Resources\EmailResource\Pages;
 use Mvenghaus\FilamentPluginTranslatableInline\Forms\Components\TranslatableContainer;
-use Illuminate\Support\Facades\Auth;
 
 class EmailResource extends Resource
 {
@@ -53,7 +54,8 @@ class EmailResource extends Resource
                     ->schema([
                         Select::make('client_id')
                             ->label(__('client'))
-                            ->relationship('client', 'name')
+                            ->options(User::where('parent_id', auth()->user()->id)->pluck('first_name', 'id'))
+                            ->relationship('client', 'phone')
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -154,7 +156,7 @@ class EmailResource extends Resource
 
     protected static function updateEmailPreview(callable $set, $clientId, $templateId)
     {
-        $client = Client::find($clientId);
+        $client = User::find($clientId);
         $template = EmailTemplate::find($templateId);
 
         if ($client && $template) {
