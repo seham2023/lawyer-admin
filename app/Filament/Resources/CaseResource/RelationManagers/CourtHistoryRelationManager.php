@@ -8,12 +8,16 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 use App\Models\Court;
+use Illuminate\Database\Eloquent\Model;
 
 class CourtHistoryRelationManager extends RelationManager
 {
     protected static string $relationship = 'courtHistory';
 
-    protected static ?string $title = 'Court History';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('Court History');
+    }
 
     public function form(Form $form): Form
     {

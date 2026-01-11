@@ -62,10 +62,12 @@ class SessionsRelationManager extends RelationManager
 
                 Forms\Components\TextInput::make('decision')
                     ->label(__('decision'))
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->hiddenOn('create'),
 
                 Forms\Components\DatePicker::make('next_session_date')
-                    ->label(__('next_session_date')),
+                    ->label(__('next_session_date'))
+                    ->hiddenOn('create'),
             ]);
     }
 

@@ -65,7 +65,7 @@ class CaseResource extends Resource
                         Forms\Components\Wizard\Step::make(__('client_information'))
                             ->schema([
                                 Select::make('client_id')
-                                    ->label(__('user'))
+                                    ->label(__('client'))
                                     ->options(User::where('parent_id', auth()->user()->id)->pluck('first_name', 'id'))
                                     ->searchable()
                                     ->preload()
@@ -325,8 +325,8 @@ class CaseResource extends Resource
         return [
             RelationManagers\SessionsRelationManager::class,
             RelationManagers\DocumentsRelationManager::class,
-            RelationManagers\CourtHistoryRelationManager::class,
-            RelationManagers\AuditsRelationManager::class,
+            // RelationManagers\CourtHistoryRelationManager::class,
+            // RelationManagers\AuditsRelationManager::class,
             // RelationManagers\PaymentsRelationManager::class,
             RelationManagers\PaymentDetailRelationManager::class,
             RelationManagers\PaymentSessionsRelationManager::class,
