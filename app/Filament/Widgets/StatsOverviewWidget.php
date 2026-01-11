@@ -14,23 +14,23 @@ class StatsOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Total Users', User::count())
-                ->description('All registered users')
+            Stat::make(__('Total Users'), User::count())
+                ->description(__('All registered users'))
                 ->descriptionIcon('heroicon-m-users')
                 ->color('success'),
 
-            Stat::make('Active Cases', CaseRecord::count())
-                ->description('Currently active legal cases')
+            Stat::make(__('Active Cases'), CaseRecord::count())
+                ->description(__('Currently active legal cases'))
                 ->descriptionIcon('heroicon-m-scale')
                 ->color('info'),
 
-            Stat::make('Categories', Category::count())
-                ->description('Total categories in system')
+            Stat::make(__('Categories'), Category::count())
+                ->description(__('Total categories in system'))
                 ->descriptionIcon('heroicon-m-folder')
                 ->color('warning'),
 
-            Stat::make('Total Payments', Payment::count())
-                ->description('Payment records')
+            Stat::make(__('Total Payments'), Payment::count())
+                ->description(__('Payment records'))
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('primary'),
         ];

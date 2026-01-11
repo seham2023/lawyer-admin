@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use Filament\Forms;
-use App\Models\User;
+use App\Models\Qestass\User;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -117,5 +117,13 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
+    }
+
+
+     public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('type', 'admin')
+            ->where('parent_id', auth()->id());
     }
 }

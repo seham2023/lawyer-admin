@@ -9,7 +9,12 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class ClientsOverviewWidget extends BaseWidget
 {
-    protected static ?string $heading = 'Recent Users';
+    protected static ?string $heading = null;
+
+    public function getHeading(): ?string
+    {
+        return __('Recent Users');
+    }
 
     protected int | string | array $columnSpan = 'full';
 
@@ -18,25 +23,25 @@ class ClientsOverviewWidget extends BaseWidget
         return $table
             ->query(
                 User::query()
-                ->where('parent_id', auth()->id())
+                    ->where('parent_id', auth()->id())
                     // ->with(['category', 'address'])
                     ->latest()
                     ->limit(5)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('first_name')
-                    ->label('Name')
+                    ->label(__('Name'))
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('email')
-                    ->label('Email')
+                    ->label(__('Email'))
                     ->searchable()
                     ->limit(30),
                 Tables\Columns\TextColumn::make('phone')
-                    ->label('Mobile')
+                    ->label(__('Mobile'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('gender')
-                    ->label('Gender')
+                    ->label(__('Gender'))
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'male' => 'info',
@@ -52,7 +57,7 @@ class ClientsOverviewWidget extends BaseWidget
                 //     ->badge()
                 //     ->color('warning'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Registered')
+                    ->label(__('Registered'))
                     ->date()
                     ->sortable(),
             ])

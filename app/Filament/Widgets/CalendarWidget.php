@@ -16,11 +16,16 @@ class CalendarWidget extends FullCalendarWidget
 {
     // Handle both Event and Session models
     public Model | string | null $model = Event::class;
-    
-    protected static ?string $heading = 'Legal Calendar';
-    
+
+    protected static ?string $heading = null;
+
+    public function getHeading(): ?string
+    {
+        return __('Legal Calendar');
+    }
+
     protected int | string | array $columnSpan = 'full';
-    
+
     protected static ?int $sort = 4;
 
     public function fetchEvents(array $fetchInfo): array
@@ -34,7 +39,7 @@ class CalendarWidget extends FullCalendarWidget
         $events = Event::query()
             ->where(function ($query) use ($fetchInfo) {
                 $query->whereBetween('start', [$fetchInfo['start'], $fetchInfo['end']])
-                      ->orWhereBetween('end', [$fetchInfo['start'], $fetchInfo['end']]);
+                    ->orWhereBetween('end', [$fetchInfo['start'], $fetchInfo['end']]);
             })
             ->get();
 
@@ -48,7 +53,7 @@ class CalendarWidget extends FullCalendarWidget
 
             $calendarEvents[] = [
                 'id' => 'session_' . $session->id, // Prefix to distinguish from events
-                'title' => 'Session: ' . $session->title,
+                'title' => __('Session') . ': ' . $session->title,
                 'start' => $sessionDateTime->format('Y-m-d\TH:i:s'),
                 'backgroundColor' => $this->getSessionColor($session->priority),
                 'borderColor' => $this->getSessionBorderColor($session->priority),
@@ -69,19 +74,19 @@ class CalendarWidget extends FullCalendarWidget
                 ? Carbon::parse($event->start)
                 : $event->start;
 
-            $endDateTime = $event->end 
+            $endDateTime = $event->end
                 ? (is_string($event->end) ? Carbon::parse($event->end) : $event->end)
                 : null;
 
             $calendarEvents[] = [
                 'id' => 'event_' . $event->id, // Prefix to distinguish from sessions
                 'title' => $event->title,
-                'start' => $event->all_day 
+                'start' => $event->all_day
                     ? $startDateTime->format('Y-m-d')
                     : $startDateTime->format('Y-m-d\TH:i:s'),
-                'end' => $endDateTime 
-                    ? ($event->all_day 
-                        ? $endDateTime->format('Y-m-d') 
+                'end' => $endDateTime
+                    ? ($event->all_day
+                        ? $endDateTime->format('Y-m-d')
                         : $endDateTime->format('Y-m-d\TH:i:s'))
                     : null,
                 'backgroundColor' => $event->color,
@@ -139,36 +144,37 @@ class CalendarWidget extends FullCalendarWidget
         return [
             Forms\Components\TextInput::make('title')
                 ->required()
-                ->label('Event Title'),
+                ->label(__('Event Title')),
 
             Forms\Components\Textarea::make('description')
-                ->label('Event Description')
+                ->label(__('Event Description'))
                 ->rows(3),
 
             Forms\Components\DateTimePicker::make('start')
                 ->required()
-                ->label('Start Date & Time'),
+                ->label(__('Start Date & Time')),
 
             Forms\Components\DateTimePicker::make('end')
-                ->label('End Date & Time')
+                ->label(__('End Date & Time'))
                 ->nullable(),
 
             Forms\Components\Select::make('type')
+                ->label(__('Event Type'))
                 ->options([
-                    'general' => 'General',
-                    'meeting' => 'Meeting',
-                    'holiday' => 'Holiday',
-                    'deadline' => 'Deadline',
-                    'appointment' => 'Appointment',
+                    'general' => __('general'),
+                    'meeting' => __('meeting'),
+                    'holiday' => __('holiday'),
+                    'deadline' => __('deadline'),
+                    'appointment' => __('appointment'),
                 ])
                 ->default('general'),
 
             Forms\Components\ColorPicker::make('color')
-                ->label('Event Color')
+                ->label(__('Event Color'))
                 ->default('#3b82f6'),
 
             Forms\Components\Toggle::make('all_day')
-                ->label('All Day Event')
+                ->label(__('All Day Event'))
                 ->default(false),
         ];
     }
@@ -178,18 +184,18 @@ class CalendarWidget extends FullCalendarWidget
         return [
             Forms\Components\TextInput::make('title')
                 ->required()
-                ->label('Session Title'),
+                ->label(__('Session Title')),
 
             Forms\Components\Textarea::make('details')
-                ->label('Session Details')
+                ->label(__('Session Details'))
                 ->rows(3),
 
             Forms\Components\DateTimePicker::make('datetime')
                 ->required()
-                ->label('Session Date & Time'),
+                ->label(__('Session Date & Time')),
 
             Forms\Components\Select::make('case_record_id')
-                ->label('Case')
+                ->label(__('Case'))
                 ->options(function () {
                     return CaseRecord::with('client')
                         ->get()
@@ -203,15 +209,16 @@ class CalendarWidget extends FullCalendarWidget
                 ->preload(),
 
             Forms\Components\Select::make('priority')
+                ->label(__('Priority'))
                 ->options([
-                    'low' => 'Low',
-                    'normal' => 'Normal',
-                    'high' => 'High',
+                    'low' => __('Low'),
+                    'normal' => __('Normal'),
+                    'high' => __('High'),
                 ])
                 ->default('normal'),
 
             Forms\Components\Hidden::make('case_number')
-                ->default(fn ($get) => CaseRecord::find($get('case_record_id'))?->id),
+                ->default(fn($get) => CaseRecord::find($get('case_record_id'))?->id),
         ];
     }
 
@@ -220,7 +227,7 @@ class CalendarWidget extends FullCalendarWidget
     {
         return [
             Actions\CreateAction::make('add_event')
-                ->label('Add Event')
+                ->label(__('Add Event'))
                 ->form($this->getEventFormSchema())
                 ->mutateFormDataUsing(function (array $data): array {
                     return $data;
@@ -236,7 +243,7 @@ class CalendarWidget extends FullCalendarWidget
                 }),
 
             Actions\CreateAction::make('add_session')
-                ->label('Add Session')
+                ->label(__('Add Session'))
                 ->form($this->getSessionFormSchema())
                 ->mutateFormDataUsing(function (array $data): array {
                     return $data;
@@ -402,7 +409,7 @@ class CalendarWidget extends FullCalendarWidget
                     Forms\Components\Placeholder::make('priority')
                         ->label('Priority')
                         ->content(function () use ($record) {
-                            return match($record->priority) {
+                            return match ($record->priority) {
                                 'high' => '🔴 High',
                                 'normal' => '🔵 Normal',
                                 'low' => '🟢 Low',
@@ -536,7 +543,7 @@ class CalendarWidget extends FullCalendarWidget
     // Helper method to get session color based on priority
     private function getSessionColor(string $priority): string
     {
-        return match($priority) {
+        return match ($priority) {
             'high' => '#dc2626',     // Red for high priority
             'normal' => '#3b82f6',   // Blue for normal priority
             'low' => '#10b981',      // Green for low priority
@@ -547,7 +554,7 @@ class CalendarWidget extends FullCalendarWidget
     // Helper method to get session border color based on priority
     private function getSessionBorderColor(string $priority): string
     {
-        return match($priority) {
+        return match ($priority) {
             'high' => '#b91c1c',     // Dark red for high priority
             'normal' => '#1d4ed8',   // Dark blue for normal priority
             'low' => '#059669',      // Dark green for low priority

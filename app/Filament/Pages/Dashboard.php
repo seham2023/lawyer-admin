@@ -13,10 +13,18 @@ use App\Filament\Widgets\CalendarWidget;
 class Dashboard extends FilamentDashboard
 {
     protected static ?string $navigationIcon = 'heroicon-o-home';
-    
+
     protected static string $routePath = '/';
-    
-    protected static ?string $title = 'Dashboard';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Dashboard');
+    }
+
+    public function getTitle(): string
+    {
+        return __('Dashboard');
+    }
 
     public function getWidgets(): array
     {

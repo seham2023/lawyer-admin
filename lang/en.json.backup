@@ -87,8 +87,6 @@
     "email_information": "Email Information",
     "email_template": "Email Template",
     "content": "Content",
-    "Events": "Events",
-    "Event": "Event",
     "template": "Template",
     "low": "Low",
     "medium": "Medium",
@@ -313,6 +311,7 @@
     "Not set": "Not set",
     "Yes": "Yes",
     "No": "No",
+    "Session Details": "Session Details",
     "No details": "No details",
     "Date & Time": "Date & Time"
 }

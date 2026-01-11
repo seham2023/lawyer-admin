@@ -19,6 +19,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\CaseResource\Pages;
 use App\Filament\Actions\SendTabbyPaymentLinkAction;
 use App\Filament\Resources\CaseResource\RelationManagers;
@@ -34,7 +35,11 @@ class CaseResource extends Resource
     {
         return __('cases');
     }
-
+ public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id())->latest();
+    }
     public static function getNavigationGroup(): ?string
     {
         return __('legal_management');
@@ -141,37 +146,37 @@ class CaseResource extends Resource
                                     ->searchable()
                                     ->required(),
 
-                                Select::make('court_id')
-                                    ->label(__('court'))
-                                    ->options(\App\Models\Court::all()->pluck('name', 'id'))->dehydrated(false)
-                                    ->searchable()
-                                    ->preload()
-                                    ->createOptionForm([
-                                        Forms\Components\TextInput::make('name')
-                                            ->label(__('name'))
-                                            ->required()
-                                            ->maxLength(255),
-                                        Forms\Components\TextInput::make('location')
-                                            ->label(__('location'))
-                                            ->maxLength(255),
-                                        Forms\Components\TextInput::make('court_number')
-                                            ->label(__('court_number'))
-                                            ->maxLength(255),
-                                        Forms\Components\Select::make('category_id')
-                                            ->label(__('category'))
-                                            ->relationship('category', 'name')
-                                            ->options(\App\Models\Category::where('type', 'court')->pluck('name', 'id'))
-                                            ->searchable()
-                                            ->preload(),
-                                        Hidden::make('user_id')
-                                            ->default(auth()->user()->id),
-                                    ])
-                                    ->createOptionAction(function (Forms\Components\Actions\Action $action) {
-                                        return $action
-                                            ->modalHeading(__('Create Court'))
-                                            ->modalSubmitActionLabel(__('Create'))
-                                            ->modalWidth('lg');
-                                    }),
+                                // Select::make('court_id')
+                                //     ->label(__('court'))
+                                //     ->options(\App\Models\Court::all()->pluck('name', 'id'))->dehydrated(false)
+                                //     ->searchable()
+                                //     ->preload()
+                                //     ->createOptionForm([
+                                //         Forms\Components\TextInput::make('name')
+                                //             ->label(__('name'))
+                                //             ->required()
+                                //             ->maxLength(255),
+                                //         Forms\Components\TextInput::make('location')
+                                //             ->label(__('location'))
+                                //             ->maxLength(255),
+                                //         Forms\Components\TextInput::make('court_number')
+                                //             ->label(__('court_number'))
+                                //             ->maxLength(255),
+                                //         Forms\Components\Select::make('category_id')
+                                //             ->label(__('category'))
+                                //             ->relationship('category', 'name')
+                                //             ->options(\App\Models\Category::where('type', 'court')->pluck('name', 'id'))
+                                //             ->searchable()
+                                //             ->preload(),
+                                //         Hidden::make('user_id')
+                                //             ->default(auth()->user()->id),
+                                //     ])
+                                //     ->createOptionAction(function (Forms\Components\Actions\Action $action) {
+                                //         return $action
+                                //             ->modalHeading(__('Create Court'))
+                                //             ->modalSubmitActionLabel(__('Create'))
+                                //             ->modalWidth('lg');
+                                //     }),
 
 
 
@@ -235,6 +240,7 @@ class CaseResource extends Resource
                                     ->label(__('payment_method'))
                                     ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
                                     ->searchable()
+                                    ->required()
                                     ->preload(),
 
                                 Select::make('payment_status_id')

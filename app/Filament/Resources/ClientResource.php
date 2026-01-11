@@ -31,7 +31,7 @@ class ClientResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('Clients');
+        return __('clients');
     }
     public static function getNavigationGroup(): ?string
     {
@@ -40,11 +40,11 @@ class ClientResource extends Resource
 
     public static function getPluralModelLabel(): string
     {
-        return __('Clients');
+        return __('clients');
     }
     public static function getModelLabel(): string
     {
-        return __('Client');
+        return __('client');
     }
 
     public static function getEloquentQuery(): Builder

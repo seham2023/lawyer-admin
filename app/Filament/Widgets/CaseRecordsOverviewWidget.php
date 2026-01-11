@@ -9,7 +9,12 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class CaseRecordsOverviewWidget extends BaseWidget
 {
-    protected static ?string $heading = 'Recent Cases';
+    protected static ?string $heading = null;
+
+    public function getHeading(): ?string
+    {
+        return __('Recent Cases');
+    }
 
     protected int | string | array $columnSpan = 'full';
 
@@ -18,39 +23,39 @@ class CaseRecordsOverviewWidget extends BaseWidget
         return $table
             ->query(
                 CaseRecord::query()
-                ->where('client_id', auth()->user()->id)
+                    ->where('client_id', auth()->user()->id)
                     ->with(['client', 'category', 'status'])
                     ->latest()
                     ->limit(5)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('client.first_name')
-                    ->label('Client')
+                    ->label(__('Client'))
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('court_name')
-                    ->label('Court')
+                Tables\Columns\TextColumn::make('court.name')
+                    ->label(__('Court'))
                     ->searchable()
                     ->limit(30),
                 Tables\Columns\TextColumn::make('subject')
-                    ->label('Subject')
+                    ->label(__('Subject'))
                     ->limit(40)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('category.name')
-                    ->label('Category')
+                    ->label(__('Category'))
                     ->badge()
                     ->color('info'),
                 Tables\Columns\TextColumn::make('status.name')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Active' => 'success',
-                        'Pending' => 'warning',
-                        'Closed' => 'danger',
+                    ->color(fn(string $state): string => match ($state) {
+                        __('Active') => 'success',
+                        __('Pending') => 'warning',
+                        __('Closed') => 'danger',
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('start_date')
-                    ->label('Start Date')
+                    ->label(__('Start Date'))
                     ->date()
                     ->sortable(),
             ])
