@@ -295,7 +295,6 @@ class LawyerTimeResource extends Resource
 
                 Tables\Columns\TextColumn::make('intervals.from')
                     ->label(__('Time Slots'))
-                    ->listWithLineBreaks()
                     ->formatStateUsing(function ($record) {
                         return $record->intervals->map(function ($interval) {
                             return $interval->from . ' - ' . $interval->to;

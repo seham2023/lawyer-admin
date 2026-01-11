@@ -16,6 +16,15 @@ class CreateCase extends CreateRecord
     protected array $paymentData = [];
     protected ?int $courtId = null;
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        if (request()->has('client_id')) {
+            $this->data['client_id'] = request('client_id');
+        }
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Create opponent only if name is not null
@@ -104,6 +113,10 @@ class CreateCase extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
+        if (request()->has('client_id')) {
+            return \App\Filament\Resources\ClientResource::getUrl('view', ['record' => request('client_id')]);
+        }
+
         return $this->getResource()::getUrl('index');
     }
 }
