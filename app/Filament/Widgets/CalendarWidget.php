@@ -33,6 +33,7 @@ class CalendarWidget extends FullCalendarWidget
         // Fetch sessions
         $sessions = Session::query()
             ->whereBetween('datetime', [$fetchInfo['start'], $fetchInfo['end']])
+            ->where('user_id', auth()->id())
             ->get();
 
         // Fetch events 
@@ -41,6 +42,7 @@ class CalendarWidget extends FullCalendarWidget
                 $query->whereBetween('start', [$fetchInfo['start'], $fetchInfo['end']])
                     ->orWhereBetween('end', [$fetchInfo['start'], $fetchInfo['end']]);
             })
+            ->where('user_id', auth()->id())
             ->get();
 
         $calendarEvents = [];

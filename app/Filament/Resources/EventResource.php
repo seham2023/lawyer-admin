@@ -2,16 +2,17 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\EventResource\Pages;
-use App\Filament\Resources\EventResource\RelationManagers;
-use App\Models\Event;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Event;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Hidden;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\EventResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\EventResource\RelationManagers;
 
 class EventResource extends Resource
 {
@@ -74,6 +75,8 @@ class EventResource extends Resource
                 Forms\Components\Toggle::make('all_day')
                     ->label(__('All Day Event'))
                     ->default(false),
+                Hidden::make('user_id')
+                    ->default(auth()->id())
             ]);
     }
 

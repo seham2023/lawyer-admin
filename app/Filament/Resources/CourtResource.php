@@ -82,8 +82,8 @@ class CourtResource extends Resource
                             ->label(__('description'))
                             ->columnSpanFull(),
 
-                      Hidden::make('user_id')
-                    ->default(auth()->id())
+                        Hidden::make('user_id')
+                            ->default(auth()->id())
 
                     ])
                     ->columns(2),
@@ -137,7 +137,7 @@ class CourtResource extends Resource
     public static function getRelations(): array
     {
         return [
-           // RelationManagers\CaseRecordsRelationManager::class,
+            // RelationManagers\CaseRecordsRelationManager::class,
         ];
     }
     public static function getEloquentQuery(): Builder

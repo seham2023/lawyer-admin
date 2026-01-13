@@ -23,7 +23,7 @@ class CaseRecordsOverviewWidget extends BaseWidget
         return $table
             ->query(
                 CaseRecord::query()
-                    ->where('client_id', auth()->user()->id)
+                    ->where('user_id', auth()->user()->id)
                     ->with(['client', 'category', 'status'])
                     ->latest()
                     ->limit(5)
