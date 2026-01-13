@@ -17,10 +17,23 @@ class TabbyPaymentService extends AbstractPaymentService
     public function __construct()
     {
         parent::__construct();
-        
-        $this->apiBaseUrl = $this->config['api_base_url'] ?? config('payment.tabby.api_base_url', 'https://api.tabby.ai');
-        $this->apiKey = $this->config['api_key'] ?? config('payment.tabby.api_key');
-        $this->merchantCode = $this->config['merchant_code'] ?? config('payment.tabby.merchant_code');
+
+        $this->apiBaseUrl = config('services.tabby.api_base_url');
+        $this->apiKey = config('services.tabby.api_key');
+        $this->merchantCode = config('services.tabby.merchant_code');
+
+        // Validate that all required configuration is present
+        if (empty($this->apiBaseUrl)) {
+            throw new \RuntimeException('Tabby API Base URL is not configured. Please set TABBY_API_BASE_URL in your .env file.');
+        }
+
+        if (empty($this->apiKey)) {
+            throw new \RuntimeException('Tabby API Key is not configured. Please set TABBY_API_KEY in your .env file.');
+        }
+
+        if (empty($this->merchantCode)) {
+            throw new \RuntimeException('Tabby Merchant Code is not configured. Please set TABBY_MERCHANT_CODE in your .env file.');
+        }
     }
 
     /**
@@ -29,20 +42,44 @@ class TabbyPaymentService extends AbstractPaymentService
      * @param float $amount
      * @param string $currency
      * @param string $buyerPhone
+     * @param string $buyerName
+     * @param string $buyerEmail
      * @param string $orderReferenceId
      * @param array $items
      * @param string|null $merchantCode
      * @return array
      */
-    public function createSession(float $amount, string $currency, string $buyerPhone, string $orderReferenceId, array $items, string $merchantCode = null): array
-    {
+    public function createSession(
+        float $amount,
+        string $currency,
+        string $buyerPhone,
+        string $orderReferenceId,
+        array $items,
+        string $merchantCode = null,
+        string $buyerName = 'Customer',
+        string $buyerEmail = null
+    ): array {
+        \Log::info('Tabby create session', [
+            'amount' => $amount,
+            'currency' => $currency,
+            'buyerPhone' => $buyerPhone,
+            'buyerName' => $buyerName,
+            'buyerEmail' => $buyerEmail,
+            'orderReferenceId' => $orderReferenceId,
+            'items' => $items,
+            'merchantCode' => $merchantCode ?? $this->merchantCode,
+        ]);
         try {
+            $baseUrl = config('app.url');
+
             $payload = [
                 'payment' => [
                     'amount' => $this->formatAmount($amount, $currency),
                     'currency' => $currency,
                     'buyer' => [
                         'phone' => $buyerPhone,
+                        'name' => $buyerName,
+                        'email' => $buyerEmail ?? 'customer@example.com',
                     ],
                     'order' => [
                         'reference_id' => $orderReferenceId,
@@ -50,6 +87,11 @@ class TabbyPaymentService extends AbstractPaymentService
                     ],
                 ],
                 'merchant_code' => $merchantCode ?? $this->merchantCode,
+                'merchant_urls' => [
+                    'success' => $baseUrl . '/tabby/payment/success',
+                    'cancel' => $baseUrl . '/tabby/payment/cancel',
+                    'failure' => $baseUrl . '/tabby/payment/failure',
+                ],
             ];
 
             $response = Http::withHeaders([
@@ -57,7 +99,10 @@ class TabbyPaymentService extends AbstractPaymentService
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->post($this->apiBaseUrl . '/api/v2/checkout', $payload);
-
+            Log::info('Tabby create session response', [
+                'response' => $response->json(),
+                'payload' => $payload
+            ]);
             if (!$response->successful()) {
                 Log::error('Tabby create session failed', [
                     'status' => $response->status(),
@@ -231,9 +276,11 @@ class TabbyPaymentService extends AbstractPaymentService
             if (!$response->successful()) {
                 // Check if the error is because the session is already finalized
                 $responseData = $response->json();
-                if (isset($responseData['errorType']) && $responseData['errorType'] === 'bad_data' && 
-                    isset($responseData['error']) && $responseData['error'] === 'session is finalized') {
-                    
+                if (
+                    isset($responseData['errorType']) && $responseData['errorType'] === 'bad_data' &&
+                    isset($responseData['error']) && $responseData['error'] === 'session is finalized'
+                ) {
+
                     // Even if the session is finalized, we should check the status
                     $paymentSession = $this->getPaymentSession($sessionId);
                     if ($paymentSession && $paymentSession->payment_id) {

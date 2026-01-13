@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\AdminPermission;
+use Spatie\Permission\Models\Permission;
 
 return [
 
@@ -15,7 +15,7 @@ return [
          * `Spatie\Permission\Contracts\Permission` contract.
          */
 
-        'permission' => AdminPermission::class,
+        'permission' => Permission::class,
 
         /*
          * When using the "HasRoles" trait from this package, we need to know which

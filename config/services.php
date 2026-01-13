@@ -36,5 +36,10 @@ return [
         'api_key' => env('OPENTOK_API_KEY'),
         'api_secret' => env('OPENTOK_API_SECRET'),
     ],
+    'tabby' => [
+        'api_base_url' => env('TABBY_API_BASE_URL', 'https://api.tabby.ai'),
+        'api_key' => env('TABBY_API_KEY'),
+        'merchant_code' => env('TABBY_MERCHANT_CODE'),
+    ],
 
 ];

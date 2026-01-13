@@ -26,23 +26,23 @@ class EditClient extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        if ($this->record->address) {
-            $this->record->address->update([
-                'country_id' => $data['country_id'] ?? null,
-                'state_id' => $data['state_id'] ?? null,
-                'city_id' => $data['city_id'] ?? null,
-            ]);
-        } else {
-            $address = Address::create([
-                'country_id' => $data['country_id'] ?? null,
-                'state_id' => $data['state_id'] ?? null,
-                'city_id' => $data['city_id'] ?? null,
-                'address' => '',
-            ]);
-            $data['address_id'] = $address->id;
-        }
+        // if ($this->record->address) {
+        //     $this->record->address->update([
+        //         'country_id' => $data['country_id'] ?? null,
+        //         'state_id' => $data['state_id'] ?? null,
+        //         'city_id' => $data['city_id'] ?? null,
+        //     ]);
+        // } else {
+        //     $address = Address::create([
+        //         'country_id' => $data['country_id'] ?? null,
+        //         'state_id' => $data['state_id'] ?? null,
+        //         'city_id' => $data['city_id'] ?? null,
+        //         'address' => '',
+        //     ]);
+        //     $data['address_id'] = $address->id;
+        // }
 
-        unset($data['country_id'], $data['state_id'], $data['city_id']);
+        // unset($data['country_id'], $data['state_id'], $data['city_id']);
 
         return $data;
     }

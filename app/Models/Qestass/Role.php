@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Qestass;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Role extends Model
 {
     use HasTranslations; 
+    protected $connection = 'qestass_app';
 
     protected $fillable = ['name'];
 
@@ -18,8 +19,8 @@ class Role extends Model
     {
         return json_encode($value, JSON_UNESCAPED_UNICODE);
     }
-    public function permissions()
-    {
-        return $this->hasMany(Permission::class);
-    }
+    // public function permissions()
+    // {
+    //     return $this->hasMany(Permission::class);
+    // }
 }
