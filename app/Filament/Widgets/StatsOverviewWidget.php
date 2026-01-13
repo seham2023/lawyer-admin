@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\User;
+use App\Models\Qestass\User;
 use App\Models\CaseRecord;
 use App\Models\Category;
 use App\Models\Payment;
