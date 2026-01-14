@@ -82,11 +82,14 @@ class PaymentSessionsRelationManager extends RelationManager
                     ->dateTime()
                     ->sortable(),
 
-                TextColumn::make('updated_at')
-                    ->label('Updated')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('web_url')
+                    ->label('Payment Link')
+                    ->url(fn(PaymentSession $record): ?string => $record->web_url)
+                    ->openUrlInNewTab()
+                    ->toggleable()
+                    ->limit(50)
+                    ->tooltip(fn(PaymentSession $record): ?string => $record->web_url),
+
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -199,14 +202,9 @@ class PaymentSessionsRelationManager extends RelationManager
 
                                 Notification::make()
                                     ->title('Tabby Session Created')
-                                    ->body('Payment session created successfully. Session ID: ' . $result['session_id'])
+                                    ->body('Payment session created successfully. Payment link sent via SMS. Session ID: ' . $result['session_id'])
                                     ->success()
                                     ->send();
-
-                                // Optionally send the payment link
-                                if (isset($result['session_id'])) {
-                                    $tabbyService->sendPaymentLink($result['session_id']);
-                                }
                             } else {
                                 Notification::make()
                                     ->title('Failed to Create Session')
@@ -230,11 +228,11 @@ class PaymentSessionsRelationManager extends RelationManager
                                 ->send();
                         }
                     }),
-                Tables\Actions\CreateAction::make(),
+                // Tables\Actions\CreateAction::make(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                // Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

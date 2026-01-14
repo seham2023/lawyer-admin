@@ -70,8 +70,6 @@ class TabbyPaymentService extends AbstractPaymentService
             'merchantCode' => $merchantCode ?? $this->merchantCode,
         ]);
         try {
-            $baseUrl = config('app.url');
-
             $payload = [
                 'payment' => [
                     'amount' => $this->formatAmount($amount, $currency),
@@ -88,9 +86,9 @@ class TabbyPaymentService extends AbstractPaymentService
                 ],
                 'merchant_code' => $merchantCode ?? $this->merchantCode,
                 'merchant_urls' => [
-                    'success' => $baseUrl . '/tabby/payment/success',
-                    'cancel' => $baseUrl . '/tabby/payment/cancel',
-                    'failure' => $baseUrl . '/tabby/payment/failure',
+                    'success' => route('tabby.payment.success'),
+                    'cancel' => route('tabby.payment.cancel'),
+                    'failure' => route('tabby.payment.failure'),
                 ],
             ];
 
@@ -103,10 +101,11 @@ class TabbyPaymentService extends AbstractPaymentService
                 'response' => $response->json(),
                 'payload' => $payload
             ]);
+
             if (!$response->successful()) {
                 Log::error('Tabby create session failed', [
                     'status' => $response->status(),
-                    'response' => $response->body(),
+                    'response' => $response->json(),
                     'payload' => $payload
                 ]);
 
@@ -121,6 +120,18 @@ class TabbyPaymentService extends AbstractPaymentService
 
             $responseData = $response->json();
 
+            // Extract web_url from the nested structure
+            // The web_url is located at: configuration.available_products.installments[0].web_url
+            $webUrl = null;
+            if (isset($responseData['configuration']['available_products']['installments'][0]['web_url'])) {
+                $webUrl = $responseData['configuration']['available_products']['installments'][0]['web_url'];
+            }
+
+            Log::info('Extracted web_url from Tabby response', [
+                'web_url' => $webUrl,
+                'session_id' => $responseData['id'] ?? null,
+            ]);
+
             // Save the payment session to database
             $paymentSession = $this->savePaymentSession([
                 'session_id' => $responseData['id'] ?? null,
@@ -132,16 +143,39 @@ class TabbyPaymentService extends AbstractPaymentService
                 'buyer_phone' => $buyerPhone,
                 'order_reference_id' => $orderReferenceId,
                 'merchant_code' => $merchantCode ?? $this->merchantCode,
-                'web_url' => $responseData['web_url'] ?? null,
+                'web_url' => $webUrl,
                 'response_data' => $responseData,
             ]);
+
+            // Automatically send payment link via SMS if status is 'created'
+            $sessionId = $responseData['id'];
+            $status = $responseData['status'];
+
+            if (strtolower($status) === 'created' && $sessionId) {
+                Log::info('Auto-sending payment link for created session', [
+                    'session_id' => $sessionId,
+                    'buyer_phone' => $buyerPhone,
+                ]);
+
+                // $linkSent = $this->sendPaymentLink($sessionId);
+
+                // if ($linkSent) {
+                //     Log::info('Payment link sent successfully', [
+                //         'session_id' => $sessionId,
+                //     ]);
+                // } else {
+                //     Log::warning('Failed to send payment link', [
+                //         'session_id' => $sessionId,
+                //     ]);
+                // }
+            }
 
             return [
                 'success' => true,
                 'status' => $responseData['status'],
                 'session_id' => $responseData['id'],
                 'payment_id' => $responseData['payment']['id'],
-                'web_url' => $responseData['web_url'] ?? null,
+                'web_url' => $webUrl,
                 'payment_session' => $paymentSession,
             ];
         } catch (\Exception $e) {
