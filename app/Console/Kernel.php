@@ -15,6 +15,12 @@ class Kernel extends ConsoleKernel
     {
         // Check payment statuses every 5 minutes
         $schedule->command(CheckPaymentStatuses::class)->everyFiveMinutes();
+
+        // Send scheduled reminders every minute
+        $schedule->command('reminders:send')->everyMinute();
+
+        // Cleanup old reminders daily at 2 AM
+        $schedule->command('reminders:cleanup --force')->dailyAt('02:00');
     }
 
     /**
@@ -22,7 +28,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

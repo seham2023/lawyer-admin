@@ -45,10 +45,22 @@ class User extends Authenticatable
     ];
   }
 
-  public function category(){
-    return $this->HasOne(Category::class);
+  public function category()
+  {
+    return $this->hasOne(Category::class);
   }
-  public function address(){
-    return $this->HasOne(Address::class);
+  public function address()
+  {
+    return $this->hasOne(Address::class);
+  }
+
+  public function settings()
+  {
+    return $this->hasMany(UserSetting::class);
+  }
+
+  public function reminders()
+  {
+    return $this->hasMany(Reminder::class);
   }
 }
