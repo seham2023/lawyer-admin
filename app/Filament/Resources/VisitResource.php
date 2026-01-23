@@ -21,8 +21,10 @@ class VisitResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
 
-    protected static ?string $navigationGroup = 'Client Management';
-
+ public static function getNavigationGroup(): ?string
+    {
+        return __('client_management');
+    }
     protected static ?int $navigationSort = 2;
 
     public static function getNavigationLabel(): string

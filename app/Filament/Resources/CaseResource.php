@@ -42,9 +42,8 @@ class CaseResource extends Resource
     }
     public static function getNavigationGroup(): ?string
     {
-        return __('legal_management');
+        return __('client_management');
     }
-
     public static function getPluralModelLabel(): string
     {
         return __('cases');
