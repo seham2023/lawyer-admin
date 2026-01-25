@@ -4,8 +4,9 @@ namespace App\Filament\Resources\LawyerTimeResource\Pages;
 
 use App\Filament\Resources\LawyerTimeResource;
 use App\Models\Qestass\Time;
-use App\Models\Qestass\Shift;
+use App\Models\Qestass\Interval;
 use Filament\Resources\Pages\CreateRecord;
+use Carbon\Carbon;
 
 class CreateLawyerTime extends CreateRecord
 {
@@ -21,7 +22,7 @@ class CreateLawyerTime extends CreateRecord
     {
         $userId = auth()->id();
 
-        // Delete existing times (and cascading shifts/intervals) for this user
+        // Delete existing times (and cascading intervals) for this user
         Time::where('user_id', $userId)->delete();
 
         // Process online days
@@ -34,17 +35,16 @@ class CreateLawyerTime extends CreateRecord
                         'user_id' => $userId,
                     ]);
 
-                    // Create shifts for this day (intervals will be auto-generated)
+                    // Generate intervals directly from shift time ranges
                     if (isset($dayData['shifts']) && is_array($dayData['shifts'])) {
                         foreach ($dayData['shifts'] as $shiftData) {
                             if (isset($shiftData['start_time']) && isset($shiftData['end_time'])) {
-                                Shift::create([
-                                    'start_time' => $shiftData['start_time'],
-                                    'end_time' => $shiftData['end_time'],
-                                    'time_id' => $time->id,
-                                    'user_id' => $userId,
-                                ]);
-                                // Intervals are auto-generated via Shift model boot method
+                                $this->generateIntervals(
+                                    $time->id,
+                                    $userId,
+                                    $shiftData['start_time'],
+                                    $shiftData['end_time']
+                                );
                             }
                         }
                     }
@@ -62,17 +62,16 @@ class CreateLawyerTime extends CreateRecord
                         'user_id' => $userId,
                     ]);
 
-                    // Create shifts for this day (intervals will be auto-generated)
+                    // Generate intervals directly from shift time ranges
                     if (isset($dayData['shifts']) && is_array($dayData['shifts'])) {
                         foreach ($dayData['shifts'] as $shiftData) {
                             if (isset($shiftData['start_time']) && isset($shiftData['end_time'])) {
-                                Shift::create([
-                                    'start_time' => $shiftData['start_time'],
-                                    'end_time' => $shiftData['end_time'],
-                                    'time_id' => $time->id,
-                                    'user_id' => $userId,
-                                ]);
-                                // Intervals are auto-generated via Shift model boot method
+                                $this->generateIntervals(
+                                    $time->id,
+                                    $userId,
+                                    $shiftData['start_time'],
+                                    $shiftData['end_time']
+                                );
                             }
                         }
                     }
@@ -82,6 +81,36 @@ class CreateLawyerTime extends CreateRecord
 
         // Return the first time record (or create a dummy one if none exist)
         return Time::where('user_id', $userId)->first() ?? new Time();
+    }
+
+    /**
+     * Generate 30-minute intervals for a given time range
+     */
+    protected function generateIntervals(int $timeId, int $userId, string $startTime, string $endTime): void
+    {
+        $start = Carbon::parse($startTime);
+        $end = Carbon::parse($endTime);
+        $intervalDuration = 30; // minutes
+
+        $current = $start->copy();
+
+        while ($current->lt($end)) {
+            $next = $current->copy()->addMinutes($intervalDuration);
+
+            // Don't exceed end time
+            if ($next->gt($end)) {
+                break;
+            }
+
+            Interval::create([
+                'from' => $current->format('H:i'),
+                'to' => $next->format('H:i'),
+                'time_id' => $timeId,
+                'user_id' => $userId,
+            ]);
+
+            $current = $next->copy();
+        }
     }
 
     protected function getRedirectUrl(): string

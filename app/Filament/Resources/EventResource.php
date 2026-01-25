@@ -11,8 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Forms\Components\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\EventResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\EventResource\RelationManagers;
+
 
 class EventResource extends Resource
 {

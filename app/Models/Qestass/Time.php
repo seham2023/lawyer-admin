@@ -18,11 +18,6 @@ class Time extends Model
         return $this->hasMany(Interval::class);
     }
 
-    public function shifts()
-    {
-        return $this->hasMany(Shift::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);

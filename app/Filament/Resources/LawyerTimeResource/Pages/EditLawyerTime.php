@@ -4,9 +4,10 @@ namespace App\Filament\Resources\LawyerTimeResource\Pages;
 
 use App\Filament\Resources\LawyerTimeResource;
 use App\Models\Qestass\Time;
-use App\Models\Qestass\Shift;
+use App\Models\Qestass\Interval;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Carbon\Carbon;
 
 class EditLawyerTime extends EditRecord
 {
@@ -23,8 +24,8 @@ class EditLawyerTime extends EditRecord
     {
         $userId = auth()->id();
 
-        // Load all times for this user with shifts
-        $times = Time::where('user_id', $userId)->with('shifts')->get();
+        // Load all times for this user with intervals
+        $times = Time::where('user_id', $userId)->with('intervals')->get();
 
         // Initialize days arrays
         $onlineDays = $this->getDefaultDays();
@@ -35,12 +36,8 @@ class EditLawyerTime extends EditRecord
             $dayIndex = $this->getDayIndex($time->day);
 
             if ($dayIndex !== null) {
-                $shifts = $time->shifts->map(function ($shift) {
-                    return [
-                        'start_time' => $shift->start_time,
-                        'end_time' => $shift->end_time,
-                    ];
-                })->toArray();
+                // Group intervals into shifts (consecutive intervals form a shift)
+                $shifts = $this->groupIntervalsIntoShifts($time->intervals);
 
                 if ($time->type === 'online') {
                     $onlineDays[$dayIndex] = [
@@ -64,6 +61,47 @@ class EditLawyerTime extends EditRecord
         ];
     }
 
+    /**
+     * Group consecutive intervals into shift time ranges
+     */
+    protected function groupIntervalsIntoShifts($intervals): array
+    {
+        if ($intervals->isEmpty()) {
+            return [];
+        }
+
+        $shifts = [];
+        $sortedIntervals = $intervals->sortBy('from')->values();
+
+        $currentShiftStart = $sortedIntervals[0]->from;
+        $currentShiftEnd = $sortedIntervals[0]->to;
+
+        for ($i = 1; $i < $sortedIntervals->count(); $i++) {
+            $interval = $sortedIntervals[$i];
+
+            // If this interval starts where the previous one ended, extend the shift
+            if ($interval->from === $currentShiftEnd) {
+                $currentShiftEnd = $interval->to;
+            } else {
+                // Gap detected, save current shift and start a new one
+                $shifts[] = [
+                    'start_time' => $currentShiftStart,
+                    'end_time' => $currentShiftEnd,
+                ];
+                $currentShiftStart = $interval->from;
+                $currentShiftEnd = $interval->to;
+            }
+        }
+
+        // Add the last shift
+        $shifts[] = [
+            'start_time' => $currentShiftStart,
+            'end_time' => $currentShiftEnd,
+        ];
+
+        return $shifts;
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // This won't be used since we're overriding handleRecordUpdate
@@ -74,7 +112,7 @@ class EditLawyerTime extends EditRecord
     {
         $userId = auth()->id();
 
-        // Delete existing times (and cascading shifts/intervals) for this user
+        // Delete existing times (and cascading intervals) for this user
         Time::where('user_id', $userId)->delete();
 
         // Process online days
@@ -87,17 +125,16 @@ class EditLawyerTime extends EditRecord
                         'user_id' => $userId,
                     ]);
 
-                    // Create shifts for this day (intervals will be auto-generated)
+                    // Generate intervals directly from shift time ranges
                     if (isset($dayData['shifts']) && is_array($dayData['shifts'])) {
                         foreach ($dayData['shifts'] as $shiftData) {
                             if (isset($shiftData['start_time']) && isset($shiftData['end_time'])) {
-                                Shift::create([
-                                    'start_time' => $shiftData['start_time'],
-                                    'end_time' => $shiftData['end_time'],
-                                    'time_id' => $time->id,
-                                    'user_id' => $userId,
-                                ]);
-                                // Intervals are auto-generated via Shift model boot method
+                                $this->generateIntervals(
+                                    $time->id,
+                                    $userId,
+                                    $shiftData['start_time'],
+                                    $shiftData['end_time']
+                                );
                             }
                         }
                     }
@@ -115,17 +152,16 @@ class EditLawyerTime extends EditRecord
                         'user_id' => $userId,
                     ]);
 
-                    // Create shifts for this day (intervals will be auto-generated)
+                    // Generate intervals directly from shift time ranges
                     if (isset($dayData['shifts']) && is_array($dayData['shifts'])) {
                         foreach ($dayData['shifts'] as $shiftData) {
                             if (isset($shiftData['start_time']) && isset($shiftData['end_time'])) {
-                                Shift::create([
-                                    'start_time' => $shiftData['start_time'],
-                                    'end_time' => $shiftData['end_time'],
-                                    'time_id' => $time->id,
-                                    'user_id' => $userId,
-                                ]);
-                                // Intervals are auto-generated via Shift model boot method
+                                $this->generateIntervals(
+                                    $time->id,
+                                    $userId,
+                                    $shiftData['start_time'],
+                                    $shiftData['end_time']
+                                );
                             }
                         }
                     }
@@ -134,6 +170,36 @@ class EditLawyerTime extends EditRecord
         }
 
         return $record;
+    }
+
+    /**
+     * Generate 30-minute intervals for a given time range
+     */
+    protected function generateIntervals(int $timeId, int $userId, string $startTime, string $endTime): void
+    {
+        $start = Carbon::parse($startTime);
+        $end = Carbon::parse($endTime);
+        $intervalDuration = 30; // minutes
+
+        $current = $start->copy();
+
+        while ($current->lt($end)) {
+            $next = $current->copy()->addMinutes($intervalDuration);
+
+            // Don't exceed end time
+            if ($next->gt($end)) {
+                break;
+            }
+
+            Interval::create([
+                'from' => $current->format('H:i'),
+                'to' => $next->format('H:i'),
+                'time_id' => $timeId,
+                'user_id' => $userId,
+            ]);
+
+            $current = $next->copy();
+        }
     }
 
     protected function getDefaultDays(): array

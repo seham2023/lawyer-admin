@@ -11,16 +11,11 @@ class Interval extends Model
 
     protected $connection = 'qestass_app';
 
-    protected $fillable = ['from', 'to', 'time_id', 'shift_id', 'user_id'];
+    protected $fillable = ['from', 'to', 'time_id', 'user_id'];
 
     public function time()
     {
         return $this->belongsTo(Time::class);
-    }
-
-    public function shift()
-    {
-        return $this->belongsTo(Shift::class);
     }
 
     public function user()
