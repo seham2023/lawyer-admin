@@ -17,13 +17,7 @@ class Messages extends Page
     protected static ?string $title = 'Messages';
 
     // Remove max-width constraint for full-width layout
-    protected static string $maxContentWidth = 'full';
-
-    // Remove padding for edge-to-edge layout
-    public function getContentTabLabel(): ?string
-    {
-        return null;
-    }
+    protected ?string $maxContentWidth = 'full';
 
     protected static ?int $navigationSort = 1;
 
