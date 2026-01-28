@@ -19,6 +19,7 @@ yarn-error.log
 /.vscode
 admin-dash-v1
 .black*
-backend
+backend/*
 android
 public/build2.zip
+!backend/nodejs-4/

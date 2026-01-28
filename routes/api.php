@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VideoCallController;
 use App\Http\Controllers\CallMessageController;
+use App\Http\Controllers\Api\ChatController;
 
 Route::middleware('auth:sanctum')->group(function () {
     // Video call endpoints
@@ -18,5 +19,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/call-messages/history', [CallMessageController::class, 'getChatHistory']);
     Route::get('/call-messages', [CallMessageController::class, 'getMessages']);
     Route::delete('/call-messages/{messageId}', [CallMessageController::class, 'deleteMessage']);
-});
 
+    // Chat/Messaging API endpoints
+    Route::prefix('chat')->group(function () {
+        Route::get('/rooms', [ChatController::class, 'getRooms']);
+        Route::get('/rooms/{roomId}/messages', [ChatController::class, 'getMessages']);
+        Route::post('/messages', [ChatController::class, 'sendMessage']);
+        Route::put('/rooms/{roomId}/read', [ChatController::class, 'markAsRead']);
+        Route::get('/unread-count', [ChatController::class, 'getUnreadCount']);
+        Route::post('/presence', [ChatController::class, 'updatePresence']);
+        Route::get('/presence/{userId}', [ChatController::class, 'getUserPresence']);
+    });
+});

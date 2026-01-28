@@ -51,6 +51,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                \App\Filament\Widgets\UnreadMessagesWidget::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
@@ -80,13 +81,27 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ;
+        ;
     }
 
 
-      public function register(): void
+    public function register(): void
     {
         parent::register();
+
+        // Add Socket.IO and custom scripts to head
+        FilamentView::registerRenderHook('panels::head.end', fn(): string => Blade::render('
+            <!-- Socket.IO Client -->
+            <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+            
+            <!-- Socket Client Wrapper -->
+            <script src="{{ asset(\'js/socket-client.js\') }}"></script>
+            
+            <!-- Meta tags for Socket.IO -->
+            <meta name="user-id" content="{{ auth()->id() }}">
+            <meta name="socket-url" content="{{ config(\'socket.url\', \'https://qestass.com:4888\') }}">
+        '));
+
         FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/css/admin.scss')"));
         // FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/css/demo.scss')"));
         FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/js/app.js')"));
