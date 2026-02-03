@@ -23,3 +23,4 @@ backend/*
 android
 public/build2.zip
 !backend/nodejs-4/
+.agent

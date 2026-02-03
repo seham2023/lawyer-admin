@@ -240,6 +240,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const userId = document.querySelector('meta[name="user-id"]')?.content;
     const socketUrl = document.querySelector('meta[name="socket-url"]')?.content || 'https://qestass.com:4888';
 
+    console.log('=== SOCKET.IO INITIALIZATION ===');
+    console.log('User ID:', userId);
+    console.log('Socket URL:', socketUrl);
+    console.log('================================');
+
     if (userId) {
         window.socket = new SocketClient(socketUrl, userId);
         window.socket.connect();
@@ -253,5 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('beforeunload', () => {
             window.socket.disconnect();
         });
+    } else {
+        console.error('ERROR: No user ID found in meta tags!');
     }
 });

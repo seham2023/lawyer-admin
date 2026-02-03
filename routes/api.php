@@ -5,7 +5,7 @@ use App\Http\Controllers\VideoCallController;
 use App\Http\Controllers\CallMessageController;
 use App\Http\Controllers\Api\ChatController;
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:web')->group(function () {
     // Video call endpoints
     Route::post('/video-calls/create-session', [VideoCallController::class, 'createSession']);
     Route::post('/video-calls/answer', [VideoCallController::class, 'answerCall']);

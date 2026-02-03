@@ -4215,16 +4215,16 @@
         },
         {
             "name": "opentok/opentok",
-            "version": "v4.21.0",
+            "version": "v4.21.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentok/OpenTok-PHP-SDK.git",
-                "reference": "387ee2649193ce992367e56acdd5977f978f6841"
+                "reference": "1ec5687ae0ea7e6c3b113c188cbade38feb28460"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentok/OpenTok-PHP-SDK/zipball/387ee2649193ce992367e56acdd5977f978f6841",
-                "reference": "387ee2649193ce992367e56acdd5977f978f6841",
+                "url": "https://api.github.com/repos/opentok/OpenTok-PHP-SDK/zipball/1ec5687ae0ea7e6c3b113c188cbade38feb28460",
+                "reference": "1ec5687ae0ea7e6c3b113c188cbade38feb28460",
                 "shasum": ""
             },
             "require": {
@@ -4281,9 +4281,9 @@
             "support": {
                 "email": "support@tokbox.com",
                 "issues": "https://github.com/opentok/Opentok-PHP-SDK/issues",
-                "source": "https://github.com/opentok/OpenTok-PHP-SDK/tree/v4.21.0"
+                "source": "https://github.com/opentok/OpenTok-PHP-SDK/tree/v4.21.1"
             },
-            "time": "2025-10-10T19:33:43+00:00"
+            "time": "2026-01-29T04:49:20+00:00"
         },
         {
             "name": "phpoption/phpoption",
