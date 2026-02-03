@@ -184,8 +184,12 @@
             });
         }
 
-        // Mark as read when viewing
-        @this.markAsRead();
+        // Mark as read when viewing (delay to ensure component is loaded)
+        setTimeout(() => {
+            if (@this && typeof @this.markAsRead === 'function') {
+                @this.markAsRead();
+            }
+        }, 100);
 
         // Listen for call initiation
         $wire.on('initiate-call', (event) => {
