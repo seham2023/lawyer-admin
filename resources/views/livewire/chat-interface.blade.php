@@ -18,6 +18,7 @@
             <div class="flex items-center gap-2">
                 {{-- Audio Call Button --}}
                 <button wire:click="initiateCall('audio')"
+                    onclick="console.log('Audio button clicked!'); alert('Audio button clicked!');"
                     class="p-2 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition"
                     title="{{ __('Audio Call') }}">
                     <x-heroicon-o-phone class="w-5 h-5" />
@@ -25,6 +26,7 @@
 
                 {{-- Video Call Button --}}
                 <button wire:click="initiateCall('video')"
+                    onclick="console.log('Video button clicked!'); alert('Video button clicked!');"
                     class="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
                     title="{{ __('Video Call') }}">
                     <x-heroicon-o-video-camera class="w-5 h-5" />
