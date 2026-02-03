@@ -99,7 +99,7 @@ class AdminPanelProvider extends PanelProvider
             
             <!-- Meta tags for Socket.IO -->
             <meta name="user-id" content="{{ auth()->id() }}">
-            <meta name="socket-url" content="{{ config(\'socket.url\', \'https://qestass.com:4888\') }}">
+            <meta name="socket-url" content="{{ env(\'SOCKET_URL\', \'https://qestass.com:4888\') }}">
         '));
 
         FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/css/admin.scss')"));

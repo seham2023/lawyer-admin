@@ -238,7 +238,7 @@ window.SocketClient = SocketClient;
 // Auto-connect when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     const userId = document.querySelector('meta[name="user-id"]')?.content;
-    const socketUrl = document.querySelector('meta[name="socket-url"]')?.content || 'https://qestass.com:4722';
+    const socketUrl = document.querySelector('meta[name="socket-url"]')?.content || 'https://qestass.com:4888';
 
     if (userId) {
         window.socket = new SocketClient(socketUrl, userId);

@@ -49,53 +49,54 @@
     {{-- Socket.IO Call Listener --}}
     @script
     <script>
-        // Listen for incoming calls from Socket.IO
-        if (window.socket) {
-            window.socket.on('call', (data) => {
-                console.log('Incoming call received:', data);
+        document.addEventListener('DOMContentLoaded', function () {
+            // Listen for incoming calls from Socket.IO
+            if (window.socket && window.socket.socket) {
+                window.socket.socket.on('call', (data) => {
+                    console.log('Incoming call received:', data);
 
-                if (data.status === 'start') {
-                    // Trigger Livewire component
-                    @this.dispatch('incoming-call', { callData: data });
+                    if (data.status === 'start') {
+                        // Trigger Livewire component
+                        @this.dispatch('incoming-call', { callData: data });
+                    }
+                });
+            }
+
+            // Handle accept call
+            $wire.on('accept-call', (event) => {
+                const callData = event.callData;
+
+                // Emit to Socket.IO that call was accepted
+                if (window.socket && window.socket.socket) {
+                    window.socket.socket.emit('call', {
+                        status: 'answer',
+                        room_id: callData.room_id,
+                        userId: {{ auth()->id() }},
+                        receiverId: callData.userId,
+                        callType: callData.callType,
+                        session_id: callData.session_id,
+                        token: callData.token
+                    });
+                }
+
+                // Open video call page or modal
+                window.open('/admin/video-call?session=' + callData.session_id, '_blank', 'width=1200,height=800');
+            });
+
+            // Handle reject call
+            $wire.on('reject-call', (event) => {
+                const callData = event.callData;
+
+                // Emit to Socket.IO that call was rejected
+                if (window.socket && window.socket.socket) {
+                    window.socket.socket.emit('call', {
+                        status: 'end',
+                        room_id: callData.room_id,
+                        userId: {{ auth()->id() }},
+                        receiverId: callData.userId
+                    });
                 }
             });
-        }
-
-        // Handle accept call
-        $wire.on('accept-call', (event) => {
-            const callData = event.callData;
-
-            // Emit to Socket.IO that call was accepted
-            if (window.socket) {
-                window.socket.emit('call', {
-                    status: 'answer',
-                    room_id: callData.room_id,
-                    userId: {{ auth()->id() }},
-                    receiverId: callData.userId,
-                    callType: callData.callType,
-                    session_id: callData.session_id,
-                    token: callData.token
-                });
-            }
-
-            // Open video call page or modal
-            // You can redirect to a dedicated call page or open a modal
-            window.open('/admin/video-call?session=' + callData.session_id, '_blank', 'width=1200,height=800');
-        });
-
-        // Handle reject call
-        $wire.on('reject-call', (event) => {
-            const callData = event.callData;
-
-            // Emit to Socket.IO that call was rejected
-            if (window.socket) {
-                window.socket.emit('call', {
-                    status: 'end',
-                    room_id: callData.room_id,
-                    userId: {{ auth()->id() }},
-                    receiverId: callData.userId
-                });
-            }
         });
     </script>
     @endscript

@@ -31,6 +31,11 @@ return [
         ],
     ],
 
+    'tokbox' => [
+        'api_key' => env('TOKBOX_API_KEY', '47723411'),
+        'api_secret' => env('TOKBOX_API_SECRET', '95d722d4d34dd4d46259a1d5837a18d07bc3b9d8'),
+    ],
+
     'opentok' => [
         'node_server_url' => env('OPENTOK_NODE_SERVER_URL', 'https://localhost:4722'),
         'api_key' => env('OPENTOK_API_KEY'),

@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Services\TokBoxService;
 use App\Services\SocketIOService;
 use App\Filament\Pages\Messages;
 use Livewire\Component;
@@ -12,38 +13,20 @@ class ChatInterface extends Component
 {
     use WithFileUploads;
 
-    public ?int $roomId = null;
+    public int $roomId;
     public array $messages = [];
     public string $newMessage = '';
     public $file;
-    public bool $isTyping = false;
-    public ?int $receiverId = null;
     public ?string $receiverName = null;
+    public ?int $receiverId = null;
 
-    protected $listeners = ['room-changed' => 'loadRoom'];
-
-    public function mount(?int $roomId = null): void
+    public function mount(): void
     {
-        if ($roomId) {
-            $this->roomId = $roomId;
-            $this->loadMessages();
-        }
-    }
-
-    #[On('room-changed')]
-    public function loadRoom(int $roomId): void
-    {
-        $this->roomId = $roomId;
         $this->loadMessages();
-        $this->markAsRead();
     }
 
     public function loadMessages(): void
     {
-        if (!$this->roomId) {
-            return;
-        }
-
         $service = app(SocketIOService::class);
         $this->messages = $service->getRoomMessages($this->roomId);
 
@@ -72,19 +55,26 @@ class ChatInterface extends Component
 
     public function sendMessage(): void
     {
-        if (empty(trim($this->newMessage)) && !$this->file) {
+        if (empty($this->newMessage) && !$this->file) {
             return;
         }
 
-        $content = $this->newMessage;
         $type = 'text';
+        $content = $this->newMessage;
 
         // Handle file upload
         if ($this->file) {
-            $filename = time() . '_' . $this->file->getClientOriginalName();
-            $this->file->storeAs('chat', $filename, 'public');
-            $content = $filename;
-            $type = $this->getFileType($this->file->getClientOriginalExtension());
+            $path = $this->file->store('chat-files', 'public');
+            $content = '/storage/' . $path;
+
+            $extension = $this->file->getClientOriginalExtension();
+            if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $type = 'image';
+            } elseif (in_array($extension, ['mp3', 'wav', 'ogg'])) {
+                $type = 'sound';
+            } else {
+                $type = 'file';
+            }
         }
 
         // Save to database
@@ -94,18 +84,20 @@ class ChatInterface extends Component
             'receiver_id' => $this->receiverId,
             'content' => $content,
             'type' => $type,
+            'is_read' => false,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Emit Socket.IO event (handled by JavaScript)
-        $this->dispatch('send-socket-message', [
-            'room_id' => $this->roomId,
-            'sender_id' => auth()->id(),
-            'receiver_id' => $this->receiverId,
-            'content' => $content,
-            'type' => $type,
-        ]);
+        // Send via Socket.IO
+        $service = app(SocketIOService::class);
+        $service->sendMessage(
+            $this->roomId,
+            auth()->id(),
+            $this->receiverId,
+            $content,
+            $type,
+        );
 
         $this->newMessage = '';
         $this->file = null;
@@ -124,28 +116,57 @@ class ChatInterface extends Component
         $this->dispatch('refresh-rooms')->to(Messages::class);
     }
 
-    public function updatedNewMessage(): void
+    public function handleTyping(): void
     {
+        // Emit typing event via Socket.IO
         $this->dispatch('user-typing', [
-            'room_id' => $this->roomId,
-            'receiver_id' => $this->receiverId,
+            'roomId' => $this->roomId,
+            'userId' => auth()->id()
         ]);
     }
 
-    protected function getFileType(string $extension): string
+    public function initiateCall(string $callType = 'video'): void
     {
-        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        $audioExtensions = ['mp3', 'wav', 'ogg', 'm4a'];
+        \Log::info('ChatInterface: initiateCall called', [
+            'callType' => $callType,
+            'roomId' => $this->roomId,
+            'receiverId' => $this->receiverId
+        ]);
 
-        if (in_array(strtolower($extension), $imageExtensions)) {
-            return 'image';
+        $tokboxService = app(TokBoxService::class);
+
+        // Create TokBox session
+        $sessionData = $tokboxService->createCallSession(auth()->id(), $this->receiverId);
+
+        \Log::info('ChatInterface: TokBox session created', [
+            'success' => $sessionData['success'] ?? false,
+            'sessionData' => $sessionData
+        ]);
+
+        if (!$sessionData['success']) {
+            \Log::error('ChatInterface: Failed to create call session');
+            $this->dispatch('call-error', message: 'Failed to create call session');
+            return;
         }
 
-        if (in_array(strtolower($extension), $audioExtensions)) {
-            return 'sound';
-        }
+        // Send call via Socket.IO
+        $socketService = app(SocketIOService::class);
 
-        return 'file';
+        $callData = [
+            'room_id' => $this->roomId,
+            'caller_id' => auth()->id(),
+            'receiver_id' => $this->receiverId,
+            'call_type' => $callType,
+            'session_id' => $sessionData['session_id'],
+            'api_key' => $sessionData['api_key'],
+            'caller_token' => $sessionData['lawyer_token'],
+            'receiver_token' => $sessionData['client_token'],
+        ];
+
+        \Log::info('ChatInterface: Dispatching initiate-call event', $callData);
+
+        // Emit call event
+        $this->dispatch('initiate-call', $callData);
     }
 
     public function render()
