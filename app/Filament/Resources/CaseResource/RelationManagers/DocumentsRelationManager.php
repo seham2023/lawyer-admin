@@ -32,11 +32,13 @@ public static function getTitle(Model $ownerRecord, string $pageClass): string
                     ->label(__('description'))
                     ->required()
                     ->columnSpanFull(),
-                     Forms\Components\FileUpload::make('file_path')
+                Forms\Components\FileUpload::make('file_path')
                     ->label(__('file_path'))
                     ->required()
-                    ->directory('case-documents')->columnSpanFull()
-                    ,
+                    ->acceptedFileTypes(['application/pdf', 'image/*'])
+                    ->maxSize(10240)
+                    ->directory('case-documents')
+                    ->columnSpanFull(),
             ]);
     }
 

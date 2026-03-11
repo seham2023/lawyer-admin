@@ -122,6 +122,8 @@ class ExpenseResource extends Resource
 
                         FileUpload::make('file_path')
                             ->label(__('file_path'))
+                            ->acceptedFileTypes(['application/pdf', 'image/*'])
+                            ->maxSize(10240)
                             ->directory('expenses'),
 
                         Textarea::make('reason')

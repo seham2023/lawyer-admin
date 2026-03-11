@@ -94,6 +94,8 @@ class EmailResource extends Resource
 
                         FileUpload::make('file_path')
                             ->label(__('file'))
+                            ->acceptedFileTypes(['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+                            ->maxSize(10240)
                             ->directory('emails'),
 
                         Select::make('priority')

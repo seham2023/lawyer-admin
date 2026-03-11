@@ -8,16 +8,24 @@ use App\Filament\Pages\Messages;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Locked;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ChatInterface extends Component
 {
     use WithFileUploads;
 
+    #[Locked]
     public int $roomId;
+    
     public array $messages = [];
     public string $newMessage = '';
     public $file;
     public ?string $receiverName = null;
+    
+    #[Locked]
     public ?int $receiverId = null;
 
     public function mount(): void
@@ -25,30 +33,36 @@ class ChatInterface extends Component
         $this->loadMessages();
     }
 
-    public function loadMessages(): void
+    protected function authorizeRoomAccess(): void
     {
-        $service = app(SocketIOService::class);
-        $this->messages = $service->getRoomMessages($this->roomId);
-
-        // Get receiver info from room
-        $room = \DB::connection('qestass_app')
+        $room = DB::connection('qestass_app')
             ->table('rooms')
             ->where('id', $this->roomId)
             ->first();
 
-        if ($room) {
-            $userId = auth()->id();
-            // Determine receiver: if current user is userone, receiver is usertwo, and vice versa
-            $this->receiverId = $room->userone_id == $userId ? $room->usertwo_id : $room->userone_id;
-
-            // Get receiver name
-            $receiver = \DB::connection('qestass_app')
-                ->table('users')
-                ->where('id', $this->receiverId)
-                ->first();
-
-            $this->receiverName = $receiver ? $receiver->first_name . ' ' . $receiver->last_name : 'Unknown';
+        if (!$room || ($room->userone_id != Auth::id() && $room->usertwo_id != Auth::id())) {
+            abort(403, 'Unauthorized access to chat room.');
         }
+
+        // Determine receiver: if current user is userone, receiver is usertwo, and vice versa
+        $userId = Auth::id();
+        $this->receiverId = $room->userone_id == $userId ? $room->usertwo_id : $room->userone_id;
+    }
+
+    public function loadMessages(): void
+    {
+        $this->authorizeRoomAccess();
+
+        $service = app(SocketIOService::class);
+        $this->messages = $service->getRoomMessages($this->roomId);
+
+        // Get receiver name
+        $receiver = DB::connection('qestass_app')
+            ->table('users')
+            ->where('id', $this->receiverId)
+            ->first();
+
+        $this->receiverName = $receiver ? $receiver->first_name . ' ' . $receiver->last_name : 'Unknown';
 
         $this->dispatch('messages-loaded');
     }
@@ -59,18 +73,26 @@ class ChatInterface extends Component
             return;
         }
 
+        $this->authorizeRoomAccess();
+
+        $this->validate([
+            'newMessage' => 'nullable|string',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp3,wav,ogg,pdf,doc,docx|max:10240', // 10MB limit
+        ]);
+
         $type = 'text';
         $content = $this->newMessage;
 
         // Handle file upload
         if ($this->file) {
+            // Store with a unique, non-original name
             $path = $this->file->store('chat-files', 'public');
             $content = '/storage/' . $path;
 
             $extension = $this->file->getClientOriginalExtension();
-            if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+            if (in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 $type = 'image';
-            } elseif (in_array($extension, ['mp3', 'wav', 'ogg'])) {
+            } elseif (in_array(strtolower($extension), ['mp3', 'wav', 'ogg'])) {
                 $type = 'sound';
             } else {
                 $type = 'file';
@@ -78,9 +100,9 @@ class ChatInterface extends Component
         }
 
         // Save to database
-        \DB::connection('qestass_app')->table('room_messages')->insert([
+        DB::connection('qestass_app')->table('room_messages')->insert([
             'room_id' => $this->roomId,
-            'sender_id' => auth()->id(),
+            'sender_id' => Auth::id(),
             'receiver_id' => $this->receiverId,
             'content' => $content,
             'type' => $type,
@@ -93,7 +115,7 @@ class ChatInterface extends Component
         $service = app(SocketIOService::class);
         $service->sendMessage(
             $this->roomId,
-            auth()->id(),
+            Auth::id(),
             $this->receiverId,
             $content,
             $type,
@@ -111,8 +133,10 @@ class ChatInterface extends Component
             return;
         }
 
+        $this->authorizeRoomAccess();
+
         $service = app(SocketIOService::class);
-        $service->markAsRead($this->roomId, auth()->id());
+        $service->markAsRead($this->roomId, Auth::id());
         $this->dispatch('refresh-rooms')->to(Messages::class);
     }
 
@@ -121,13 +145,15 @@ class ChatInterface extends Component
         // Emit typing event via Socket.IO
         $this->dispatch('user-typing', [
             'roomId' => $this->roomId,
-            'userId' => auth()->id()
+            'userId' => Auth::id()
         ]);
     }
 
     public function initiateCall(string $callType = 'video'): void
     {
-        \Log::info('ChatInterface: initiateCall called', [
+        $this->authorizeRoomAccess();
+
+        Log::info('ChatInterface: initiateCall called', [
             'callType' => $callType,
             'roomId' => $this->roomId,
             'receiverId' => $this->receiverId
@@ -136,15 +162,15 @@ class ChatInterface extends Component
         $tokboxService = app(TokBoxService::class);
 
         // Create TokBox session
-        $sessionData = $tokboxService->createCallSession(auth()->id(), $this->receiverId);
+        $sessionData = $tokboxService->createCallSession(Auth::id(), $this->receiverId);
 
-        \Log::info('ChatInterface: TokBox session created', [
+        Log::info('ChatInterface: TokBox session created', [
             'success' => $sessionData['success'] ?? false,
             'sessionData' => $sessionData
         ]);
 
         if (!$sessionData['success']) {
-            \Log::error('ChatInterface: Failed to create call session');
+            Log::error('ChatInterface: Failed to create call session');
             $this->dispatch('call-error', message: 'Failed to create call session');
             return;
         }
@@ -154,7 +180,7 @@ class ChatInterface extends Component
 
         $callData = [
             'room_id' => $this->roomId,
-            'caller_id' => auth()->id(),
+            'caller_id' => Auth::id(),
             'receiver_id' => $this->receiverId,
             'call_type' => $callType,
             'session_id' => $sessionData['session_id'],
@@ -163,7 +189,7 @@ class ChatInterface extends Component
             'receiver_token' => $sessionData['client_token'],
         ];
 
-        \Log::info('ChatInterface: Dispatching initiate-call event', $callData);
+        Log::info('ChatInterface: Dispatching initiate-call event', $callData);
 
         // Emit call event
         $this->dispatch('initiate-call', $callData);

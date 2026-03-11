@@ -138,6 +138,7 @@ class PaymentResource extends Resource
                         Forms\Components\FileUpload::make('image')
                             ->label(__('Payment Receipt'))
                             ->image()
+                            ->maxSize(10240)
                             ->directory('payment-receipts')
                             ->nullable(),
                     ])->columns(2),

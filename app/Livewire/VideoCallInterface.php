@@ -4,10 +4,12 @@ namespace App\Livewire;
 
 use App\Models\VideoCall;
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Illuminate\Support\Facades\Auth;
 
 class VideoCallInterface extends Component
 {
+    #[Locked]
     public $callId;
     public $videoCall;
     public $sessionId;

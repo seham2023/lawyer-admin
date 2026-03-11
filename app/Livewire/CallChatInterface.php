@@ -5,10 +5,12 @@ namespace App\Livewire;
 use App\Models\VideoCall;
 use App\Models\CallMessage;
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Illuminate\Support\Facades\Auth;
 
 class CallChatInterface extends Component
 {
+    #[Locked]
     public $callId;
     public $videoCall;
     public $messages = [];

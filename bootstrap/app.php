@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\HardenLivewireRequests::class,
+        ]);
+
         // Redirect unauthenticated users to Filament login
         $middleware->redirectGuestsTo(fn() => route('filament.admin.auth.login'));
     })
