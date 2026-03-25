@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Visit extends Model
 {
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'user_id',
         'client_id',

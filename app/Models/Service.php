@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Service extends Model
 {
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'period',
         'price',
