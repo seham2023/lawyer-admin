@@ -22,12 +22,14 @@ class VideoCall extends Page
     public ?string $token = null;
     public ?string $apiKey = null;
     public ?string $callType = 'video';
+    public ?int $uid = null;
 
     public function mount(): void
     {
         $this->sessionId = request()->query('session');
         $this->token = request()->query('token');
-        $this->apiKey = request()->query('apiKey', config('services.tokbox.api_key', '47723411'));
+        $this->apiKey = request()->query('apiKey', config('services.agora.app_id'));
         $this->callType = request()->query('callType', 'video');
+        $this->uid = auth()->id() ?? 0;
     }
 }

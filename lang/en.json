@@ -209,6 +209,7 @@
     "last_name": "Last Name",
     "Gender": "Gender",
     "Address": "Address",
+    "identity_number": "Identity Number",
     "payment_status": "Payment Status",
     "Details": "Details",
     "Payments": "Payments",
@@ -396,5 +397,16 @@
     "reminders.metadata": "Details",
     "reminders.logs": "Delivery Logs",
     "reminders.send_now": "Send Now",
-    "reminders.cancel": "Cancel Reminder"
+    "reminders.cancel": "Cancel Reminder",
+    "admins": "Admins",
+    "admin": "Admin",
+    "admin_management": "Admin Management",
+    "admin_information": "Admin Information",
+    "country_key": "Country Key",
+    "permissions": "Permissions",
+    "services": "Services",
+    "Services": "Services",
+    "Service": "Service",
+    "Service Name": "Service Name",
+    "Period (Minutes)": "Period (Minutes)"
 }

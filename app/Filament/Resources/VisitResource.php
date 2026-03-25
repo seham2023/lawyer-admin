@@ -63,75 +63,90 @@ class VisitResource extends Resource
                             ->default(now())
                             ->native(false),
 
+                        Forms\Components\Select::make('status_id')
+                            ->label(__('Status'))
+                            ->options(Status::where('type', 'visit')->pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->native(false),
+
+                        Forms\Components\Select::make('services')
+                            ->multiple()
+                            ->relationship('services', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->label(__('Services'))
+                            ->columnSpanFull(),
+
                         Forms\Components\TextInput::make('purpose')
                             ->label(__('Purpose'))
                             ->required()
                             ->maxLength(255)
                             ->columnSpanFull(),
 
-                        Forms\Components\Textarea::make('notes')
-                            ->label(__('Notes'))
-                            ->rows(4)
-                            ->columnSpanFull(),
+                        // Forms\Components\Textarea::make('notes')
+                        //     ->label(__('Notes'))
+                        //     ->rows(4)
+                        //     ->columnSpanFull(),
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make(__('Payment Information'))
-                    ->schema([
-                        Forms\Components\Select::make('currency_id')
-                            ->label(__('Currency'))
-                            ->options(Currency::all()->pluck('name', 'id'))
-                            ->searchable()
-                            ->required()
-                            ->default(1)
-                            ->reactive(),
+                // Forms\Components\Section::make(__('Payment Information'))
+                //     ->schema([
+                //         Forms\Components\Select::make('currency_id')
+                //             ->label(__('Currency'))
+                //             ->options(Currency::all()->pluck('name', 'id'))
+                //             ->searchable()
+                //             ->required()
+                //             ->default(1)
+                //             ->reactive(),
 
-                        Forms\Components\TextInput::make('amount')
-                            ->label(__('Amount'))
-                            ->numeric()
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                $tax = $get('tax') ?? 0;
-                                $amount = $state ?? 0;
-                                $total = $amount + ($amount * $tax / 100);
-                                $set('total_after_tax', $total);
-                            }),
+                //         Forms\Components\TextInput::make('amount')
+                //             ->label(__('Amount'))
+                //             ->numeric()
+                //             ->required()
+                //             ->reactive()
+                //             ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                //                 $tax = $get('tax') ?? 0;
+                //                 $amount = $state ?? 0;
+                //                 $total = $amount + ($amount * $tax / 100);
+                //                 $set('total_after_tax', $total);
+                //             }),
 
-                        Forms\Components\TextInput::make('tax')
-                            ->label(__('Tax') . ' (%)')
-                            ->numeric()
-                            ->default(0)
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                $amount = $get('amount') ?? 0;
-                                $tax = $state ?? 0;
-                                $total = $amount + ($amount * $tax / 100);
-                                $set('total_after_tax', $total);
-                            }),
+                //         Forms\Components\TextInput::make('tax')
+                //             ->label(__('Tax') . ' (%)')
+                //             ->numeric()
+                //             ->default(0)
+                //             ->reactive()
+                //             ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                //                 $amount = $get('amount') ?? 0;
+                //                 $tax = $state ?? 0;
+                //                 $total = $amount + ($amount * $tax / 100);
+                //                 $set('total_after_tax', $total);
+                //             }),
 
-                        Forms\Components\TextInput::make('total_after_tax')
-                            ->label(__('Total After Tax'))
-                            ->numeric()
-                            ->disabled()
-                            ->dehydrated(false),
+                //         Forms\Components\TextInput::make('total_after_tax')
+                //             ->label(__('Total After Tax'))
+                //             ->numeric()
+                //             ->disabled()
+                //             ->dehydrated(false),
 
-                        Forms\Components\Select::make('pay_method_id')
-                            ->label(__('Payment Method'))
-                            ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
-                            ->searchable()
-                            ->native(false),
+                //         Forms\Components\Select::make('pay_method_id')
+                //             ->label(__('Payment Method'))
+                //             ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
+                //             ->searchable()
+                //             ->native(false),
 
-                        Forms\Components\Select::make('payment_status_id')
-                            ->label(__('Payment Status'))
-                            ->options(Status::where('type', 'payment')->pluck('name', 'id'))
-                            ->searchable()
-                            ->default(1)
-                            ->native(false),
-                    ])
-                    ->columns(2)
-                    ->collapsible()
-                    ->collapsed(),
+                //         Forms\Components\Select::make('payment_status_id')
+                //             ->label(__('Payment Status'))
+                //             ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                //             ->searchable()
+                //             ->default(1)
+                //             ->native(false),
+                //     ])
+                //     ->columns(2)
+                //     ->collapsible()
+                //     ->collapsed(),
             ]);
     }
 
@@ -151,6 +166,11 @@ class VisitResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('status.name')
+                    ->label(__('Status'))
+                    ->sortable()
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('purpose')
                     ->label(__('Purpose'))
@@ -277,7 +297,7 @@ class VisitResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('user_id', auth()->id())
+            ->where('user_id', auth()->user()->id)
             ->with(['client', 'payment.paymentDetails']);
     }
 }

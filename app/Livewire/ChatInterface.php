@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Services\TokBoxService;
+use App\Services\AgoraService;
 use App\Services\SocketIOService;
 use App\Filament\Pages\Messages;
 use Livewire\Component;
@@ -159,12 +159,12 @@ class ChatInterface extends Component
             'receiverId' => $this->receiverId
         ]);
 
-        $tokboxService = app(TokBoxService::class);
+        $agoraService = app(AgoraService::class);
 
-        // Create TokBox session
-        $sessionData = $tokboxService->createCallSession(Auth::id(), $this->receiverId);
+        // Create Agora session
+        $sessionData = $agoraService->createCallSession(Auth::id(), $this->receiverId, $this->roomId);
 
-        Log::info('ChatInterface: TokBox session created', [
+        Log::info('ChatInterface: Agora session created', [
             'success' => $sessionData['success'] ?? false,
             'sessionData' => $sessionData
         ]);

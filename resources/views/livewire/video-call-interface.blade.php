@@ -103,50 +103,56 @@
     @endif
 
     @push('scripts')
-    <script src="https://static.opentok.com/v2/js/opentok.min.js"></script>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <script>
-        // OpenTok initialization will be handled here
-        const apiKey = "{{ $apiKey }}";
-        const sessionId = "{{ $sessionId }}";
+        // Agora Initialization
+        const appId = "{{ $apiKey }}"; // Using apiKey variable for appId
+        const channelName = "{{ $sessionId }}"; // Using sessionId for channelName
         const token = "{{ $token }}";
         const callType = "{{ $callType }}";
 
-        let session;
-        let publisher;
-        let subscriber;
+        let client;
+        let localAudioTrack;
+        let localVideoTrack;
 
-        // Initialize OpenTok session
-        function initializeSession() {
-            session = OT.initSession(apiKey, sessionId);
+        async function initializeSession() {
+            client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-            // Subscribe to streams
-            session.on('streamCreated', function(event) {
-                subscriber = session.subscribe(event.stream, 'subscriber', {
-                    audioVolume: 100,
-                    videoSource: callType === 'video' ? 'camera' : null,
-                });
-            });
-
-            // Connect to session
-            session.connect(token, function(error) {
-                if (error) {
-                    console.error('Failed to connect:', error);
-                } else {
-                    // Publish local stream
-                    publisher = OT.initPublisher('publisher', {
-                        audioSource: true,
-                        videoSource: callType === 'video' ? 'camera' : null,
-                        width: 160,
-                        height: 120,
-                    });
-
-                    session.publish(publisher, function(error) {
-                        if (error) {
-                            console.error('Failed to publish:', error);
-                        }
-                    });
+            // Subscribe to remote streams
+            client.on("user-published", async (user, mediaType) => {
+                await client.subscribe(user, mediaType);
+                if (mediaType === "video") {
+                    const remoteVideoTrack = user.videoTrack;
+                    const remotePlayerContainer = document.getElementById("subscriber");
+                    remoteVideoTrack.play(remotePlayerContainer);
+                }
+                if (mediaType === "audio") {
+                    const remoteAudioTrack = user.audioTrack;
+                    remoteAudioTrack.play();
                 }
             });
+
+            client.on("user-unpublished", (user) => {
+                // Handled automatically
+            });
+
+            try {
+                // Random UID 0 allows Agora to assign one
+                await client.join(appId, channelName, token, 0);
+
+                // Publish local stream
+                if (callType === 'video') {
+                    [localAudioTrack, localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+                    localVideoTrack.play(document.getElementById("publisher"));
+                    await client.publish([localAudioTrack, localVideoTrack]);
+                } else {
+                    localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                    await client.publish([localAudioTrack]);
+                }
+                console.log("Publish success!");
+            } catch (error) {
+                console.error('Failed to connect or publish:', error);
+            }
         }
 
         // Initialize on page load
@@ -154,21 +160,21 @@
 
         // Listen for Livewire events
         Livewire.on('muteToggled', (isMuted) => {
-            if (publisher) {
-                publisher.publishAudio(!isMuted);
+            if (localAudioTrack) {
+                localAudioTrack.setMuted(isMuted);
             }
         });
 
         Livewire.on('videoToggled', (isOn) => {
-            if (publisher) {
-                publisher.publishVideo(isOn);
+            if (localVideoTrack) {
+                localVideoTrack.setMuted(!isOn);
             }
         });
 
-        Livewire.on('callEnded', () => {
-            if (session) {
-                session.disconnect();
-            }
+        Livewire.on('callEnded', async () => {
+            if (localAudioTrack) { localAudioTrack.close(); }
+            if (localVideoTrack) { localVideoTrack.close(); }
+            if (client) { await client.leave(); }
             window.location.href = '/admin/video-calls';
         });
     </script>

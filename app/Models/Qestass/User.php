@@ -2,20 +2,21 @@
 
 namespace App\Models\Qestass;
 
+use App\Models\Service;
+use App\Models\SMS;
 use App\Traits\DeviceTrait;
 use App\Traits\ReportTrait;
 use App\Traits\SmsTrait;
+use App\Traits\Uploadable;
+use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Passport\HasApiTokens;
-use App\Traits\Uploadable;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\File;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\SMS;
-use Filament\Models\Contracts\HasName;
 
 
 class User extends Authenticatable implements HasName
@@ -429,6 +430,11 @@ class User extends Authenticatable implements HasName
         $defaultDb = config('database.connections.' . config('database.default') . '.database');
         return $this->hasMany(\App\Models\CaseRecord::class, 'client_id', 'id')
             ->from($defaultDb . '.case_records');
+    }
+
+    public function adminPermissions()
+    {
+        return $this->belongsToMany(\App\Models\Qestass\AdminPermission::class, 'user_admin_permissions', 'user_id', 'admin_permission_id');
     }
 
     public function payments()

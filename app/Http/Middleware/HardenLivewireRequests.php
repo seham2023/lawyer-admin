@@ -71,7 +71,7 @@ class HardenLivewireRequests
         $jsonString = json_encode($input);
         
         foreach ($maliciousPatterns as $pattern) {
-            if (preg_match('/' . $pattern . '/i', $jsonString)) {
+            if (preg_match('#' . $pattern . '#i', $jsonString)) {
                 return true;
             }
         }

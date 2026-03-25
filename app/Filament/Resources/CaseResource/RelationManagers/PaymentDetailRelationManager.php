@@ -21,6 +21,16 @@ class PaymentDetailRelationManager extends RelationManager
     {
         return __('payments');
     }
+
+    public static function getModelLabel(): string
+    {
+        return __('Payment Details');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('payments');
+    }
     public function form(Form $form): Form
     {
         return $form

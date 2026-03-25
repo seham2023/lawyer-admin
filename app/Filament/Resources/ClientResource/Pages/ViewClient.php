@@ -7,9 +7,10 @@ use App\Filament\Resources\ClientResource;
 use App\Models\Currency;
 use App\Models\Status;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
+use Filament\Forms\Components\Select;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\HtmlString;
 
 class ViewClient extends ViewRecord
@@ -33,64 +34,75 @@ class ViewClient extends ViewRecord
                         ->label(__('Purpose'))
                         ->required()
                         ->maxLength(255),
-                    \Filament\Forms\Components\Textarea::make('notes')
-                        ->label(__('Notes'))
-                        ->rows(3)
-                        ->columnSpanFull(),
+                   
+             Select::make('status_id')
+                    ->label(__('status'))
+                    ->options(Status::where('type', 'visit')->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->native(false),
+                    Select::make('services')
+                            ->multiple()
+                            ->relationship('services', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->label(__('Services'))
+                            ->columnSpanFull(),
 
                     // Payment Section
-                    \Filament\Forms\Components\Section::make(__('Payment Information'))
-                        ->schema([
-                            \Filament\Forms\Components\Select::make('currency_id')
-                                ->label(__('Currency'))
-                                ->options(Currency::all()->pluck('name', 'id'))
-                                ->searchable()
-                                ->required()
-                                ->default(1),
+                    // \Filament\Forms\Components\Section::make(__('Payment Information'))
+                    //     ->schema([
+                    //         \Filament\Forms\Components\Select::make('currency_id')
+                    //             ->label(__('Currency'))
+                    //             ->options(Currency::all()->pluck('name', 'id'))
+                    //             ->searchable()
+                    //             ->required()
+                    //             ->default(1),
 
-                            \Filament\Forms\Components\TextInput::make('amount')
-                                ->label(__('Amount'))
-                                ->numeric()
-                                ->required()
-                                ->reactive()
-                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                    $tax = $get('tax') ?? 0;
-                                    $amount = $state ?? 0;
-                                    $total = $amount + ($amount * $tax / 100);
-                                    $set('total_after_tax', $total);
-                                }),
+                    //         \Filament\Forms\Components\TextInput::make('amount')
+                    //             ->label(__('Amount'))
+                    //             ->numeric()
+                    //             ->required()
+                    //             ->reactive()
+                    //             ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                    //                 $tax = $get('tax') ?? 0;
+                    //                 $amount = $state ?? 0;
+                    //                 $total = $amount + ($amount * $tax / 100);
+                    //                 $set('total_after_tax', $total);
+                    //             }),
 
-                            \Filament\Forms\Components\TextInput::make('tax')
-                                ->label(__('Tax') . ' (%)')
-                                ->numeric()
-                                ->default(0)
-                                ->reactive()
-                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                    $amount = $get('amount') ?? 0;
-                                    $tax = $state ?? 0;
-                                    $total = $amount + ($amount * $tax / 100);
-                                    $set('total_after_tax', $total);
-                                }),
+                    //         \Filament\Forms\Components\TextInput::make('tax')
+                    //             ->label(__('Tax') . ' (%)')
+                    //             ->numeric()
+                    //             ->default(0)
+                    //             ->reactive()
+                    //             ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                    //                 $amount = $get('amount') ?? 0;
+                    //                 $tax = $state ?? 0;
+                    //                 $total = $amount + ($amount * $tax / 100);
+                    //                 $set('total_after_tax', $total);
+                    //             }),
 
-                            \Filament\Forms\Components\TextInput::make('total_after_tax')
-                                ->label(__('Total After Tax'))
-                                ->numeric()
-                                ->disabled()
-                                ->dehydrated(false),
+                    //         \Filament\Forms\Components\TextInput::make('total_after_tax')
+                    //             ->label(__('Total After Tax'))
+                    //             ->numeric()
+                    //             ->disabled()
+                    //             ->dehydrated(false),
 
-                            \Filament\Forms\Components\Select::make('pay_method_id')
-                                ->label(__('Payment Method'))
-                                ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
-                                ->searchable(),
+                    //         \Filament\Forms\Components\Select::make('pay_method_id')
+                    //             ->label(__('Payment Method'))
+                    //             ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
+                    //             ->searchable(),
 
-                            \Filament\Forms\Components\Select::make('payment_status_id')
-                                ->label(__('Payment Status'))
-                                ->options(Status::where('type', 'payment')->pluck('name', 'id'))
-                                ->searchable()
-                                ->default(1),
-                        ])
-                        ->columns(2)
-                        ->collapsible(),
+                    //         \Filament\Forms\Components\Select::make('payment_status_id')
+                    //             ->label(__('Payment Status'))
+                    //             ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                    //             ->searchable()
+                    //             ->default(1),
+                    //     ])
+                    //     ->columns(2)
+                    //     ->collapsible(),
                 ])
                 ->action(function (array $data) {
                     // Create visit

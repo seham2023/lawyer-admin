@@ -42,99 +42,70 @@
         </div>
     </div>
 
-    {{-- TokBox SDK --}}
-    <script src="https://static.opentok.com/v2/js/opentok.min.js"></script>
+    {{-- Agora SDK --}}
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
 
     <script>
-        // TokBox Configuration
-        const apiKey = '{{ $apiKey }}';
-        const sessionId = '{{ $sessionId }}';
+        // Agora Configuration
+        const appId = '{{ $apiKey }}'; // Using apiKey logic as appId mapping
+        const channelName = '{{ $sessionId }}'; // sessionId mapped to channelName
         const token = '{{ $token }}';
         const callType = '{{ $callType }}';
 
-        let session;
-        let publisher;
-        let subscriber;
+        let client;
+        let localAudioTrack;
+        let localVideoTrack;
         let audioEnabled = true;
         let videoEnabled = true;
 
-        // Initialize TokBox Session
-        function initializeSession() {
-            session = OT.initSession(apiKey, sessionId);
+        async function initializeSession() {
+            client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-            // Create Publisher (Local Video/Audio)
-            const publisherOptions = {
-                insertMode: 'append',
-                width: '100%',
-                height: '100%',
-                publishAudio: true,
-                publishVideo: callType === 'video',
-                style: {
-                    buttonDisplayMode: 'off'
-                }
-            };
-
-            publisher = OT.initPublisher('publisher', publisherOptions, (error) => {
-                if (error) {
-                    console.error('Error initializing publisher:', error);
-                    updateCallStatus('Error: ' + error.message);
-                } else {
-                    console.log('Publisher initialized');
-                }
-            });
-
-            // Subscribe to Remote Stream
-            session.on('streamCreated', (event) => {
-                console.log('Remote stream created');
+            // Subscribe to remote stream
+            client.on("user-published", async (user, mediaType) => {
+                await client.subscribe(user, mediaType);
                 updateCallStatus('Connected');
 
-                const subscriberOptions = {
-                    insertMode: 'append',
-                    width: '100%',
-                    height: '100%',
-                    style: {
-                        buttonDisplayMode: 'off'
-                    }
-                };
-
-                subscriber = session.subscribe(
-                    event.stream,
-                    'subscriber',
-                    subscriberOptions,
-                    (error) => {
-                        if (error) {
-                            console.error('Error subscribing:', error);
-                        }
-                    }
-                );
+                if (mediaType === "video") {
+                    const remoteVideoTrack = user.videoTrack;
+                    const subscriberDiv = document.getElementById('subscriber');
+                    remoteVideoTrack.play(subscriberDiv);
+                }
+                if (mediaType === "audio") {
+                    const remoteAudioTrack = user.audioTrack;
+                    remoteAudioTrack.play();
+                }
             });
 
-            // Handle Stream Destroyed
-            session.on('streamDestroyed', (event) => {
-                console.log('Stream destroyed:', event.reason);
+            client.on("user-unpublished", (user) => {
+                updateCallStatus('Participant left');
+            });
+
+            client.on("user-left", (user) => {
                 updateCallStatus('Call ended');
-                setTimeout(() => {
-                    window.close();
-                }, 2000);
+                setTimeout(() => window.close(), 2000);
             });
 
             // Connect to Session
-            session.connect(token, (error) => {
-                if (error) {
-                    console.error('Error connecting:', error);
-                    updateCallStatus('Connection failed');
-                } else {
-                    console.log('Connected to session');
-                    updateCallStatus('Waiting for other participant...');
+            try {
+                // Join channel using the authenticated user's ID
+                const uid = {{ $uid ?? 0 }};
+                await client.join(appId, channelName, token, uid);
+                updateCallStatus('Waiting for other participant...');
 
-                    // Publish local stream
-                    session.publish(publisher, (error) => {
-                        if (error) {
-                            console.error('Error publishing:', error);
-                        }
-                    });
+                // Publish local tracks
+                if (callType === 'video') {
+                    [localAudioTrack, localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+                    localVideoTrack.play(document.getElementById('publisher'));
+                    await client.publish([localAudioTrack, localVideoTrack]);
+                } else {
+                    localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                    await client.publish([localAudioTrack]);
                 }
-            });
+            } catch (error) {
+                console.error('Error connecting to Agora:', error);
+                updateCallStatus('Connection failed: ' + error.message);
+            }
         }
 
         // Update Call Status
@@ -145,7 +116,9 @@
         // Mute/Unmute Audio
         document.getElementById('muteAudio').addEventListener('click', () => {
             audioEnabled = !audioEnabled;
-            publisher.publishAudio(audioEnabled);
+            if (localAudioTrack) {
+                localAudioTrack.setMuted(!audioEnabled);
+            }
 
             const btn = document.getElementById('muteAudio');
             if (audioEnabled) {
@@ -161,7 +134,9 @@
         @if($callType === 'video')
             document.getElementById('toggleVideo').addEventListener('click', () => {
                 videoEnabled = !videoEnabled;
-                publisher.publishVideo(videoEnabled);
+                if (localVideoTrack) {
+                    localVideoTrack.setMuted(!videoEnabled);
+                }
 
                 const btn = document.getElementById('toggleVideo');
                 if (videoEnabled) {
@@ -175,18 +150,17 @@
         @endif
 
         // End Call
-        document.getElementById('endCall').addEventListener('click', () => {
-            if (session) {
-                session.disconnect();
-            }
+        document.getElementById('endCall').addEventListener('click', async () => {
+            if (localAudioTrack) localAudioTrack.close();
+            if (localVideoTrack) localVideoTrack.close();
+            if (client) await client.leave();
+
             updateCallStatus('Call ended');
-            setTimeout(() => {
-                window.close();
-            }, 1000);
+            setTimeout(() => window.close(), 1000);
         });
 
         // Initialize on page load
-        if (sessionId && token && apiKey) {
+        if (channelName && token && appId) {
             initializeSession();
         } else {
             updateCallStatus('Invalid call parameters');
@@ -194,9 +168,8 @@
 
         // Cleanup on window close
         window.addEventListener('beforeunload', () => {
-            if (session) {
-                session.disconnect();
-            }
+            if (localAudioTrack) localAudioTrack.close();
+            if (localVideoTrack) localVideoTrack.close();
         });
     </script>
 </x-filament-panels::page>

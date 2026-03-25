@@ -15,6 +15,21 @@ class PaymentsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'amount';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('Payments');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Payment');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Payments');
+    }
+
     public function form(Form $form): Form
     {
         return $form

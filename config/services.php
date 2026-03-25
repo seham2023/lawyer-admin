@@ -47,4 +47,9 @@ return [
         'merchant_code' => env('TABBY_MERCHANT_CODE'),
     ],
 
+    'agora' => [
+        'app_id' => env('AGORA_APP_ID'),
+        'app_certificate' => env('AGORA_APP_CERTIFICATE'),
+    ],
+
 ];

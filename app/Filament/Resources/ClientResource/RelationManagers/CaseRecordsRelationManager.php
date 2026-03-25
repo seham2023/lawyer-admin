@@ -16,6 +16,21 @@ class CaseRecordsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'subject';
 
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('Case Records');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Case Record');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Case Records');
+    }
+
     public function form(Form $form): Form
     {
         return $form

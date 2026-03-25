@@ -11,6 +11,7 @@ class Visit extends Model
     protected $fillable = [
         'user_id',
         'client_id',
+        'status_id',
         'visit_date',
         'purpose',
         'notes'
@@ -24,6 +25,16 @@ class Visit extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class);
+    }
+
+    public function services(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Service::class);
     }
 
     /**

@@ -73,9 +73,8 @@ class ClientResource extends Resource
                             ->label(__('last_name'))
                             ->required()
                             ->maxLength(255),
-                        TextInput::make('email')
-                            ->label(__('email'))
-                            ->email()
+                        TextInput::make('identity_number')
+                            ->label(__('identity_number'))
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
@@ -86,18 +85,18 @@ class ClientResource extends Resource
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\Select::make('gender')
-                            ->label(__('gender'))
-                            ->options([
-                                'male' => __('male'),
-                                'female' => __('female'),
-                            ])
-                            ->required()
-                            ->native(false),
-                        TextInput::make('address')
-                            ->label(__('address'))
-                            ->required()
-                            ->maxLength(500),
+                        // Forms\Components\Select::make('gender')
+                        //     ->label(__('gender'))
+                        //     ->options([
+                        //         'male' => __('male'),
+                        //         'female' => __('female'),
+                        //     ])
+                        //     ->required()
+                        //     ->native(false),
+                        // TextInput::make('address')
+                        //     ->label(__('address'))
+                        //     ->required()
+                        //     ->maxLength(500),
                         // TextInput::make('company')
                         //     ->label(__('company'))
                         //     ->maxLength(255),
@@ -110,9 +109,9 @@ class ClientResource extends Resource
                         //     ->required()
                         //     ->native(false),
 
-                        Textarea::make('notes')
-                            ->label(__('notes'))
-                            ->columnSpanFull(),
+                        // Textarea::make('notes')
+                        //     ->label(__('notes'))
+                        //     ->columnSpanFull(),
                     ])->columns(2),
 
                 // Address section using relationship
@@ -188,8 +187,8 @@ class ClientResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('email')
-                    ->label(__('email'))
+                TextColumn::make('identity_number')
+                    ->label(__('identity_number'))
                     ->sortable()
                     ->searchable(),
 
@@ -198,15 +197,15 @@ class ClientResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('gender')
-                    ->label(__('gender'))
-                    ->sortable()
-                    ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'male' => 'info',
-                        'female' => 'success',
-                        default => 'gray',
-                    }),
+                // TextColumn::make('gender')
+                //     ->label(__('gender'))
+                //     ->sortable()
+                //     ->badge()
+                //     ->color(fn(string $state): string => match ($state) {
+                //         'male' => 'info',
+                //         'female' => 'success',
+                //         default => 'gray',
+                //     }),
 
                 // TextColumn::make('company')
                 //     ->label(__('company'))
@@ -214,15 +213,15 @@ class ClientResource extends Resource
                 //     ->searchable()
                 //     ->toggleable(),
 
-                TextColumn::make('address.address')
-                    ->label(__('address'))
-                    ->sortable()
-                    ->limit(50)
-                    ->toggleable(),
+                // TextColumn::make('address.address')
+                //     ->label(__('address'))
+                //     ->sortable()
+                //     ->limit(50)
+                //     ->toggleable(),
 
-                TextColumn::make('category.name')
-                    ->label(__('category'))
-                    ->sortable(),
+                // TextColumn::make('category.name')
+                //     ->label(__('category'))
+                //     ->sortable(),
 
                 TextColumn::make('created_at')
                     ->label(__('created_at'))

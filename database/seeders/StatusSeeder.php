@@ -100,5 +100,20 @@ class StatusSeeder extends Seeder
 
             ]);
         }
+
+        $visitStatuses = [
+            ['en' => 'Scheduled', 'ar' => 'مجدول'],
+            ['en' => 'Completed', 'ar' => 'مكتمل'],
+            ['en' => 'Cancelled', 'ar' => 'ملغى'],
+            ['en' => 'No Show', 'ar' => 'لم يحضر'],
+            ['en' => 'Rescheduled', 'ar' => 'تمت إعادة الجدولة'],
+        ];
+
+        foreach ($visitStatuses as $status) {
+            Status::create([
+                'name' => $status,
+                'type' => 'visit',
+            ]);
+        }
     }
 }

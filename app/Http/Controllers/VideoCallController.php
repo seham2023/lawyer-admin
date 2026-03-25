@@ -55,9 +55,9 @@ class VideoCallController extends Controller
                 'caller_id' => $caller->id,
                 'receiver_id' => $receiver->id,
                 'case_record_id' => $validated['case_record_id'],
-                'session_id' => $data['data']['sessionId'],
+                'session_id' => $data['data']['channelName'],
                 'token' => $data['data']['token'],
-                'api_key' => $data['data']['apiKey'],
+                'api_key' => $data['data']['appId'],
                 'call_type' => $validated['call_type'],
                 'status' => 'pending',
                 'started_at' => now(),
@@ -67,9 +67,9 @@ class VideoCallController extends Controller
                 'success' => true,
                 'data' => [
                     'call_id' => $videoCall->id,
-                    'session_id' => $data['data']['sessionId'],
+                    'session_id' => $data['data']['channelName'],
                     'token' => $data['data']['token'],
-                    'api_key' => $data['data']['apiKey'],
+                    'api_key' => $data['data']['appId'],
                     'call_type' => $validated['call_type'],
                 ],
             ]);

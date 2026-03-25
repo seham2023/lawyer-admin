@@ -2,20 +2,36 @@
 
 namespace App\Filament\Resources\ClientResource\RelationManagers;
 
-use App\Models\Visit;
 use App\Models\Currency;
+use App\Models\Status;
+use App\Models\Visit;
 use Filament\Forms;
 use Filament\Forms\Components\Hidden;
-use Filament\Tables;
 use Filament\Forms\Form;
-use Filament\Tables\Table;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables;
+use Filament\Tables\Table;
 
 class VisitsRelationManager extends RelationManager
 {
     protected static string $relationship = 'visits';
 
     protected static ?string $recordTitleAttribute = 'purpose';
+
+    public static function getTitle(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): string
+    {
+        return __('Visits');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Visit');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Visits');
+    }
 
     public function form(Form $form): Form
     {
@@ -30,6 +46,21 @@ class VisitsRelationManager extends RelationManager
                     ->label(__('purpose'))
                     ->required()
                     ->maxLength(255),
+
+                Forms\Components\Select::make('status_id')
+                    ->label(__('status'))
+                    ->options(Status::where('type', 'visit')->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->native(false),
+                     Forms\Components\Select::make('services')
+                            ->multiple()
+                            ->relationship('services', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->label(__('Services'))
+                            ->columnSpanFull(),
 
                 Forms\Components\Textarea::make('notes')
                     ->label(__('notes'))
