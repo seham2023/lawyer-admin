@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Qestass;
 
 use App\Traits\Uploadable;
 use Illuminate\Database\Eloquent\Model;

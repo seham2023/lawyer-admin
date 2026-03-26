@@ -6,7 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "althinect/filament-spatie-roles-permissions": "^2.2",
+        "althinect/filament-spatie-roles-permissions": "dev-local-fix as 2.3.2",
         "filament/filament": "^3.2",
         "filament/spatie-laravel-translatable-plugin": "^3.2",
         "kenepa/translation-manager": "^4.0",
@@ -34,7 +34,14 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "exclude-from-classmap": [
+            "app/Filament/Resources/*-o.php",
+            "app/Filament/Resources/*-p.php",
+            "app/Filament/Resources/*.back",
+            "app/Filament/Resources/*.old",
+            "app/Filament/Resources/*-old"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -64,6 +71,15 @@
             "dont-discover": []
         }
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/althinect/filament-spatie-roles-permissions",
+            "options": {
+                "symlink": false
+            }
+        }
+    ],
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
