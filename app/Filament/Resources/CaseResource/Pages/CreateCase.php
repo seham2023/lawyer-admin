@@ -95,7 +95,7 @@ class CreateCase extends CreateRecord
                 'currency_id' => $this->paymentData['currency_id'],
                 'tax' => $this->paymentData['tax'],
                 'user_id' => auth()->id(),
-                'pay_method_id' => $this->paymentData['pay_method_id'] ?? null,
+                'pay_method_id' => $this->paymentData['pay_method_id'] ?? 1, // Fallback to Cash ID 1 if not provided
                 'status_id' => $this->paymentData['payment_status_id'] ?? 1, // Default to Pending
             ]);
         }

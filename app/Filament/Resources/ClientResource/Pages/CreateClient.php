@@ -4,12 +4,18 @@ namespace App\Filament\Resources\ClientResource\Pages;
 
 use App\Filament\Resources\ClientResource;
 use App\Models\Address;
-use Filament\Actions;
+use App\Models\Qestass\User;
+use App\Support\LawyerClientAccess;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class CreateClient extends CreateRecord
 {
     protected static string $resource = ClientResource::class;
+
+    protected bool $attachedExistingClient = false;
+    protected bool $clientAlreadyLinked = false;
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
@@ -29,6 +35,67 @@ class CreateClient extends CreateRecord
         $data['type'] = 'user';
         $data['parent_id'] = auth()->id();
         return $data;
+    }
+
+    protected function handleRecordCreation(array $data): Model
+    {
+        $lawyerId = auth()->id();
+        $existingClient = $this->findExistingClient($data);
+
+        if ($existingClient) {
+            $wasAttached = LawyerClientAccess::attach($lawyerId, $existingClient->id);
+            $this->attachedExistingClient = $wasAttached;
+            $this->clientAlreadyLinked = ! $wasAttached;
+
+            return $existingClient;
+        }
+
+        $record = static::getModel()::create($data);
+        LawyerClientAccess::attach($lawyerId, $record->id);
+
+        return $record;
+    }
+
+    protected function findExistingClient(array $data): ?User
+    {
+        $phoneMatch = null;
+        $identityMatch = null;
+
+        if (! empty($data['phone'])) {
+            $phoneMatch = User::query()
+                ->where('type', 'user')
+                ->where('phone', $data['phone'])
+                ->first();
+        }
+
+        if (! empty($data['identity_number'])) {
+            $identityMatch = User::query()
+                ->where('type', 'user')
+                ->where('identity_number', $data['identity_number'])
+                ->first();
+        }
+
+        if ($phoneMatch && $identityMatch && $phoneMatch->id !== $identityMatch->id) {
+            throw ValidationException::withMessages([
+                'phone' => __('This phone belongs to a different client record.'),
+                'identity_number' => __('This identity number belongs to a different client record.'),
+            ]);
+        }
+
+        return $phoneMatch ?? $identityMatch;
+    }
+
+    protected function getCreatedNotificationTitle(): ?string
+    {
+        if ($this->clientAlreadyLinked) {
+            return __('Client already exists for your account.');
+        }
+
+        if ($this->attachedExistingClient) {
+            return __('Existing client linked to your account.');
+        }
+
+        return __('Client created');
     }
 
     protected function getRedirectUrl(): string

@@ -20,6 +20,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
 use Illuminate\Database\Eloquent\Builder;
+use App\Support\LawyerClientAccess;
 use App\Filament\Resources\CaseResource\Pages;
 use App\Filament\Actions\SendTabbyPaymentLinkAction;
 use App\Filament\Resources\CaseResource\RelationManagers;
@@ -65,7 +66,7 @@ class CaseResource extends Resource
                             ->schema([
                                 Select::make('client_id')
                                     ->label(__('client'))
-                                    ->options(User::where('parent_id', auth()->user()->id)->pluck('first_name', 'id'))
+                                    ->options(fn () => LawyerClientAccess::optionsForLawyer(auth()->id()))
                                     ->searchable()
                                     ->preload()
                                     ->required(),

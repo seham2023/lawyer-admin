@@ -30,7 +30,7 @@ class CreateVisit extends CreateRecord
                 'currency_id' => $data['currency_id'],
                 'user_id' => auth()->id(),
                 'client_id' => $this->record->client_id,
-                'pay_method_id' => $data['pay_method_id'] ?? null,
+                'pay_method_id' => $data['pay_method_id'] ?? 1, // Fallback to Cash ID 1 if not provided
                 'status_id' => $data['payment_status_id'] ?? 1,
                 'payable_type' => \App\Models\Visit::class,
                 'payable_id' => $this->record->id,

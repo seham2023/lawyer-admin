@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use Filament\Tables;
 use Filament\Tables\Table;
 use App\Models\Qestass\User;
+use App\Support\LawyerClientAccess;
 use Filament\Widgets\TableWidget as BaseWidget;
 
 class ClientsOverviewWidget extends BaseWidget
@@ -22,9 +23,7 @@ class ClientsOverviewWidget extends BaseWidget
     {
         return $table
             ->query(
-                User::query()
-                    ->where('parent_id', auth()->id())
-                    // ->with(['category', 'address'])
+                LawyerClientAccess::applyToUserQuery(User::query(), auth()->id())
                     ->latest()
                     ->limit(5)
             )

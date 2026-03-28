@@ -38,9 +38,10 @@ class EditExpense extends EditRecord
         $payment = $this->record->payment;
         if ($payment) {
             $payment->update([
-                'amount' => $data['amount'],
+                'amount' => $data['amount'] + ($data['amount'] * ($data['tax'] ?? 0) / 100),
                 'currency_id' => $data['currency_id'],
                 'tax' => $data['tax'] ?? 0,
+                'pay_method_id' => $data['pay_method_id'],
             ]);
         }
 

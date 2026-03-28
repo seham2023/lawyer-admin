@@ -35,6 +35,7 @@ class EditCase extends EditRecord
             $data['amount'] = $this->record->payment->amount;
             $data['currency_id'] = $this->record->payment->currency_id;
             $data['tax'] = $this->record->payment->tax;
+            $data['pay_method_id'] = $this->record->payment->pay_method_id;
         }
 
         $this->form->fill($data);
@@ -104,6 +105,7 @@ class EditCase extends EditRecord
                 'amount' => $data['amount'] ?? 0,
                 'currency_id' => $data['currency_id'] ?? null,
                 'tax' => $data['tax'] ?? 0,
+                'pay_method_id' => $data['pay_method_id'] ?? 1,
             ]);
         }
 

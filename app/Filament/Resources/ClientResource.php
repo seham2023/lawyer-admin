@@ -18,6 +18,7 @@ use App\Filament\Resources\ClientResource\Pages;
 use App\Filament\Resources\ClientResource\RelationManagers;
 use App\Models\Qestass\User;
 use App\Models\Currency;
+use App\Support\LawyerClientAccess;
 use Illuminate\Database\Eloquent\Builder;
 
 class ClientResource extends Resource
@@ -49,9 +50,10 @@ class ClientResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->where('type', 'user')
-            ->where('parent_id', auth()->id());
+        return LawyerClientAccess::applyToUserQuery(
+            parent::getEloquentQuery(),
+            auth()->id(),
+        );
     }
 
     public static function form(Forms\Form $form): Forms\Form
@@ -76,7 +78,6 @@ class ClientResource extends Resource
                         TextInput::make('identity_number')
                             ->label(__('identity_number'))
                             ->required()
-                            ->unique(ignoreRecord: true)
                             ->maxLength(255),
 
                         TextInput::make('phone')

@@ -17,19 +17,6 @@ class CreateExpense extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Extract data for Payment
-        $paymentData = [
-            'amount' => $data['amount'],
-            'currency_id' => $data['currency_id'],
-            'tax' => $data['tax'] ?? 0,
-        ];
-
-        // Create Payment
-        $payment = Payment::create($paymentData);
-
-        // Add payment_id to expense data
-        $data['payment_id'] = $payment->id;
-
         // Extract check data
         $checkData = [
             'check_number' => $data['check_number'] ?? null,
@@ -42,14 +29,29 @@ class CreateExpense extends CreateRecord
         // Store check data temporarily
         $this->checkData = $checkData;
 
-        // Remove check fields from expense data
-        unset($data['check_number'], $data['bank_name'], $data['clearance_date'], $data['deposit_account'], $data['check_status_id'], $data['tax'], $data['total_after_tax']);
+        // Note: amount, currency_id, tax, etc. are NOT in Expense fillable,
+        // they will be used in afterCreate to create the Payment record.
 
         return $data;
     }
 
     protected function afterCreate(): void
     {
+        $data = $this->form->getState();
+
+        // Create Payment record for this expense
+        // This links the payment to the expense via morph relationship (payable)
+        Payment::create([
+            'amount' => $data['amount'] + ($data['amount'] * ($data['tax'] ?? 0) / 100),
+            'tax' => $data['tax'] ?? 0,
+            'currency_id' => $data['currency_id'],
+            'pay_method_id' => $data['pay_method_id'],
+            'user_id' => auth()->id(),
+            'payable_type' => \App\Models\Expense::class,
+            'payable_id' => $this->record->id,
+            'status_id' => 2, // Typically marked as 'Paid' for an expense
+        ]);
+
         // Create ExpenseCheck if check data exists
         if (!empty(array_filter($this->checkData))) {
             $this->checkData['expense_id'] = $this->record->id;

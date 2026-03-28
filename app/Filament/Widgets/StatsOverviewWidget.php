@@ -4,8 +4,8 @@ namespace App\Filament\Widgets;
 
 use App\Models\Qestass\User;
 use App\Models\CaseRecord;
-use App\Models\Category;
 use App\Models\Payment;
+use App\Support\LawyerClientAccess;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -14,7 +14,7 @@ class StatsOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         return [
-            Stat::make(__('Total Users'), User::where('parent_id', auth()->user()->id)->count())
+            Stat::make(__('Total Users'), LawyerClientAccess::applyToUserQuery(User::query(), auth()->id())->count())
                 ->description(__('All registered users'))
                 ->descriptionIcon('heroicon-m-users')
                 ->color('success'),

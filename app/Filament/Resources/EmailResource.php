@@ -18,6 +18,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use App\Filament\Resources\EmailResource\Pages;
+use App\Support\LawyerClientAccess;
 use Mvenghaus\FilamentPluginTranslatableInline\Forms\Components\TranslatableContainer;
 
 class EmailResource extends Resource
@@ -54,7 +55,7 @@ class EmailResource extends Resource
                     ->schema([
                         Select::make('client_id')
                             ->label(__('client'))
-                            ->options(User::where('parent_id', auth()->user()->id)->pluck('first_name', 'id'))
+                            ->options(fn () => LawyerClientAccess::optionsForLawyer(auth()->id()))
                             ->relationship('client', 'phone')
                             ->required()
                             ->reactive()
