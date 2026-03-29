@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\ClientResource\RelationManagers;
 
-use App\Models\Currency;
 use App\Models\Status;
 use App\Models\Visit;
 use Filament\Forms;
@@ -89,7 +88,7 @@ class VisitsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('payment.amount')
                     ->label(__('Total Amount'))
-                    ->money(fn() => Currency::first()->code ?? 'USD')
+                    ->money(fn() => \App\Support\Money::getCurrencyCode())
                     ->default('-')
                     ->sortable()
                     ->badge()
@@ -97,14 +96,14 @@ class VisitsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('payment.total_paid')
                     ->label(__('Paid'))
-                    ->money(fn() => Currency::first()->code ?? 'USD')
+                    ->money(fn() => \App\Support\Money::getCurrencyCode())
                     ->default('-')
                     ->badge()
                     ->color('success'),
 
                 Tables\Columns\TextColumn::make('payment.remaining_payment')
                     ->label(__('Remaining'))
-                    ->money(fn() => Currency::first()->code ?? 'USD')
+                    ->money(fn() => \App\Support\Money::getCurrencyCode())
                     ->default('-')
                     ->badge()
                     ->color(fn($state) => $state > 0 ? 'danger' : 'success'),
@@ -214,7 +213,7 @@ class VisitsRelationManager extends RelationManager
                             ->label(__('Amount'))
                             ->numeric()
                             ->required()
-                            ->prefix(fn() => Currency::first()->symbol ?? '$')
+                            ->prefix(fn() => \App\Support\Money::getCurrencySymbol())
                             ->minValue(0.01)
                             ->helperText(fn($record) => __('Remaining balance') . ': ' . ($record->payment->remaining_payment ?? 0)),
 

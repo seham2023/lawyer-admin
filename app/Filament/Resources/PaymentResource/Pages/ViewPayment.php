@@ -36,12 +36,14 @@ class ViewPayment extends ViewRecord
                                     ->formatStateUsing(fn($state) => match ($state) {
                                         'App\\Models\\CaseRecord' => __('Case'),
                                         'App\\Models\\Visit' => __('Visit'),
+                                        'App\\Models\\Expense' => __('Expense'),
                                         default => __('Unknown'),
                                     })
                                     ->badge()
                                     ->color(fn($state) => match ($state) {
                                         'App\\Models\\CaseRecord' => 'info',
                                         'App\\Models\\Visit' => 'success',
+                                        'App\\Models\\Expense' => 'warning',
                                         default => 'gray',
                                     }),
 
@@ -52,6 +54,8 @@ class ViewPayment extends ViewRecord
                                             return $record->payable?->subject ?? '-';
                                         } elseif ($record->payable_type === 'App\\Models\\Visit') {
                                             return $record->payable?->purpose ?? '-';
+                                        } elseif ($record->payable_type === 'App\\Models\\Expense') {
+                                            return $record->payable?->name ?? '-';
                                         }
                                         return '-';
                                     })
@@ -69,7 +73,7 @@ class ViewPayment extends ViewRecord
                             ->schema([
                                 TextEntry::make('amount')
                                     ->label(__('Total Amount'))
-                                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                                    ->money(fn($record) => $record->currency?->code ?? \App\Support\Money::getCurrencyCode())
                                     ->icon('heroicon-o-banknotes')
                                     ->color('info')
                                     ->size(TextEntry\TextEntrySize::Large)
@@ -77,7 +81,7 @@ class ViewPayment extends ViewRecord
 
                                 TextEntry::make('total_paid')
                                     ->label(__('Paid Amount'))
-                                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                                    ->money(fn($record) => $record->currency?->code ?? \App\Support\Money::getCurrencyCode())
                                     ->icon('heroicon-o-check-circle')
                                     ->color('success')
                                     ->size(TextEntry\TextEntrySize::Large)
@@ -85,7 +89,7 @@ class ViewPayment extends ViewRecord
 
                                 TextEntry::make('remaining_payment')
                                     ->label(__('Remaining Balance'))
-                                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                                    ->money(fn($record) => $record->currency?->code ?? \App\Support\Money::getCurrencyCode())
                                     ->icon('heroicon-o-clock')
                                     ->color(fn($record) => $record->remaining_payment > 0 ? 'danger' : 'success')
                                     ->size(TextEntry\TextEntrySize::Large)

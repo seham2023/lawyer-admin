@@ -428,5 +428,11 @@
     "secretary": "سكرتير",
     "legal_researcher": "باحث قانوني",
     "assistant": "مساعد",
-    "lawyer": "محامي"
+    "lawyer": "محامي",
+    "Unread Messages": "الرسائل غير المقروءة",
+    "Active Conversations": "المحادثات النشطة",
+    "Today's Messages": "رسائل اليوم",
+    "Messages waiting for response": "رسائل بانتظار الرد",
+    "Total client conversations": "إجمالي محادثات العملاء",
+    "Messages received today": "الرسائل المستلمة اليوم"
 }

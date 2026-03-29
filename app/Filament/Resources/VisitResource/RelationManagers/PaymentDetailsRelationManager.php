@@ -4,7 +4,6 @@ namespace App\Filament\Resources\VisitResource\RelationManagers;
 
 use App\Models\PaymentDetail;
 use App\Models\PayMethod;
-use App\Models\Currency;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
@@ -44,7 +43,7 @@ class PaymentDetailsRelationManager extends RelationManager
                     ->label(__('Amount'))
                     ->numeric()
                     ->required()
-                    ->prefix(fn() => Currency::first()->symbol ?? '$')
+                    ->prefix(fn() => \App\Support\Money::getCurrencySymbol())
                     ->minValue(0.01),
 
                 Forms\Components\DateTimePicker::make('paid_at')
@@ -99,7 +98,7 @@ class PaymentDetailsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label(__('Amount'))
-                    ->money(fn() => Currency::first()->code ?? 'USD')
+                    ->money(fn() => \App\Support\Money::getCurrencyCode())
                     ->sortable()
                     ->badge()
                     ->color('success'),

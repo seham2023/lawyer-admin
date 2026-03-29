@@ -408,5 +408,11 @@
     "Services": "Services",
     "Service": "Service",
     "Service Name": "Service Name",
-    "Period (Minutes)": "Period (Minutes)"
+    "Period (Minutes)": "Period (Minutes)",
+    "Unread Messages": "Unread Messages",
+    "Active Conversations": "Active Conversations",
+    "Today's Messages": "Today's Messages",
+    "Messages waiting for response": "Messages waiting for response",
+    "Total client conversations": "Total client conversations",
+    "Messages received today": "Messages received today"
 }

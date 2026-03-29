@@ -205,7 +205,7 @@ class ViewCase extends ViewRecord
                                         $totalAmount = $record->payment->amount ?? 0;
                                         $paidAmount = $record->payment->total_paid ?? 0;
                                         $remaining = $totalAmount - $paidAmount;
-                                        $currency = Currency::first()->symbol ?? '';
+                                        $currency = \App\Support\Money::getCurrencySymbol();
 
                                         return new HtmlString("
                                             <div class='space-y-3'>

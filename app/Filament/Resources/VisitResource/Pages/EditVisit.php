@@ -17,16 +17,17 @@ class EditVisit extends EditRecord
         // Populate payment data if it exists
         if ($this->record->payment) {
             $data['currency_id'] = $this->record->payment->currency_id;
-            
-            // For editing, we show the net amount (amount field in Payment)
-            $data['amount'] = $this->record->payment->amount;
             $data['tax'] = $this->record->payment->tax;
-            
-            // Calculate total for display
-            $data['total_after_tax'] = $data['amount'] + ($data['amount'] * ($data['tax'] ?? 0) / 100);
-            
             $data['pay_method_id'] = $this->record->payment->pay_method_id;
             $data['payment_status_id'] = $this->record->payment->status_id;
+
+            if (($data['tax'] ?? 0) > 0) {
+                $data['amount'] = round($this->record->payment->amount / (1 + ($data['tax'] / 100)), 2);
+            } else {
+                $data['amount'] = $this->record->payment->amount;
+            }
+
+            $data['total_after_tax'] = $this->record->payment->amount;
         }
 
         $this->form->fill($data);
@@ -37,7 +38,7 @@ class EditVisit extends EditRecord
         // Update payment record if it exists
         if ($this->record->payment) {
             $this->record->payment->update([
-                'amount' => $data['amount'] ?? 0,
+                'amount' => ($data['amount'] ?? 0) + (($data['amount'] ?? 0) * (($data['tax'] ?? 0) / 100)),
                 'tax' => $data['tax'] ?? 0,
                 'currency_id' => $data['currency_id'],
                 'pay_method_id' => $data['pay_method_id'] ?? 1,
@@ -46,7 +47,7 @@ class EditVisit extends EditRecord
         } else if (isset($data['amount']) && $data['amount'] > 0) {
             // Create payment if it didn't exist but amount is now provided
             $this->record->payment()->create([
-                'amount' => $data['amount'],
+                'amount' => $data['amount'] + ($data['amount'] * (($data['tax'] ?? 0) / 100)),
                 'tax' => $data['tax'] ?? 0,
                 'currency_id' => $data['currency_id'],
                 'user_id' => auth()->id(),

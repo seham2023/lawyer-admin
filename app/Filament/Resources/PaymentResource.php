@@ -158,12 +158,14 @@ class PaymentResource extends Resource
                     ->formatStateUsing(fn($state) => match ($state) {
                         'App\\Models\\CaseRecord' => __('Case'),
                         'App\\Models\\Visit' => __('Visit'),
+                        'App\\Models\\Expense' => __('Expense'),
                         default => __('Unknown'),
                     })
                     ->badge()
                     ->color(fn($state) => match ($state) {
                         'App\\Models\\CaseRecord' => 'info',
                         'App\\Models\\Visit' => 'success',
+                        'App\\Models\\Expense' => 'warning',
                         default => 'gray',
                     })
                     ->sortable()
@@ -234,6 +236,7 @@ class PaymentResource extends Resource
                     ->options([
                         'App\\Models\\CaseRecord' => __('Case'),
                         'App\\Models\\Visit' => __('Visit'),
+                        'App\\Models\\Expense' => __('Expense'),
                     ]),
 
                 Tables\Filters\SelectFilter::make('status_id')

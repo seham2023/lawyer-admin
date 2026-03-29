@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ClientResource\Pages;
 
 use App\Filament\Resources\ClientResource;
-use App\Models\Address;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -57,10 +56,10 @@ class EditClient extends EditRecord
                 ->requiresConfirmation()
                 ->modalHeading(__('Detach Client'))
                 ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
-                ->action(function (\App\Models\Qestass\User $record): void {
+                ->action(function (): void {
                     \App\Models\LawyerClient::query()
                         ->where('lawyer_id', auth()->id())
-                        ->where('client_id', $record->id)
+                        ->where('client_id', $this->record->id)
                         ->delete();
 
                     \Filament\Notifications\Notification::make()

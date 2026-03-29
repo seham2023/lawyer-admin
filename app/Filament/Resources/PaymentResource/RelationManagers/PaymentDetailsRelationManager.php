@@ -100,7 +100,7 @@ class PaymentDetailsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label(__('Amount'))
-                    ->money(fn() => $this->getOwnerRecord()->currency?->code ?? 'USD')
+                    ->money(fn() => $this->getOwnerRecord()->currency?->code ?? \App\Support\Money::getCurrencyCode())
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('paid_at')

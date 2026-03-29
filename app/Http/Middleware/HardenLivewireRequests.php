@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 
 class HardenLivewireRequests
@@ -19,20 +18,26 @@ class HardenLivewireRequests
     {
         // Only target Livewire update requests
         if ($request->is('livewire/update')) {
-            // 1. Rate Limiting: Max 30 requests per minute from the same IP
-            $executed = RateLimiter::attempt(
-                'livewire-update:' . $request->ip(),
-                30,
-                function () {
-                    // Method to be called if rate limit not reached
-                },
-                60 // Decay minutes
-            );
+            // Keep rate limiting enabled, but make it realistic for Filament dashboards
+            // with polling widgets, notifications, and chat screens.
+            $identifier = $request->user()?->getAuthIdentifier() ?? $request->ip();
+            $maxAttempts = $request->user() ? 240 : 60;
+            $decaySeconds = 60;
+            $rateLimitKey = 'livewire-update:' . $identifier;
 
-            if (!$executed) {
-                Log::warning('Rate limit exceeded for Livewire update from IP: ' . $request->ip());
-                return response()->json(['message' => 'Too many requests. Please slow down.'], 429);
+            if (RateLimiter::tooManyAttempts($rateLimitKey, $maxAttempts)) {
+                Log::warning('Rate limit exceeded for Livewire update', [
+                    'ip' => $request->ip(),
+                    'user_id' => $request->user()?->getAuthIdentifier(),
+                    'available_in' => RateLimiter::availableIn($rateLimitKey),
+                ]);
+
+                return response()->json([
+                    'message' => 'Too many requests. Please slow down.',
+                ], 429);
             }
+
+            RateLimiter::hit($rateLimitKey, $decaySeconds);
 
             $payload = $request->all();
             

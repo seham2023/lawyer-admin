@@ -17,9 +17,9 @@ Route::prefix('tabby/payment')->name('tabby.payment.')->group(function () {
 
 // Payment After-Pay Routes
 Route::prefix('payment')->name('payment.')->group(function () {
-    Route::get('/{paymentId}/success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('success');
-    Route::get('/{paymentId}/pending', [\App\Http\Controllers\PaymentController::class, 'pending'])->name('pending');
-    Route::get('/{paymentId}/failed', [\App\Http\Controllers\PaymentController::class, 'failed'])->name('failed');
+    Route::get('/{paymentId}/success', [\App\Http\Controllers\PaymentController::class, 'success'])->middleware('signed')->name('success');
+    Route::get('/{paymentId}/pending', [\App\Http\Controllers\PaymentController::class, 'pending'])->middleware('signed')->name('pending');
+    Route::get('/{paymentId}/failed', [\App\Http\Controllers\PaymentController::class, 'failed'])->middleware('signed')->name('failed');
     Route::get('/error', [\App\Http\Controllers\PaymentController::class, 'error'])->name('error');
-    Route::get('/{paymentId}/status', [\App\Http\Controllers\PaymentController::class, 'checkStatus'])->name('status');
+    Route::get('/{paymentId}/status', [\App\Http\Controllers\PaymentController::class, 'checkStatus'])->middleware('signed')->name('status');
 });

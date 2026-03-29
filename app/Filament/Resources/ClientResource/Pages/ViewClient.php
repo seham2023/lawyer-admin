@@ -35,6 +35,10 @@ class ViewClient extends ViewRecord
                         ->label(__('Purpose'))
                         ->required()
                         ->maxLength(255),
+                    \Filament\Forms\Components\Textarea::make('notes')
+                        ->label(__('Notes'))
+                        ->rows(3)
+                        ->columnSpanFull(),
                    
              Select::make('status_id')
                     ->label(__('status'))
@@ -45,7 +49,12 @@ class ViewClient extends ViewRecord
                     ->native(false),
                     Select::make('services')
                             ->multiple()
-                            ->options(\App\Models\Service::query()->get()->mapWithKeys(fn($s) => [$s->id => "{$s->name} ({$s->price} SAR)"]))
+                            ->options(\App\Models\Service::query()
+                                ->where('user_id', auth()->id())
+                                ->get()
+                                ->mapWithKeys(fn($service) => [
+                                    $service->id => trim($service->name . ' - ' . number_format((float) $service->price, 2) . ' SAR'),
+                                ]))
                             ->searchable()
                             ->preload()
                             ->label(__('Services'))
@@ -157,10 +166,10 @@ class ViewClient extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading(__('Detach Client'))
                 ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
-                ->action(function (User $record): void {
+                ->action(function (): void {
                     \App\Models\LawyerClient::query()
                         ->where('lawyer_id', auth()->id())
-                        ->where('client_id', $record->id)
+                        ->where('client_id', $this->record->id)
                         ->delete();
 
                     \Filament\Notifications\Notification::make()
@@ -229,7 +238,7 @@ class ViewClient extends ViewRecord
                                         }
 
                                         $remaining = $totalAmount - $paidAmount;
-                                        $currency = Currency::first()->symbol ?? '';
+                                        $currency = \App\Support\Money::getCurrencySymbol();
 
                                         return new HtmlString("
                                             <div class='space-y-2'>
@@ -266,7 +275,7 @@ class ViewClient extends ViewRecord
                                         }
 
                                         $remaining = $totalAmount - $paidAmount;
-                                        $currency = Currency::first()->symbol ?? '';
+                                        $currency = \App\Support\Money::getCurrencySymbol();
 
                                         return new HtmlString("
                                             <div class='space-y-2'>
@@ -318,7 +327,7 @@ class ViewClient extends ViewRecord
                                         $totalAmount = $casesTotalAmount + $visitsTotalAmount;
                                         $paidAmount = $casesPaidAmount + $visitsPaidAmount;
                                         $remaining = $totalAmount - $paidAmount;
-                                        $currency = Currency::first()->symbol ?? '';
+                                        $currency = \App\Support\Money::getCurrencySymbol();
 
                                         return new HtmlString("
                                             <div class='space-y-2 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg'>

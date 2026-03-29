@@ -113,23 +113,31 @@ class CalendarWidget extends FullCalendarWidget
         // Handle session IDs (prefixed with 'session_')
         if (is_string($key) && str_starts_with($key, 'session_')) {
             $sessionId = str_replace('session_', '', $key);
-            return Session::findOrFail($sessionId);
+            return Session::query()
+                ->where('user_id', auth()->id())
+                ->findOrFail($sessionId);
         }
 
         // Handle event IDs (prefixed with 'event_')
         if (is_string($key) && str_starts_with($key, 'event_')) {
             $eventId = str_replace('event_', '', $key);
-            return Event::findOrFail($eventId);
+            return Event::query()
+                ->where('user_id', auth()->id())
+                ->findOrFail($eventId);
         }
 
         // Handle direct numeric IDs as fallback
         if (is_numeric($key)) {
-            $event = Event::find($key);
+            $event = Event::query()
+                ->where('user_id', auth()->id())
+                ->find($key);
             if ($event) {
                 return $event;
             }
 
-            $session = Session::find($key);
+            $session = Session::query()
+                ->where('user_id', auth()->id())
+                ->find($key);
             if ($session) {
                 return $session;
             }
@@ -222,7 +230,9 @@ class CalendarWidget extends FullCalendarWidget
                 ->default('normal'),
 
             Forms\Components\Hidden::make('case_number')
-                ->default(fn($get) => CaseRecord::find($get('case_record_id'))?->id),
+                ->default(fn($get) => CaseRecord::query()
+                    ->where('user_id', auth()->id())
+                    ->find($get('case_record_id'))?->id),
         ];
     }
 

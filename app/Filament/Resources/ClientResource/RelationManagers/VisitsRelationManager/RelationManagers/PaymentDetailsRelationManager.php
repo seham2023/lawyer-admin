@@ -43,7 +43,7 @@ class PaymentDetailsRelationManager extends RelationManager
                     ->label(__('Amount'))
                     ->numeric()
                     ->required()
-                    ->prefix(fn() => \App\Models\Currency::first()->symbol ?? '$')
+                    ->prefix(fn() => \App\Support\Money::getCurrencySymbol())
                     ->minValue(0.01),
 
                 Forms\Components\DateTimePicker::make('paid_at')
@@ -98,7 +98,7 @@ class PaymentDetailsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label(__('Amount'))
-                    ->money(fn() => \App\Models\Currency::first()->code ?? 'USD')
+                    ->money(fn() => \App\Support\Money::getCurrencyCode())
                     ->sortable()
                     ->badge()
                     ->color('success'),

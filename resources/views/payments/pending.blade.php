@@ -241,16 +241,16 @@
                 return; // Stop auto-refresh after max attempts
             }
 
-            fetch('{{ route("payment.status", $payment->id) }}')
+            fetch('{{ $statusUrl }}')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         // Check if status changed to success or failed
                         const statusName = data.status.toLowerCase();
                         if (statusName.includes('paid') || statusName.includes('مدفوع') || statusName.includes('success')) {
-                            window.location.href = '{{ route("payment.success", $payment->id) }}';
+                            window.location.href = '{{ $successUrl }}';
                         } else if (statusName.includes('failed') || statusName.includes('فشل') || statusName.includes('rejected')) {
-                            window.location.href = '{{ route("payment.failed", $payment->id) }}';
+                            window.location.href = '{{ $failedUrl }}';
                         }
                     }
                 })

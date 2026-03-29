@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
+use App\Support\LawyerClientAccess;
 use App\Filament\Resources\VisitResource\Pages;
 use App\Filament\Resources\VisitResource\RelationManagers;
 
@@ -50,12 +51,12 @@ class VisitResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('client_id')
                             ->label(__('Client'))
-                            ->relationship('client', 'first_name')
+                            ->options(fn () => LawyerClientAccess::optionsForLawyer(auth()->id()))
                             ->searchable()
                             ->preload()
                             ->required()
                             ->native(false)
-                            ->getOptionLabelFromRecordUsing(fn($record) => $record->first_name . ' ' . $record->last_name),
+                            ->native(false),
 
                         Forms\Components\DateTimePicker::make('visit_date')
                             ->label(__('Visit Date'))
@@ -72,7 +73,11 @@ class VisitResource extends Resource
 
                         Forms\Components\Select::make('services')
                             ->multiple()
-                            ->relationship('services', 'name')
+                            ->relationship(
+                                'services',
+                                'name',
+                                fn (Builder $query) => $query->where('user_id', auth()->id())
+                            )
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} (" . number_format($record->price, 2) . " " . \App\Support\Money::getCurrencyCode() . ")")
                             ->searchable()
                             ->preload()
