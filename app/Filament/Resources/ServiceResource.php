@@ -86,7 +86,7 @@ class ServiceResource extends Resource
 
                 Tables\Columns\TextColumn::make('price')
                     ->label(__('Price'))
-                    ->money(fn () => \App\Models\Currency::first()->code ?? 'USD')
+                    ->money(fn () => \App\Support\Money::getCurrencyCode())
                     ->sortable()
                     ->badge()
                     ->color('success'),

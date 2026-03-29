@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ClientResource\Pages;
 
 use App\Filament\Resources\CaseResource;
 use App\Filament\Resources\ClientResource;
+use App\Models\Qestass\User;
 use App\Models\Currency;
 use App\Models\Status;
 use Filament\Actions;
@@ -44,7 +45,7 @@ class ViewClient extends ViewRecord
                     ->native(false),
                     Select::make('services')
                             ->multiple()
-                            ->relationship('services', 'name')
+                            ->options(\App\Models\Service::query()->get()->mapWithKeys(fn($s) => [$s->id => "{$s->name} ({$s->price} SAR)"]))
                             ->searchable()
                             ->preload()
                             ->label(__('Services'))
@@ -109,10 +110,16 @@ class ViewClient extends ViewRecord
                     $visit = \App\Models\Visit::create([
                         'user_id' => auth()->id(),
                         'client_id' => $this->record->id,
+                        'status_id' => $data['status_id'],
                         'visit_date' => $data['visit_date'],
                         'purpose' => $data['purpose'],
                         'notes' => $data['notes'] ?? null,
                     ]);
+
+                    // Sync services
+                    if (isset($data['services']) && is_array($data['services'])) {
+                        $visit->services()->sync($data['services']);
+                    }
 
                     // Create payment if amount is provided
                     if (isset($data['amount']) && $data['amount'] > 0) {
@@ -143,7 +150,26 @@ class ViewClient extends ViewRecord
                 ->color('warning')
                 ->url(fn() => CaseResource::getUrl('create', ['client_id' => $this->record->id])),
             Actions\EditAction::make(),
-            Actions\DeleteAction::make(),
+            Actions\Action::make('detach_client')
+                ->label(__('Detach Client'))
+                ->icon('heroicon-o-link-slash')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading(__('Detach Client'))
+                ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
+                ->action(function (User $record): void {
+                    \App\Models\LawyerClient::query()
+                        ->where('lawyer_id', auth()->id())
+                        ->where('client_id', $record->id)
+                        ->delete();
+
+                    \Filament\Notifications\Notification::make()
+                        ->title(__('Client detached from your workspace.'))
+                        ->success()
+                        ->send();
+
+                    $this->redirect($this->getResource()::getUrl('index'));
+                }),
         ];
     }
 

@@ -50,7 +50,26 @@ class EditClient extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\Action::make('detach_client')
+                ->label(__('Detach Client'))
+                ->icon('heroicon-o-link-slash')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading(__('Detach Client'))
+                ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
+                ->action(function (\App\Models\Qestass\User $record): void {
+                    \App\Models\LawyerClient::query()
+                        ->where('lawyer_id', auth()->id())
+                        ->where('client_id', $record->id)
+                        ->delete();
+
+                    \Filament\Notifications\Notification::make()
+                        ->title(__('Client detached from your workspace.'))
+                        ->success()
+                        ->send();
+
+                    $this->redirect($this->getResource()::getUrl('index'));
+                }),
         ];
     }
 

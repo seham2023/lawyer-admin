@@ -30,10 +30,8 @@ class AppServiceProvider extends ServiceProvider
         // Register CaseRecord Observer for audit trail
         \App\Models\CaseRecord::observe(\App\Observers\CaseRecordObserver::class);
 
-        Gate::define('use-translation-manager', function (?User $user) {
-            // Your authorization logic
-            return true;
-            // return $user !== null && ($user->hasRole('admin') || $user->hasRole('Super Admin'));
+        Gate::define('use-translation-manager', function ($user) {
+            return $user !== null && $user->type === 'admin';
         });
     }
 }

@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Country;
 use App\Models\State;
 use App\Models\City;
+use App\Models\LawyerClient;
+use Filament\Notifications\Notification;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Resources\Resource;
@@ -80,11 +82,28 @@ class ClientResource extends Resource
                             ->required()
                             ->maxLength(255),
 
+                        Forms\Components\Select::make('country_key')
+                            ->label(__('country_key'))
+                            ->options([
+                                '00966' => '+966 (SA)',
+                                '00971' => '+971 (AE)',
+                                '00965' => '+965 (KW)',
+                                '00974' => '+974 (QA)',
+                                '00973' => '+973 (BH)',
+                                '00968' => '+968 (OM)',
+                                '002' => '+2 (EG)',
+                            ])
+                            ->default('00966')
+                            ->required()
+                            ->searchable()
+                            ->native(false),
+
                         TextInput::make('phone')
                             ->label(__('mobile'))
                             ->tel()
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(20)
+                            ->placeholder('5xxxxxxxx'),
 
                         // Forms\Components\Select::make('gender')
                         //     ->label(__('gender'))
@@ -178,25 +197,23 @@ class ClientResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('first_name')
-                    ->label(__('first_name'))
-                    ->sortable()
-                    ->searchable(),
-
-                TextColumn::make('last_name')
-                    ->label(__('last_name'))
-                    ->sortable()
-                    ->searchable(),
+                TextColumn::make('full_name')
+                    ->label(__('full_name'))
+                    ->getStateUsing(fn (User $record) => $record->getFilamentName())
+                    ->sortable(['first_name', 'last_name'])
+                    ->searchable(['first_name', 'last_name'])
+                    ->weight('bold'),
 
                 TextColumn::make('identity_number')
                     ->label(__('identity_number'))
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('phone')
+                TextColumn::make('full_mobile')
                     ->label(__('mobile'))
-                    ->sortable()
-                    ->searchable(),
+                    ->getStateUsing(fn (User $record) => ($record->country_key ?? '') . ' ' . $record->phone)
+                    ->sortable(['phone'])
+                    ->searchable(['phone', 'country_key']),
 
                 // TextColumn::make('gender')
                 //     ->label(__('gender'))
@@ -238,11 +255,6 @@ class ClientResource extends Resource
                         'female' => __('female'),
                     ]),
 
-                Tables\Filters\SelectFilter::make('category')
-                    ->label(__('category'))
-                    ->options(Category::where('type', 'client')->pluck('name', 'id'))
-                    ->searchable(),
-
                 Tables\Filters\Filter::make('name')
                     ->form([
                         Forms\Components\TextInput::make('name')
@@ -252,7 +264,11 @@ class ClientResource extends Resource
                         return $query
                             ->when(
                                 $data['name'],
-                                fn(Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
+                                fn(Builder $query, $name): Builder => $query->where(function (Builder $nameQuery) use ($name) {
+                                    $nameQuery
+                                        ->where('first_name', 'like', "%{$name}%")
+                                        ->orWhere('last_name', 'like', "%{$name}%");
+                                }),
                             );
                     }),
 
@@ -265,7 +281,7 @@ class ClientResource extends Resource
                         return $query
                             ->when(
                                 $data['mobile'],
-                                fn(Builder $query, $mobile): Builder => $query->where('mobile', 'like', "%{$mobile}%"),
+                                fn(Builder $query, $mobile): Builder => $query->where('phone', 'like', "%{$mobile}%"),
                             );
                     }),
             ])
@@ -414,11 +430,45 @@ class ClientResource extends Resource
                 //             ->success()
                 //             ->send();
                 //     }),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('detach_client')
+                    ->label(__('Detach Client'))
+                    ->icon('heroicon-o-link-slash')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading(__('Detach Client'))
+                    ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
+                    ->action(function (User $record): void {
+                        LawyerClient::query()
+                            ->where('lawyer_id', auth()->id())
+                            ->where('client_id', $record->id)
+                            ->delete();
+
+                        Notification::make()
+                            ->title(__('Client detached from your workspace.'))
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('detach_clients')
+                        ->label(__('Detach Clients'))
+                        ->icon('heroicon-o-link-slash')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->action(function ($records): void {
+                            $clientIds = $records->pluck('id')->all();
+
+                            LawyerClient::query()
+                                ->where('lawyer_id', auth()->id())
+                                ->whereIn('client_id', $clientIds)
+                                ->delete();
+
+                            Notification::make()
+                                ->title(__('Selected clients were detached from your workspace.'))
+                                ->success()
+                                ->send();
+                        }),
                 ]),
             ]);
     }

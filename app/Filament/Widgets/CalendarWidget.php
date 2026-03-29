@@ -199,10 +199,12 @@ class CalendarWidget extends FullCalendarWidget
             Forms\Components\Select::make('case_record_id')
                 ->label(__('Case'))
                 ->options(function () {
-                    return CaseRecord::with('client')
+                    return \App\Models\CaseRecord::query()
+                        ->where('user_id', auth()->id())
+                        ->with('client')
                         ->get()
                         ->mapWithKeys(function ($case) {
-                            $clientName = $case->client?->name ?? 'Unknown Client';
+                            $clientName = $case->client?->getFilamentName() ?? 'Unknown Client';
                             return [$case->id => "Case #{$case->id} - {$clientName}"];
                         });
                 })

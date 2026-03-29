@@ -73,10 +73,21 @@ class VisitResource extends Resource
                         Forms\Components\Select::make('services')
                             ->multiple()
                             ->relationship('services', 'name')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} (" . number_format($record->price, 2) . " " . \App\Support\Money::getCurrencyCode() . ")")
                             ->searchable()
                             ->preload()
                             ->label(__('Services'))
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->reactive()
+                            ->afterStateUpdated(function (callable $set, callable $get) {
+                                $serviceIds = $get('services') ?? [];
+                                $amount = \App\Models\Service::whereIn('id', $serviceIds)->sum('price');
+                                $set('amount', $amount);
+                                
+                                $tax = $get('tax') ?? 0;
+                                $total = $amount + ($amount * $tax / 100);
+                                $set('total_after_tax', $total);
+                            }),
 
                         Forms\Components\TextInput::make('purpose')
                             ->label(__('Purpose'))
@@ -84,69 +95,70 @@ class VisitResource extends Resource
                             ->maxLength(255)
                             ->columnSpanFull(),
 
-                        // Forms\Components\Textarea::make('notes')
-                        //     ->label(__('Notes'))
-                        //     ->rows(4)
-                        //     ->columnSpanFull(),
+                        Forms\Components\Textarea::make('notes')
+                            ->label(__('Notes'))
+                            ->rows(4)
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
-                // Forms\Components\Section::make(__('Payment Information'))
-                //     ->schema([
-                //         Forms\Components\Select::make('currency_id')
-                //             ->label(__('Currency'))
-                //             ->options(Currency::all()->pluck('name', 'id'))
-                //             ->searchable()
-                //             ->required()
-                //             ->default(1)
-                //             ->reactive(),
+                Forms\Components\Section::make(__('Payment Information'))
+                    ->schema([
+                        Forms\Components\Select::make('currency_id')
+                            ->label(__('Currency'))
+                            ->options(\App\Models\Currency::all()->pluck('name', 'id'))
+                            ->searchable()
+                            ->required()
+                            ->default(fn () => \App\Support\Money::getCurrencyId())
+                            ->reactive(),
 
-                //         Forms\Components\TextInput::make('amount')
-                //             ->label(__('Amount'))
-                //             ->numeric()
-                //             ->required()
-                //             ->reactive()
-                //             ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                //                 $tax = $get('tax') ?? 0;
-                //                 $amount = $state ?? 0;
-                //                 $total = $amount + ($amount * $tax / 100);
-                //                 $set('total_after_tax', $total);
-                //             }),
+                        Forms\Components\TextInput::make('amount')
+                            ->label(__('Amount'))
+                            ->numeric()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $tax = $get('tax') ?? 0;
+                                $amount = $state ?? 0;
+                                $total = $amount + ($amount * $tax / 100);
+                                $set('total_after_tax', $total);
+                            }),
 
-                //         Forms\Components\TextInput::make('tax')
-                //             ->label(__('Tax') . ' (%)')
-                //             ->numeric()
-                //             ->default(0)
-                //             ->reactive()
-                //             ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                //                 $amount = $get('amount') ?? 0;
-                //                 $tax = $state ?? 0;
-                //                 $total = $amount + ($amount * $tax / 100);
-                //                 $set('total_after_tax', $total);
-                //             }),
+                        Forms\Components\TextInput::make('tax')
+                            ->label(__('Tax') . ' (%)')
+                            ->numeric()
+                            ->default(0)
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $amount = $get('amount') ?? 0;
+                                $tax = $state ?? 0;
+                                $total = $amount + ($amount * $tax / 100);
+                                $set('total_after_tax', $total);
+                            }),
 
-                //         Forms\Components\TextInput::make('total_after_tax')
-                //             ->label(__('Total After Tax'))
-                //             ->numeric()
-                //             ->disabled()
-                //             ->dehydrated(false),
+                        Forms\Components\TextInput::make('total_after_tax')
+                            ->label(__('Total After Tax'))
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated(false),
 
-                //         Forms\Components\Select::make('pay_method_id')
-                //             ->label(__('Payment Method'))
-                //             ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
-                //             ->searchable()
-                //             ->native(false),
+                        Forms\Components\Select::make('pay_method_id')
+                            ->label(__('Payment Method'))
+                            ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
+                            ->searchable()
+                            ->default(1)
+                            ->native(false),
 
-                //         Forms\Components\Select::make('payment_status_id')
-                //             ->label(__('Payment Status'))
-                //             ->options(Status::where('type', 'payment')->pluck('name', 'id'))
-                //             ->searchable()
-                //             ->default(1)
-                //             ->native(false),
-                //     ])
-                //     ->columns(2)
-                //     ->collapsible()
-                //     ->collapsed(),
+                        Forms\Components\Select::make('payment_status_id')
+                            ->label(__('Payment Status'))
+                            ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                            ->searchable()
+                            ->default(1)
+                            ->native(false),
+                    ])
+                    ->columns(2)
+                    ->collapsible()
+                    ->collapsed(false),
             ]);
     }
 
@@ -179,7 +191,7 @@ class VisitResource extends Resource
 
                 Tables\Columns\TextColumn::make('payment.amount')
                     ->label(__('Total Amount'))
-                    ->money(fn() => Currency::first()->code ?? 'USD')
+                    ->money(fn() => \App\Support\Money::getCurrencyCode())
                     ->default('-')
                     ->sortable()
                     ->badge()
@@ -187,14 +199,14 @@ class VisitResource extends Resource
 
                 Tables\Columns\TextColumn::make('payment.total_paid')
                     ->label(__('Paid'))
-                    ->money(fn() => Currency::first()->code ?? 'USD')
+                    ->money(fn() => \App\Support\Money::getCurrencyCode())
                     ->default('-')
                     ->badge()
                     ->color('success'),
 
                 Tables\Columns\TextColumn::make('payment.remaining_payment')
                     ->label(__('Remaining'))
-                    ->money(fn() => Currency::first()->code ?? 'USD')
+                    ->money(fn() => \App\Support\Money::getCurrencyCode())
                     ->default('-')
                     ->badge()
                     ->color(fn($state) => $state > 0 ? 'danger' : 'success'),

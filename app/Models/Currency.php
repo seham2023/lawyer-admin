@@ -9,7 +9,7 @@ class Currency extends Model
 {
     use HasTranslations;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'code'];
 
     public $translatable = ['name'];
 }

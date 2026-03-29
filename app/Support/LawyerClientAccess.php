@@ -22,13 +22,7 @@ class LawyerClientAccess
 
         return $query
             ->where('type', 'user')
-            ->where(function (Builder $builder) use ($lawyerId, $clientIds) {
-                $builder->where('parent_id', $lawyerId);
-
-                if ($clientIds !== []) {
-                    $builder->orWhereIn('id', $clientIds);
-                }
-            });
+            ->whereIn('id', $clientIds);
     }
 
     public static function optionsForLawyer(int $lawyerId): array

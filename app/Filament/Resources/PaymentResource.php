@@ -56,6 +56,7 @@ class PaymentResource extends Resource
                             ->options([
                                 'App\\Models\\CaseRecord' => __('Case'),
                                 'App\\Models\\Visit' => __('Visit'),
+                                'App\\Models\\Expense' => __('Expense'),
                             ])
                             ->required()
                             ->reactive()
@@ -72,12 +73,15 @@ class PaymentResource extends Resource
                                 }
 
                                 if ($type === 'App\\Models\\CaseRecord') {
-                                    return CaseRecord::where('user_id', auth()->id())
+                                    return \App\Models\CaseRecord::where('user_id', auth()->id())
                                         ->pluck('subject', 'id');
                                 } elseif ($type === 'App\\Models\\Visit') {
-                                    return Visit::where('user_id', auth()->id())
+                                    return \App\Models\Visit::where('user_id', auth()->id())
                                         ->get()
                                         ->pluck('purpose', 'id');
+                                } elseif ($type === 'App\\Models\\Expense') {
+                                    return \App\Models\Expense::where('user_id', auth()->id())
+                                        ->pluck('name', 'id');
                                 }
 
                                 return [];
@@ -91,7 +95,7 @@ class PaymentResource extends Resource
                             ->options(Currency::all()->pluck('name', 'id'))
                             ->searchable()
                             ->required()
-                            ->default(fn() => Currency::first()?->id),
+                            ->default(fn() => \App\Support\Money::getCurrencyId()),
 
                         TextInput::make('amount')
                             ->label(__('Amount'))
@@ -172,6 +176,8 @@ class PaymentResource extends Resource
                             return $record->payable?->subject ?? '-';
                         } elseif ($record->payable_type === 'App\\Models\\Visit') {
                             return $record->payable?->purpose ?? '-';
+                        } elseif ($record->payable_type === 'App\\Models\\Expense') {
+                            return $record->payable?->name ?? '-';
                         }
                         return '-';
                     })
@@ -180,18 +186,18 @@ class PaymentResource extends Resource
 
                 TextColumn::make('amount')
                     ->label(__('Total Amount'))
-                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                    ->money(fn($record) => $record->currency?->code ?? \App\Support\Money::getCurrencyCode())
                     ->sortable(),
 
                 TextColumn::make('total_paid')
                     ->label(__('Paid'))
-                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                    ->money(fn($record) => $record->currency?->code ?? \App\Support\Money::getCurrencyCode())
                     ->color('success')
                     ->sortable(),
 
                 TextColumn::make('remaining_payment')
                     ->label(__('Remaining'))
-                    ->money(fn($record) => $record->currency?->code ?? 'USD')
+                    ->money(fn($record) => $record->currency?->code ?? \App\Support\Money::getCurrencyCode())
                     ->color(fn($record) => $record->remaining_payment > 0 ? 'danger' : 'success')
                     ->sortable(),
 

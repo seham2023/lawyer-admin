@@ -81,28 +81,38 @@ class CaseResource extends Resource
 
                         Forms\Components\Wizard\Step::make(__('opponent_information'))
                             ->schema([
-                                TextInput::make('opponent_name')
-                                    ->label(__('opponent_name'))
-                                    ->maxLength(255),
-
-                                TextInput::make('opponent_mobile')
-                                    ->label(__('opponent_mobile'))
-                                    ->tel()
-                                    ->maxLength(255),
-
-                                TextInput::make('opponent_email')
-                                    ->label(__('opponent_email'))
-                                    ->email()
-                                    ->maxLength(255),
-
-                                TextInput::make('opponent_location')
-                                    ->label(__('opponent_location'))
-                                    ->maxLength(255),
-
-                                Select::make('opponent_nationality_id')
-                                    ->label(__('opponent_nationality'))
-                                    ->options(Nationality::all()->pluck('name', 'id'))
-                                    ->searchable(),
+                                Select::make('opponent_id')
+                                    ->label(__('opponent'))
+                                    ->relationship('opponent', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->createOptionForm([
+                                        TextInput::make('name')
+                                            ->label(__('name'))
+                                            ->required()
+                                            ->maxLength(255),
+                                        TextInput::make('mobile')
+                                            ->label(__('mobile'))
+                                            ->tel()
+                                            ->maxLength(255),
+                                        TextInput::make('email')
+                                            ->label(__('email'))
+                                            ->email()
+                                            ->maxLength(255),
+                                        TextInput::make('location')
+                                            ->label(__('location'))
+                                            ->maxLength(255),
+                                        Select::make('nationality_id')
+                                            ->label(__('opponent_nationality'))
+                                            ->options(\App\Models\Nationality::all()->pluck('name', 'id'))
+                                            ->searchable(),
+                                    ])
+                                    ->createOptionAction(function (Forms\Components\Actions\Action $action) {
+                                        return $action
+                                            ->modalHeading(__('Create Opponent'))
+                                            ->modalSubmitActionLabel(__('Create'))
+                                            ->modalWidth('lg');
+                                    }),
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('opponent_lawyer'))

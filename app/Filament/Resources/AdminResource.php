@@ -66,16 +66,33 @@ class AdminResource extends Resource
                             ->email()
                             ->unique(ignoreRecord: true)
                             ->maxLength(191),
-                        Forms\Components\TextInput::make('country_key')
+                        Forms\Components\Select::make('country_key')
                             ->label(__('country_key'))
+                            ->options([
+                                '00966' => '+966 (SA)',
+                                '00971' => '+971 (AE)',
+                                '00973' => '+973 (BH)',
+                                '002' => '+2 (EG)',
+                            ])
+                            ->default('00966')
                             ->required()
-                            ->default('+966'),
+                            ->native(false),
                         Forms\Components\TextInput::make('phone')
                             ->label(__('phone'))
                             ->tel()
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(191),
+                        Forms\Components\Select::make('specialist_type')
+                            ->label(__('role'))
+                            ->options([
+                                'secretary' => __('secretary'),
+                                'legal_researcher' => __('legal_researcher'),
+                                'assistant' => __('assistant'),
+                                'lawyer' => __('lawyer'),
+                            ])
+                            ->required()
+                            ->native(false),
                         Forms\Components\TextInput::make('password')
                             ->label(__('password'))
                             ->password()
@@ -104,12 +121,9 @@ class AdminResource extends Resource
                     ->label(__('id'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('first_name')
-                    ->label(__('first_name'))
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('last_name')
-                    ->label(__('last_name'))
-                    ->searchable()
+                    ->label(__('name'))
+                    ->getStateUsing(fn ($record) => $record->first_name . ' ' . $record->last_name)
+                    ->searchable(['first_name', 'last_name'])
                     ->sortable(),
                 Tables\Columns\TextColumn::make('email')
                     ->label(__('email'))
@@ -117,16 +131,29 @@ class AdminResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('phone')
                     ->label(__('phone'))
-                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record->country_key . ' ' . $record->phone)
+                    ->searchable(['phone', 'country_key'])
                     ->sortable(),
-                // Tables\Columns\TextColumn::make('status')
-                //     ->label(__('status'))
-                //     ->badge()
-                //     ->color(fn (string $state): string => match ($state) {
-                //         'active' => 'success',
-                //         'inactive' => 'danger',
-                //         default => 'gray',
-                //     }),
+                Tables\Columns\TextColumn::make('specialist_type')
+                    ->label(__('role'))
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        'lawyer' => 'info',
+                        'secretary' => 'warning',
+                        'assistant' => 'success',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn ($state) => __($state))
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label(__('status'))
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'active' => 'success',
+                        'inactive' => 'danger',
+                        default => 'gray',
+                    })
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('created_at'))
                     ->dateTime()

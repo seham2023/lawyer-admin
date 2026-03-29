@@ -23,10 +23,23 @@ class EditExpense extends EditRecord
             $data['check_status_id'] = $check->status_id;
         }
 
-        // Load tax from payment
+        // Load data from payment
         $payment = $this->record->payment;
         if ($payment) {
             $data['tax'] = $payment->tax;
+            $data['currency_id'] = $payment->currency_id;
+            $data['pay_method_id'] = $payment->pay_method_id;
+            
+            // Recompute net amount from gross stored in payment
+            // amount = gross / (1 + tax/100)
+            if ($payment->tax > 0) {
+                $data['amount'] = round($payment->amount / (1 + ($payment->tax / 100)), 2);
+            } else {
+                $data['amount'] = $payment->amount;
+            }
+            
+            // Set total for the computed field
+            $data['total_after_tax'] = $payment->amount;
         }
 
         return $data;
