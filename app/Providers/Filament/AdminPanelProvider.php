@@ -35,14 +35,32 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandLogo(asset('images/legal/logo.png'))
+            ->brandLogoHeight('3.5rem')
+            ->favicon(asset('images/legal/gavel.png'))
             ->colors([
-                'primary' => Color::Amber,
-                'danger' => Color::Red,
+                'primary' => [
+                    50 => '#fbf8ef',
+                    100 => '#f5ecd6',
+                    200 => '#ebd9ab',
+                    300 => '#dec17b',
+                    400 => '#d1a555',
+                    500 => '#c58e3e',
+                    600 => '#aa7233',
+                    700 => '#8d5a2d',
+                    800 => '#744a29',
+                    900 => '#603d25',
+                    950 => '#351f12',
+                ],
+                'danger' => Color::Rose,
                 'gray' => Color::Zinc,
-                'info' => Color::Blue,
-                'success' => Color::Green,
-                'warning' => Color::Amber,
+                'info' => Color::Sky,
+                'success' => Color::Emerald,
+                'warning' => Color::Orange,
             ])
+            ->font('Outfit')
+            ->sidebarCollapsibleOnDesktop()
+            ->maxContentWidth('full')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
