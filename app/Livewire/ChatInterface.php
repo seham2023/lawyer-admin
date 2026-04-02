@@ -106,7 +106,7 @@ class ChatInterface extends Component
             'receiver_id' => $this->receiverId,
             'content' => $content,
             'type' => $type,
-            'is_read' => false,
+            'read_at' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -187,6 +187,8 @@ class ChatInterface extends Component
             'api_key' => $sessionData['api_key'],
             'caller_token' => $sessionData['lawyer_token'],
             'receiver_token' => $sessionData['client_token'],
+            'caller_name' => trim((Auth::user()->name ?? '') ?: ((Auth::user()->first_name ?? '') . ' ' . (Auth::user()->last_name ?? ''))),
+            'caller_avatar' => Auth::user()->avatar ?? null,
         ];
 
         Log::info('ChatInterface: Dispatching initiate-call event', $callData);

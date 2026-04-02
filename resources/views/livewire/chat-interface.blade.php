@@ -155,7 +155,7 @@
         // Socket.IO listeners
         if (window.socket) {
             // Join room
-            window.socket.socket.emit('joinRoom', { room_id: roomId, user_id: userId });
+            window.socket.joinRoom(roomId);
 
             // Listen for new messages
             window.socket.socket.on('newMessage', (data) => {
@@ -166,21 +166,11 @@
             });
 
             // Listen for typing
-            window.socket.socket.on('userTyping', (data) => {
+            window.socket.socket.on('typingIndicator', (data) => {
                 if (data.room_id == roomId && data.user_id != userId) {
                     const indicator = document.getElementById('typing-indicator-' + roomId);
                     if (indicator) {
-                        indicator.textContent = 'typing...';
-                    }
-                }
-            });
-
-            // Listen for stopped typing
-            window.socket.socket.on('userStoppedTyping', (data) => {
-                if (data.room_id == roomId) {
-                    const indicator = document.getElementById('typing-indicator-' + roomId);
-                    if (indicator) {
-                        indicator.textContent = '';
+                        indicator.textContent = data.is_typing ? 'typing...' : '';
                     }
                 }
             });
@@ -200,27 +190,28 @@
             console.log('2. Event type:', typeof event);
             console.log('3. Event is array:', Array.isArray(event));
 
-            const callData = event[0];
+            const callData = Array.isArray(event) ? event[0] : event;
             console.log('4. Call data extracted:', callData);
             console.log('5. Socket exists:', !!window.socket);
             console.log('6. Socket.socket exists:', !!(window.socket && window.socket.socket));
 
             if (window.socket && window.socket.socket) {
                 const emitData = {
-                    status: 'start',
                     room_id: callData.room_id,
-                    userId: callData.caller_id,
-                    receiverId: callData.receiver_id,
-                    callType: callData.call_type,
+                    caller_id: callData.caller_id,
+                    receiver_id: callData.receiver_id,
+                    caller_name: callData.caller_name,
+                    caller_avatar: callData.caller_avatar,
+                    call_type: callData.call_type,
                     session_id: callData.session_id,
                     token: callData.receiver_token,
                     api_key: callData.api_key
                 };
 
-                console.log('7. Emitting call event to Socket.IO:', emitData);
+                console.log('7. Emitting initiateCall event to Socket.IO:', emitData);
 
-                // Emit call event to Socket.IO
-                window.socket.socket.emit('call', emitData);
+                // Emit Node v4 call signaling event
+                window.socket.socket.emit('initiateCall', emitData);
 
                 console.log('8. Call event emitted successfully');
 

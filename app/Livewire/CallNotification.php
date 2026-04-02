@@ -16,17 +16,17 @@ class CallNotification extends Component
     public function handleIncomingCall(array $callData): void
     {
         $this->incomingCall = $callData;
-        $this->callType = $callData['callType'] ?? 'audio';
+        $this->callType = $callData['callType'] ?? $callData['call_type'] ?? 'audio';
 
         // Get caller name
         $caller = \DB::connection('qestass_app')
             ->table('users')
-            ->where('id', $callData['userId'] ?? 0)
+            ->where('id', $callData['caller_id'] ?? $callData['callerId'] ?? $callData['userId'] ?? 0)
             ->first();
 
         $this->callerName = $caller
             ? $caller->first_name . ' ' . $caller->last_name
-            : 'Unknown Caller';
+            : ($callData['caller_name'] ?? $callData['callerName'] ?? 'Unknown Caller');
 
         $this->showCallModal = true;
     }

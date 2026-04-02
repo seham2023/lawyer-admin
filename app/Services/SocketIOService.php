@@ -9,11 +9,13 @@ class SocketIOService
 {
     protected string $socketUrl;
     protected string $socketPath;
+    protected string $nodeServerUrl;
 
     public function __construct()
     {
-        $this->socketUrl = config('socket.url', 'https://qestass.com:4722');
+        $this->socketUrl = config('socket.url', 'https://qestass.com:4888');
         $this->socketPath = config('socket.path', '/socket.io');
+        $this->nodeServerUrl = rtrim(config('services.opentok.node_server_url', 'http://127.0.0.1:4888'), '/');
     }
 
     /**
@@ -22,7 +24,7 @@ class SocketIOService
     public function sendMessage(int $roomId, int $senderId, int $receiverId, string $content, string $type = 'text', ?int $duration = null): bool
     {
         try {
-            $response = Http::timeout(5)->post("{$this->socketUrl}/api/sendMessage", [
+            $response = Http::timeout(5)->post("{$this->nodeServerUrl}/api/sendMessage", [
                 'room_id' => $roomId,
                 'sender_id' => $senderId,
                 'receiver_id' => $receiverId,
@@ -36,6 +38,7 @@ class SocketIOService
             Log::error('SocketIO sendMessage failed', [
                 'error' => $e->getMessage(),
                 'room_id' => $roomId,
+                'node_server_url' => $this->nodeServerUrl,
             ]);
             return false;
         }
@@ -68,7 +71,7 @@ class SocketIOService
         return \DB::connection('qestass_app')
             ->table('room_messages')
             ->where('receiver_id', $userId)
-            ->where('is_read', false)
+            ->whereNull('read_at')
             ->count();
     }
 
@@ -82,9 +85,8 @@ class SocketIOService
                 ->table('room_messages')
                 ->where('room_id', $roomId)
                 ->where('receiver_id', $userId)
-                ->where('is_read', false)
+                ->whereNull('read_at')
                 ->update([
-                    'is_read' => true,
                     'read_at' => now(),
                 ]);
 
@@ -108,7 +110,7 @@ class SocketIOService
             ->table('rooms')
             ->select([
                 'rooms.*',
-                \DB::raw('(SELECT COUNT(*) FROM room_messages WHERE room_messages.room_id = rooms.id AND room_messages.receiver_id = ? AND room_messages.is_read = false) as unread_count'),
+                \DB::raw('(SELECT COUNT(*) FROM room_messages WHERE room_messages.room_id = rooms.id AND room_messages.receiver_id = ? AND room_messages.read_at IS NULL) as unread_count'),
                 \DB::raw('(SELECT content FROM room_messages WHERE room_messages.room_id = rooms.id ORDER BY created_at DESC LIMIT 1) as last_message'),
                 \DB::raw('(SELECT created_at FROM room_messages WHERE room_messages.room_id = rooms.id ORDER BY created_at DESC LIMIT 1) as last_message_at'),
                 \DB::raw('(SELECT CONCAT(first_name, " ", last_name) FROM users WHERE users.id = IF(rooms.userone_id = ?, rooms.usertwo_id, rooms.userone_id)) as client_name'),

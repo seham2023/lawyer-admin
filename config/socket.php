@@ -10,7 +10,7 @@ return [
     |
     */
 
-    'url' => env('SOCKET_IO_URL', 'https://qestass.com:4722'),
+    'url' => env('SOCKET_IO_URL', 'https://qestass.com:4888'),
     'path' => env('SOCKET_IO_PATH', '/socket.io'),
 
     /*

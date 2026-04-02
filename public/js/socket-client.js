@@ -33,11 +33,14 @@ class SocketClient {
             console.log('Connected to Socket.IO server');
             this.connected = true;
             
-            // Emit dashboard connection event
-            this.socket.emit('dashboardConnect', {
+            const payload = {
                 user_id: this.userId,
                 platform: 'dashboard'
-            });
+            };
+
+            // Emit supported registration events so Node v4 can map this user
+            this.socket.emit('dashboardConnect', payload);
+            this.socket.emit('registerUser', payload);
 
             // Update presence to online
             this.updatePresence('online');
@@ -67,14 +70,26 @@ class SocketClient {
         });
 
         // Listen for incoming calls
-        this.socket.on('call', (data) => {
+        this.socket.on('incomingCall', (data) => {
             console.log('Incoming call:', data);
             this.callCallbacks.forEach(callback => callback(data));
-            
-            if (data.status === 'start') {
-                this.playSound('call');
-                this.showCallNotification(data);
-            }
+            this.playSound('call');
+            this.showCallNotification(data);
+        });
+
+        this.socket.on('callAccepted', (data) => {
+            console.log('Call accepted:', data);
+            this.callCallbacks.forEach(callback => callback({ ...data, status: 'accepted' }));
+        });
+
+        this.socket.on('callRejected', (data) => {
+            console.log('Call rejected:', data);
+            this.callCallbacks.forEach(callback => callback({ ...data, status: 'rejected' }));
+        });
+
+        this.socket.on('callEnded', (data) => {
+            console.log('Call ended:', data);
+            this.callCallbacks.forEach(callback => callback({ ...data, status: 'ended' }));
         });
 
         return this.socket;
@@ -202,8 +217,8 @@ class SocketClient {
         }
 
         if (Notification.permission === 'granted') {
-            new Notification(`${data.userName || 'Someone'} is calling`, {
-                body: `Incoming ${data.callType} call`,
+            new Notification(`${data.caller_name || data.callerName || 'Someone'} is calling`, {
+                body: `Incoming ${data.call_type || data.callType || 'audio'} call`,
                 icon: '/images/logo.png',
                 tag: `call-${data.room_id}`,
                 requireInteraction: true
