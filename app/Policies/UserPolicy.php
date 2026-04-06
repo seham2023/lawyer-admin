@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Qestass\User;
-use App\Models\LawyerClient;
+use App\Models\LawyerUser;
 
 class UserPolicy
 {
@@ -28,7 +28,7 @@ class UserPolicy
         // For client users (type = user)
         if ($model->type === 'user') {
             // Admins can see all if required, but logic says lawyers see their attached clients
-            return $user->type === 'admin' || LawyerClient::where('lawyer_id', $user->id)->where('client_id', $model->id)->exists();
+            return $user->type === 'admin' || \App\Models\LawyerUser::where('lawyer_id', $user->id)->where('user_id', $model->id)->where('user_type', 'client')->exists();
         }
 
         return false;
@@ -52,7 +52,7 @@ class UserPolicy
         }
 
         if ($model->type === 'user') {
-            return $user->type === 'admin' || LawyerClient::where('lawyer_id', $user->id)->where('client_id', $model->id)->exists();
+            return $user->type === 'admin' || \App\Models\LawyerUser::where('lawyer_id', $user->id)->where('user_id', $model->id)->where('user_type', 'client')->exists();
         }
 
         return false;

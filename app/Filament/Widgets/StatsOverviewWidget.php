@@ -5,7 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Qestass\User;
 use App\Models\CaseRecord;
 use App\Models\Payment;
-use App\Support\LawyerClientAccess;
+use App\Support\LawyerUserAccess;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -21,7 +21,7 @@ class StatsOverviewWidget extends BaseWidget
         $outstanding = max(0, $totalPayments - $totalCollected);
         
         return [
-            Stat::make(__('Total Clients'), LawyerClientAccess::applyToUserQuery(User::query(), $lawyerId)->count())
+            Stat::make(__('Total Clients'), LawyerUserAccess::applyToUserQuery(User::query(), $lawyerId, 'client')->count())
                 ->description(__('Attached to your workspace'))
                 ->descriptionIcon('heroicon-m-users')
                 ->color('success'),

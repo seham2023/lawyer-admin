@@ -12,7 +12,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
-use App\Support\LawyerClientAccess;
+use App\Support\LawyerUserAccess;
 use App\Filament\Resources\VisitResource\Pages;
 use App\Filament\Resources\VisitResource\RelationManagers;
 
@@ -51,7 +51,7 @@ class VisitResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('client_id')
                             ->label(__('Client'))
-                            ->options(fn () => LawyerClientAccess::optionsForLawyer(auth()->id()))
+                            ->options(fn () => LawyerUserAccess::optionsForLawyer(auth()->id(), 'client'))
                             ->searchable()
                             ->preload()
                             ->required()

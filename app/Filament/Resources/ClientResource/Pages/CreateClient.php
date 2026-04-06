@@ -5,7 +5,7 @@ namespace App\Filament\Resources\ClientResource\Pages;
 use App\Filament\Resources\ClientResource;
 use App\Models\Address;
 use App\Models\Qestass\User;
-use App\Support\LawyerClientAccess;
+use App\Support\LawyerUserAccess;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
@@ -43,7 +43,7 @@ class CreateClient extends CreateRecord
         $existingClient = $this->findExistingClient($data);
 
         if ($existingClient) {
-            $wasAttached = LawyerClientAccess::attach($lawyerId, $existingClient->id);
+            $wasAttached = LawyerUserAccess::attach($lawyerId, $existingClient->id);
             $this->attachedExistingClient = $wasAttached;
             $this->clientAlreadyLinked = ! $wasAttached;
 
@@ -51,7 +51,7 @@ class CreateClient extends CreateRecord
         }
 
         $record = static::getModel()::create($data);
-        LawyerClientAccess::attach($lawyerId, $record->id);
+        LawyerUserAccess::attach($lawyerId, $record->id);
 
         return $record;
     }

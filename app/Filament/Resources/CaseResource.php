@@ -20,7 +20,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
 use Illuminate\Database\Eloquent\Builder;
-use App\Support\LawyerClientAccess;
+use App\Support\LawyerUserAccess;
 use App\Filament\Resources\CaseResource\Pages;
 use App\Filament\Actions\SendTabbyPaymentLinkAction;
 use App\Filament\Resources\CaseResource\RelationManagers;
@@ -36,10 +36,20 @@ class CaseResource extends Resource
     {
         return __('cases');
     }
- public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->where('user_id', auth()->id())->latest();
+        $user = auth()->user();
+        $query = parent::getEloquentQuery();
+
+        if ($user->parent_id) {
+            // Sub-lawyer: only see cases owned by parent AND assigned to them
+            return $query->where('user_id', $user->parent_id)
+                         ->where('assigned_lawyer_id', $user->id)
+                         ->latest();
+        }
+
+        // Main lawyer: see all cases they own
+        return $query->where('user_id', $user->id)->latest();
     }
     public static function getNavigationGroup(): ?string
     {
@@ -66,7 +76,7 @@ class CaseResource extends Resource
                             ->schema([
                                 Select::make('client_id')
                                     ->label(__('client'))
-                                    ->options(fn () => LawyerClientAccess::optionsForLawyer(auth()->id()))
+                                    ->options(fn () => \App\Support\LawyerUserAccess::optionsForLawyer(auth()->user()->parent_id ?? auth()->id(), 'client'))
                                     ->searchable()
                                     ->preload()
                                     ->required(),
@@ -208,6 +218,13 @@ class CaseResource extends Resource
                                 RichEditor::make('contract')
                                     ->label(__('contract'))
                                     ->columnSpanFull(),
+
+                                Select::make('assigned_lawyer_id')
+                                    ->label(__('assigned_lawyer'))
+                                    ->options(fn () => \App\Support\LawyerUserAccess::optionsForLawyer(auth()->user()->parent_id ?? auth()->id(), 'sub_lawyer'))
+                                    ->searchable()
+                                    ->preload()
+                                    ->hint(__('If left empty, only the main lawyer can manage this case.')),
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('financial_details'))
@@ -263,9 +280,9 @@ class CaseResource extends Resource
 
 
                 Hidden::make('user_id')
-                    ->default(auth()->id())
+                    ->default(fn () => auth()->user()->parent_id ?? auth()->id())
             ]);
-    }
+}
 
     public static function table(Tables\Table $table): Tables\Table
     {

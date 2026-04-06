@@ -25,7 +25,8 @@ class CaseRecord extends Model
         'notes',
         'contract',
         'client_type_id',
-        'client_id'
+        'client_id',
+        'assigned_lawyer_id'
     ];
     protected $casts = [
         'start_date' => 'date',
@@ -146,6 +147,11 @@ class CaseRecord extends Model
     public function audits()
     {
         return $this->hasMany(CaseRecordAudit::class, 'case_record_id');
+    }
+
+    public function assignedLawyer()
+    {
+        return $this->belongsTo(User::class, 'assigned_lawyer_id');
     }
 
     public function __toString()

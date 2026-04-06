@@ -7,7 +7,7 @@ use App\Models\Category;
 use App\Models\Country;
 use App\Models\State;
 use App\Models\City;
-use App\Models\LawyerClient;
+use App\Models\LawyerUser;
 use Filament\Notifications\Notification;
 use Filament\Forms;
 use Filament\Tables;
@@ -20,7 +20,7 @@ use App\Filament\Resources\ClientResource\Pages;
 use App\Filament\Resources\ClientResource\RelationManagers;
 use App\Models\Qestass\User;
 use App\Models\Currency;
-use App\Support\LawyerClientAccess;
+use App\Support\LawyerUserAccess;
 use Illuminate\Database\Eloquent\Builder;
 
 class ClientResource extends Resource
@@ -52,9 +52,10 @@ class ClientResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return LawyerClientAccess::applyToUserQuery(
+        return LawyerUserAccess::applyToUserQuery(
             parent::getEloquentQuery(),
             auth()->id(),
+            'client'
         );
     }
 
@@ -438,9 +439,10 @@ class ClientResource extends Resource
                     ->modalHeading(__('Detach Client'))
                     ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
                     ->action(function (User $record): void {
-                        LawyerClient::query()
+                        LawyerUser::query()
                             ->where('lawyer_id', auth()->id())
-                            ->where('client_id', $record->id)
+                            ->where('user_id', $record->id)
+                            ->where('user_type', 'client')
                             ->delete();
 
                         Notification::make()
@@ -459,9 +461,10 @@ class ClientResource extends Resource
                         ->action(function ($records): void {
                             $clientIds = $records->pluck('id')->all();
 
-                            LawyerClient::query()
+                            LawyerUser::query()
                                 ->where('lawyer_id', auth()->id())
-                                ->whereIn('client_id', $clientIds)
+                                ->whereIn('user_id', $clientIds)
+                                ->where('user_type', 'client')
                                 ->delete();
 
                             Notification::make()

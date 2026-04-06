@@ -451,6 +451,23 @@ class User extends Authenticatable implements HasName
             ->from($defaultDb . '.visits');
     }
 
+    public function lawyerUsers()
+    {
+        return $this->hasMany(\App\Models\LawyerUser::class, 'lawyer_id');
+    }
+
+    public function linkedLawyers()
+    {
+        return $this->hasMany(\App\Models\LawyerUser::class, 'user_id');
+    }
+
+    public function assignedCases()
+    {
+        $defaultDb = config('database.connections.' . config('database.default') . '.database');
+        return $this->hasMany(\App\Models\CaseRecord::class, 'assigned_lawyer_id', 'id')
+            ->from($defaultDb . '.case_records');
+    }
+
     public function getFilamentName(): string
     {
         // Return the full name if both first_name and last_name are available

@@ -67,9 +67,10 @@ class EditCase extends EditRecord
             }
         } else {
             // Remove opponent if name is empty
-            if ($this->record->opponent) {
-                $this->record->opponent->delete();
+            if ($opponent = $this->record->opponent) {
                 $this->record->update(['opponent_id' => null]);
+                $opponent->delete();
+                $data['opponent_id'] = null;
             }
         }
 
@@ -90,12 +91,14 @@ class EditCase extends EditRecord
                     'email' => $data['opponent_lawyer_email'] ?? null,
                 ]);
                 $this->record->update(['opponent_lawyer_id' => $opponentLawyer->id]);
+                $data['opponent_lawyer_id'] = $opponentLawyer->id;
             }
         } else {
             // Remove opponent lawyer if name is empty
-            if ($this->record->opponent_lawyer) {
-                $this->record->opponent_lawyer->delete();
+            if ($opponentLawyer = $this->record->opponent_lawyer) {
                 $this->record->update(['opponent_lawyer_id' => null]);
+                $opponentLawyer->delete();
+                $data['opponent_lawyer_id'] = null;
             }
         }
 

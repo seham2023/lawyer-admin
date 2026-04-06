@@ -167,9 +167,9 @@ class ViewClient extends ViewRecord
                 ->modalHeading(__('Detach Client'))
                 ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
                 ->action(function (): void {
-                    \App\Models\LawyerClient::query()
+                    \App\Models\LawyerUser::query()
                         ->where('lawyer_id', auth()->id())
-                        ->where('client_id', $this->record->id)
+                        ->where('user_id', $this->record->id)
                         ->delete();
 
                     \Filament\Notifications\Notification::make()

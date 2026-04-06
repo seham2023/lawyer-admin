@@ -8,19 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('lawyer_clients', function (Blueprint $table) {
+        Schema::create('lawyer_users', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('lawyer_id');
-            $table->unsignedBigInteger('client_id');
+            $table->unsignedBigInteger('user_id');
+            $table->string('user_type')->default('client'); // client, admin, sub_lawyer
             $table->timestamps();
 
-            $table->unique(['lawyer_id', 'client_id']);
-            $table->index('client_id');
+            $table->unique(['lawyer_id', 'user_id', 'user_type'], 'lawyer_user_type_unique');
+            $table->index('user_id');
+            $table->index('user_type');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('lawyer_clients');
+        Schema::dropIfExists('lawyer_users');
     }
 };
