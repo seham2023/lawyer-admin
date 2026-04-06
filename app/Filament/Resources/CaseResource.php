@@ -296,10 +296,14 @@ class CaseResource extends Resource
                     ->label(__('client'))
                     ->getStateUsing(fn($record) => $record->client?->getFilamentName() ?? '-')
                     ->searchable(query: function ($query, $search) {
-                        return $query->whereHas('client', function ($q) use ($search) {
-                            $q->where('first_name', 'like', "%{$search}%")
-                                ->orWhere('last_name', 'like', "%{$search}%")
-                                ->orWhere('mobile', 'like', "%{$search}%");
+                        $appDb = config('database.connections.qestass_app.database');
+                        return $query->whereHas('client', function ($q) use ($search, $appDb) {
+                            $q->from($appDb . '.users')
+                                ->where(function ($qq) use ($search) {
+                                    $qq->where('first_name', 'like', "%{$search}%")
+                                        ->orWhere('last_name', 'like', "%{$search}%")
+                                        ->orWhere('phone', 'like', "%{$search}%");
+                                });
                         });
                     })
                     ->sortable(query: function ($query, $direction) {
@@ -312,7 +316,7 @@ class CaseResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('court_name')
+                TextColumn::make('currentCourt.court.name')
                     ->label(__('court_name'))
                     ->sortable()
                     ->searchable(),

@@ -12,6 +12,12 @@ use Filament\Resources\RelationManagers\RelationManager;
 class CaseRecordsRelationManager extends RelationManager
 {
     protected static string $relationship = 'caseRecords';
+    
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id());
+    }
 
     protected static ?string $recordTitleAttribute = 'subject';
 
@@ -53,9 +59,6 @@ class CaseRecordsRelationManager extends RelationManager
                     ->required()
                     ->native(false),
 
-                Forms\Components\TextInput::make('court_name')
-                    ->label(__('court_name'))
-                    ->maxLength(255),
 
                 Forms\Components\TextInput::make('subject')
                     ->label(__('subject'))
@@ -87,11 +90,10 @@ class CaseRecordsRelationManager extends RelationManager
                     ->limit(40)
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('court_name')
+                Tables\Columns\TextColumn::make('currentCourt.court.name')
                     ->label(__('court_name'))
                     ->sortable()
-                    ->searchable()
-                    ->limit(30),
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('start_date')
                     ->label(__('start_date'))
@@ -216,6 +218,18 @@ class CaseRecordsRelationManager extends RelationManager
                             ->required()
                             ->prefix(fn() => \App\Support\Money::getCurrencySymbol())
                             ->minValue(0.01)
+                            ->rules([
+                                function ($record) {
+                                    return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                        if (!$record->payment) return;
+                                        
+                                        $remaining = $record->payment->remaining_payment;
+                                        if ($value > $remaining) {
+                                            $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                        }
+                                    };
+                                }
+                            ])
                             ->helperText(fn($record) => __('Remaining balance') . ': ' . ($record->payment->remaining_payment ?? 0)),
 
                         Forms\Components\DateTimePicker::make('paid_at')

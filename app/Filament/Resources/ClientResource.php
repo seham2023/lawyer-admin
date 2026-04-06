@@ -431,12 +431,12 @@ class ClientResource extends Resource
                 //             ->success()
                 //             ->send();
                 //     }),
-                Tables\Actions\Action::make('detach_client')
-                    ->label(__('Detach Client'))
-                    ->icon('heroicon-o-link-slash')
-                    ->color('warning')
+                Tables\Actions\Action::make('delete_client')
+                    ->label(__('Delete'))
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
                     ->requiresConfirmation()
-                    ->modalHeading(__('Detach Client'))
+                    ->modalHeading(__('Delete Client'))
                     ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
                     ->action(function (User $record): void {
                         LawyerUser::query()
@@ -446,17 +446,17 @@ class ClientResource extends Resource
                             ->delete();
 
                         Notification::make()
-                            ->title(__('Client detached from your workspace.'))
+                            ->title(__('Client deleted.'))
                             ->success()
                             ->send();
                     }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('detach_clients')
-                        ->label(__('Detach Clients'))
-                        ->icon('heroicon-o-link-slash')
-                        ->color('warning')
+                    Tables\Actions\BulkAction::make('delete_clients')
+                        ->label(__('Delete Selected'))
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
                         ->requiresConfirmation()
                         ->action(function ($records): void {
                             $clientIds = $records->pluck('id')->all();
@@ -468,7 +468,7 @@ class ClientResource extends Resource
                                 ->delete();
 
                             Notification::make()
-                                ->title(__('Selected clients were detached from your workspace.'))
+                                ->title(__('Selected clients were deleted.'))
                                 ->success()
                                 ->send();
                         }),

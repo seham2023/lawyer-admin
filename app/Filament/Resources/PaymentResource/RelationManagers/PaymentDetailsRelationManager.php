@@ -46,12 +46,16 @@ class PaymentDetailsRelationManager extends RelationManager
                     ->label(__('Amount'))
                     ->numeric()
                     ->required()
+                    ->minValue(0.01)
                     ->rules([
-                        function ($get) {
-                            return function (string $attribute, $value, Closure $fail) use ($get) {
-                                $payment = $this->getOwnerRecord()?->payment ?? $this->getOwnerRecord();
-                                if ($payment && $value > 0 && $payment->getRemainingPaymentAttribute() < $value) {
-                                    $fail("Amount cannot exceed the remaining payment of {$payment->getRemainingPaymentAttribute()}.");
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                $payment = $this->getOwnerRecord();
+                                if (!$payment) return;
+                                
+                                $remaining = $payment->remaining_payment;
+                                if ($value > $remaining) {
+                                    $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
                                 }
                             };
                         }

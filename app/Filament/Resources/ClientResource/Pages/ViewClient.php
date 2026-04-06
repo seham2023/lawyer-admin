@@ -159,12 +159,12 @@ class ViewClient extends ViewRecord
                 ->color('warning')
                 ->url(fn() => CaseResource::getUrl('create', ['client_id' => $this->record->id])),
             Actions\EditAction::make(),
-            Actions\Action::make('detach_client')
-                ->label(__('Detach Client'))
-                ->icon('heroicon-o-link-slash')
-                ->color('warning')
+            Actions\Action::make('delete_client')
+                ->label(__('Delete'))
+                ->icon('heroicon-o-trash')
+                ->color('danger')
                 ->requiresConfirmation()
-                ->modalHeading(__('Detach Client'))
+                ->modalHeading(__('Delete Client'))
                 ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
                 ->action(function (): void {
                     \App\Models\LawyerUser::query()
@@ -173,7 +173,7 @@ class ViewClient extends ViewRecord
                         ->delete();
 
                     \Filament\Notifications\Notification::make()
-                        ->title(__('Client detached from your workspace.'))
+                        ->title(__('Client deleted.'))
                         ->success()
                         ->send();
 

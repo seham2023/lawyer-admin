@@ -168,10 +168,10 @@ class SubLawyerResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('detach_sub_lawyer')
-                    ->label(__('Detach Sub Lawyer'))
-                    ->icon('heroicon-o-link-slash')
-                    ->color('warning')
+                Tables\Actions\Action::make('delete_sub_lawyer')
+                    ->label(__('Delete'))
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
                     ->requiresConfirmation()
                     ->action(function (User $record): void {
                         LawyerUser::query()
@@ -181,11 +181,10 @@ class SubLawyerResource extends Resource
                             ->delete();
 
                         \Filament\Notifications\Notification::make()
-                            ->title(__('Sub Lawyer detached from your workspace.'))
+                            ->title(__('Sub Lawyer deleted.'))
                             ->success()
                             ->send();
                     }),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

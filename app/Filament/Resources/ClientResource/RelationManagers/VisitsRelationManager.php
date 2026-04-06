@@ -14,6 +14,12 @@ use Filament\Tables\Table;
 class VisitsRelationManager extends RelationManager
 {
     protected static string $relationship = 'visits';
+    
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id());
+    }
 
     protected static ?string $recordTitleAttribute = 'purpose';
 
@@ -215,6 +221,18 @@ class VisitsRelationManager extends RelationManager
                             ->required()
                             ->prefix(fn() => \App\Support\Money::getCurrencySymbol())
                             ->minValue(0.01)
+                            ->rules([
+                                function ($record) {
+                                    return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                        if (!$record->payment) return;
+                                        
+                                        $remaining = $record->payment->remaining_payment;
+                                        if ($value > $remaining) {
+                                            $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                        }
+                                    };
+                                }
+                            ])
                             ->helperText(fn($record) => __('Remaining balance') . ': ' . ($record->payment->remaining_payment ?? 0)),
 
                         Forms\Components\DateTimePicker::make('paid_at')

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 class Category extends Model
 {
     use HasTranslations;
+    protected $connection = 'mysql';
     protected $fillable = ['name', 'image', 'parent_id', 'type', 'user_id'];
     protected $translatable = ['name'];
 

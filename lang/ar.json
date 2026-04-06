@@ -441,7 +441,14 @@
     "sub_lawyer_information": "معلومات المحامي المساعد",
     "assign_to_case": "تعيين للقضية",
     "assigned_lawyer": "المحامي المعين",
-    "Detach Sub Lawyer": "إلغاء ربط المحامي المساعد",
-    "Sub Lawyer detached from your workspace.": "تم إلغاء ربط المحامي المساعد من مساحة عملك.",
-    "If left empty, only the main lawyer can manage this case.": "إذا ترك فارغاً، سيتمكن المحامي الأساسي فقط من إدارة هذه القضية."
+    "Detach Sub Lawyer": "حذف المحامي المساعد",
+    "Sub Lawyer detached from your workspace.": "تم حذف المحامي المساعد.",
+    "If left empty, only the main lawyer can manage this case.": "إذا ترك فارغاً، سيتمكن المحامي الأساسي فقط من إدارة هذه القضية.",
+    "Delete": "حذف",
+    "Delete Selected": "حذف المختار",
+    "Delete Client": "حذف العميل",
+    "Client deleted.": "تم حذف العميل.",
+    "Sub Lawyer deleted.": "تم حذف المحامي المساعد.",
+    "Selected clients were deleted.": "تم حذف العملاء المختارين.",
+    "Amount cannot exceed the remaining balance of :amount": "لا يمكن أن يتجاوز المبلغ الرصيد المتبقي البالغ :amount"
 }

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CaseRecord extends Model
 {
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'category_id',
         'status_id',

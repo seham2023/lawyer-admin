@@ -43,8 +43,20 @@ class PaymentDetailsRelationManager extends RelationManager
                     ->label(__('Amount'))
                     ->numeric()
                     ->required()
-                    ->prefix(fn() => \App\Support\Money::getCurrencySymbol())
-                    ->minValue(0.01),
+                    ->minValue(0.01)
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                $payment = $this->getOwnerRecord()->payment;
+                                if (!$payment) return;
+                                
+                                $remaining = $payment->remaining_payment;
+                                if ($value > $remaining) {
+                                    $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                }
+                            };
+                        }
+                    ]),
 
                 Forms\Components\DateTimePicker::make('paid_at')
                     ->label(__('Payment Date'))

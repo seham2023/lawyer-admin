@@ -174,7 +174,17 @@ class VisitResource extends Resource
                 Tables\Columns\TextColumn::make('client.first_name')
                     ->label(__('Client'))
                     ->formatStateUsing(fn($record) => $record->client->first_name . ' ' . $record->client->last_name)
-                    ->searchable(['first_name', 'last_name'])
+                    ->searchable(query: function ($query, $search) {
+                        $appDb = config('database.connections.qestass_app.database');
+                        return $query->whereHas('client', function ($q) use ($search, $appDb) {
+                            $q->from($appDb . '.users')
+                                ->where(function ($qq) use ($search) {
+                                    $qq->where('first_name', 'like', "%{$search}%")
+                                        ->orWhere('last_name', 'like', "%{$search}%")
+                                        ->orWhere('phone', 'like', "%{$search}%");
+                                });
+                        });
+                    })
                     ->sortable()
                     ->weight('bold'),
 

@@ -167,17 +167,17 @@ class ViewCase extends ViewRecord
                     ->schema([
                         Infolists\Components\Grid::make(3)
                             ->schema([
-                                Infolists\Components\TextEntry::make('court.name')
+                                Infolists\Components\TextEntry::make('currentCourt.court.name')
                                     ->label(__('Court Name'))
                                     ->icon('heroicon-o-building-library')
                                     ->default('-'),
 
-                                Infolists\Components\TextEntry::make('court_name')
-                                    ->label(__('Court Name (Custom)'))
-                                    ->default('-')
-                                    ->hidden(fn($state) => empty($state)),
+                                Infolists\Components\TextEntry::make('currentCourt.court.location')
+                                    ->label(__('Location'))
+                                    ->icon('heroicon-o-map-pin')
+                                    ->default('-'),
 
-                                Infolists\Components\TextEntry::make('court_number')
+                                Infolists\Components\TextEntry::make('currentCourt.court.court_number')
                                     ->label(__('Court Number'))
                                     ->badge()
                                     ->default('-'),

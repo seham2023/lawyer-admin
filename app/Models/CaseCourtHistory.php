@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CaseCourtHistory extends Model
 {
+    protected $connection = 'mysql';
+
     protected $table = 'case_court_history';
 
     protected $fillable = [
