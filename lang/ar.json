@@ -450,5 +450,13 @@
     "Client deleted.": "تم حذف العميل.",
     "Sub Lawyer deleted.": "تم حذف المحامي المساعد.",
     "Selected clients were deleted.": "تم حذف العملاء المختارين.",
-    "Amount cannot exceed the remaining balance of :amount": "لا يمكن أن يتجاوز المبلغ الرصيد المتبقي البالغ :amount"
+    "Amount cannot exceed the remaining balance of :amount": "لا يمكن أن يتجاوز المبلغ الرصيد المتبقي البالغ :amount",
+    "all": "الكل",
+    "active_cases": "القضايا النشطة",
+    "judgment": "قيد التقاضي",
+    "closed": "مغلقة",
+    "Latest Session Court": "آخر محكمة من الجلسات",
+    "Session added successfully": "تم إضافة الجلسة بنجاح",
+    "Document added successfully": "تم إضافة المستند بنجاح",
+    "Payment added successfully": "تم إضافة الدفعة بنجاح"
 }

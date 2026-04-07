@@ -112,6 +112,11 @@ class CaseRecord extends Model
         return $this->hasMany(Session::class, 'case_record_id');
     }
 
+    public function latestSession()
+    {
+        return $this->hasOne(Session::class, 'case_record_id')->latestOfMany('datetime');
+    }
+
     public function documents()
     {
         return $this->hasMany(Document::class, 'case_record_id');

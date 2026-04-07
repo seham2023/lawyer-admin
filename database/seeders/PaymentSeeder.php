@@ -18,6 +18,7 @@ class PaymentSeeder extends Seeder
             ['en' => 'Credit Card', 'ar' => 'بطاقة ائتمان'],
             ['en' => 'Debit Card', 'ar' => 'بطاقة الخصم'],
             ['en' => 'Bank Transfer', 'ar' => 'التحويل المصرفي'],
+            ['en' => 'Tabby', 'ar' => 'تابي'],
             ['en' => 'Other', 'ar' => 'أخرى'],
         ];
 

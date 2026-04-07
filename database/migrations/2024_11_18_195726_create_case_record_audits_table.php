@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('new_value')->nullable(); // New value
             $table->json('metadata')->nullable(); // Additional context
             $table->ipAddress('ip_address')->nullable(); // User's IP
-            $table->string('action')->after('user_id')->nullable();
+            $table->string('action')->nullable();
 
             // Add index for better query performance
             $table->index(['case_record_id', 'created_at']);

@@ -414,5 +414,15 @@
     "Today's Messages": "Today's Messages",
     "Messages waiting for response": "Messages waiting for response",
     "Total client conversations": "Total client conversations",
-    "Messages received today": "Messages received today"
+    "Messages received today": "Messages received today",
+    "all": "All",
+    "active_cases": "Active Cases",
+    "judgment": "Judgment",
+    "closed": "Closed",
+    "Latest Session Court": "Latest Session Court",
+    "Session added successfully": "Session added successfully",
+    "Document added successfully": "Document added successfully",
+    "Payment added successfully": "Payment added successfully",
+    "Add Session": "Add Session",
+    "Add Document": "Add Document"
 }

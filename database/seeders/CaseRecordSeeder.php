@@ -99,14 +99,7 @@ class CaseRecordSeeder extends Seeder
             'pay_method_id' => 1, // Cash
         ]);
 
-        // Create court history for case 1
-        CaseCourtHistory::create([
-            'case_record_id' => $case1->id,
-            'court_id' => $courts[0]->id,
-            'transfer_date' => now()->subMonths(6),
-            'transfer_reason' => 'Initial Filing',
-            'is_current' => true,
-        ]);
+       
 
         // Create session for case 1
         Session::create([
@@ -148,15 +141,7 @@ class CaseRecordSeeder extends Seeder
             'pay_method_id' => 1, // Cash
         ]);
 
-        // Create court history for case 2
-        CaseCourtHistory::create([
-            'case_record_id' => $case2->id,
-            'court_id' => $courts[1]->id,
-            'transfer_date' => now()->subMonths(3),
-            'transfer_reason' => 'Initial Filing',
-            'is_current' => true,
-        ]);
-
+      
         // Create session for case 2
         Session::create([
             'case_record_id' => $case2->id,
@@ -197,14 +182,7 @@ class CaseRecordSeeder extends Seeder
             'pay_method_id' => 1, // Cash
         ]);
 
-        // Create court history for case 3
-        CaseCourtHistory::create([
-            'case_record_id' => $case3->id,
-            'court_id' => $courts[2]->id,
-            'transfer_date' => now()->subMonth(),
-            'transfer_reason' => 'Initial Filing',
-            'is_current' => true,
-        ]);
+      
 
         // Create session for case 3
         Session::create([

@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->foreignId('opponent_lawyer_id')->nullable()->constrained('opponent_lawyers');
             $table->date('start_date');
             $table->unsignedBigInteger('client_id')->nullable();
-            $table->unsignedBigInteger('assigned_lawyer_id')->nullable()->after('user_id');
+            $table->foreignId('assigned_lawyer_id')->nullable()->constrained('users');
             $table->string('subject')->nullable();
             $table->text('subject_description')->nullable();
             $table->text('notes')->nullable();
