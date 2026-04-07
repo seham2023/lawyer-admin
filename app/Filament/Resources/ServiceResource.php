@@ -21,7 +21,7 @@ class ServiceResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('client_management');
+        return __('Lawyer Management');
     }
 
     public static function getNavigationLabel(): string

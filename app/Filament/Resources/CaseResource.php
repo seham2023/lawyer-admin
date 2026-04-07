@@ -91,38 +91,28 @@ class CaseResource extends Resource
 
                         Forms\Components\Wizard\Step::make(__('opponent_information'))
                             ->schema([
-                                Select::make('opponent_id')
-                                    ->label(__('opponent'))
-                                    ->relationship('opponent', 'name')
-                                    ->searchable()
-                                    ->preload()
-                                    ->createOptionForm([
-                                        TextInput::make('name')
-                                            ->label(__('name'))
-                                            ->required()
-                                            ->maxLength(255),
-                                        TextInput::make('mobile')
-                                            ->label(__('mobile'))
-                                            ->tel()
-                                            ->maxLength(255),
-                                        TextInput::make('email')
-                                            ->label(__('email'))
-                                            ->email()
-                                            ->maxLength(255),
-                                        TextInput::make('location')
-                                            ->label(__('location'))
-                                            ->maxLength(255),
-                                        Select::make('nationality_id')
-                                            ->label(__('opponent_nationality'))
-                                            ->options(\App\Models\Nationality::all()->pluck('name', 'id'))
-                                            ->searchable(),
-                                    ])
-                                    ->createOptionAction(function (Forms\Components\Actions\Action $action) {
-                                        return $action
-                                            ->modalHeading(__('Create Opponent'))
-                                            ->modalSubmitActionLabel(__('Create'))
-                                            ->modalWidth('lg');
-                                    }),
+                                TextInput::make('opponent_name')
+                                    ->label(__('opponent_name'))
+                                    ->maxLength(255),
+
+                                TextInput::make('opponent_mobile')
+                                    ->label(__('opponent_mobile'))
+                                    ->tel()
+                                    ->maxLength(255),
+
+                                TextInput::make('opponent_email')
+                                    ->label(__('opponent_email'))
+                                    ->email()
+                                    ->maxLength(255),
+
+                                TextInput::make('opponent_location')
+                                    ->label(__('opponent_location'))
+                                    ->maxLength(255),
+
+                                Select::make('opponent_nationality_id')
+                                    ->label(__('opponent_nationality'))
+                                    ->options(Nationality::all()->pluck('name', 'id'))
+                                    ->searchable(),
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('opponent_lawyer'))
@@ -337,7 +327,30 @@ class CaseResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->label(__('Payment Status'))
+                    ->options([
+                        'paid' => __('Paid'),
+                        'partial' => __('Partial'),
+                        'unpaid' => __('Unpaid'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        return $query->when($data['value'] === 'paid', function ($query) {
+                            return $query->whereHas('payment', function ($q) {
+                                $q->whereRaw('amount <= (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)');
+                            });
+                        })->when($data['value'] === 'partial', function ($query) {
+                            return $query->whereHas('payment', function ($q) {
+                                $q->whereRaw('amount > (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)')
+                                  ->whereRaw('(SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id) > 0');
+                            });
+                        })->when($data['value'] === 'unpaid', function ($query) {
+                            return $query->whereDoesntHave('payment')
+                                ->orWhereHas('payment', function ($q) {
+                                    $q->whereRaw('(SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id) = 0');
+                                });
+                        });
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

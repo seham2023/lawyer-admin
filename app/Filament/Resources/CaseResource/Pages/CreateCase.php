@@ -39,8 +39,38 @@ class CreateCase extends CreateRecord
         // Store court_id for court history creation
         $this->courtId = $data['court_id'] ?? null;
 
+        // Create opponent
+        if (!empty($data['opponent_name'])) {
+            $opponent = Opponent::create([
+                'name' => $data['opponent_name'],
+                'email' => $data['opponent_email'] ?? null,
+                'mobile' => $data['opponent_mobile'] ?? null,
+                'location' => $data['opponent_location'] ?? null,
+                'nationality_id' => $data['opponent_nationality_id'] ?? null,
+            ]);
+            $data['opponent_id'] = $opponent->id;
+        }
+
+        // Create opponent lawyer
+        if (!empty($data['opponent_lawyer_name'])) {
+            $opponentLawyer = OpponentLawyer::create([
+                'name' => $data['opponent_lawyer_name'],
+                'mobile' => $data['opponent_lawyer_mobile'] ?? null,
+                'email' => $data['opponent_lawyer_email'] ?? null,
+            ]);
+            $data['opponent_lawyer_id'] = $opponentLawyer->id;
+        }
+
         // Remove the fields that are not in case_records table
         unset(
+            $data['opponent_name'],
+            $data['opponent_email'],
+            $data['opponent_mobile'],
+            $data['opponent_location'],
+            $data['opponent_nationality_id'],
+            $data['opponent_lawyer_name'],
+            $data['opponent_lawyer_mobile'],
+            $data['opponent_lawyer_email'],
             $data['amount'],
             $data['currency_id'],
             $data['tax'],

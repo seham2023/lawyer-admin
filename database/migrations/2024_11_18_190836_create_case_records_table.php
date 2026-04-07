@@ -4,8 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -21,8 +20,7 @@ return new class extends Migration
             $table->foreignId('opponent_lawyer_id')->nullable()->constrained('opponent_lawyers');
             $table->date('start_date');
             $table->unsignedBigInteger('client_id')->nullable();
-            $table->unsignedBigInteger('lawyer_id')->nullable();
-            // $table->string('judge_name')->nullable();
+            $table->unsignedBigInteger('assigned_lawyer_id')->nullable()->after('user_id');
             $table->string('subject')->nullable();
             $table->text('subject_description')->nullable();
             $table->text('notes')->nullable();

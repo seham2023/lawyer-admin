@@ -173,24 +173,72 @@ class VisitsRelationManager extends RelationManager
                             );
                     }),
 
-                Tables\Filters\Filter::make('has_payment')
-                    ->label(__('Has Payment'))
-                    ->query(fn($query) => $query->whereHas('payment')),
+                Tables\Filters\SelectFilter::make('status_id')
+                    ->label(__('Status'))
+                    ->options(\App\Models\Status::where('type', 'visit')->pluck('name', 'id')),
 
-                Tables\Filters\Filter::make('unpaid')
-                    ->label(__('Unpaid'))
-                    ->query(fn($query) => $query->whereDoesntHave('payment')
-                        ->orWhereHas('payment', function ($q) {
-                            $q->whereRaw('amount > (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)');
-                        })),
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->label(__('Payment Status'))
+                    ->options([
+                        'paid' => __('Paid'),
+                        'partial' => __('Partial'),
+                        'unpaid' => __('Unpaid'),
+                    ])
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data) {
+                        return $query->when($data['value'] === 'paid', function ($query) {
+                            return $query->whereHas('payment', function ($q) {
+                                $q->whereRaw('amount <= (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)');
+                            });
+                        })->when($data['value'] === 'partial', function ($query) {
+                            return $query->whereHas('payment', function ($q) {
+                                $q->whereRaw('amount > (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)')
+                                  ->whereRaw('(SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id) > 0');
+                            });
+                        })->when($data['value'] === 'unpaid', function ($query) {
+                            return $query->whereDoesntHave('payment')
+                                ->orWhereHas('payment', function ($q) {
+                                    $q->whereRaw('(SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id) = 0');
+                                });
+                        });
+                    }),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->after(function (\App\Models\Visit $record) {
+                        $amount = $record->services()->sum('price');
+                        if ($amount > 0) {
+                            $record->payment()->create([
+                                'amount' => $amount,
+                                'tax' => 0,
+                                'currency_id' => \App\Support\Money::getCurrencyId(),
+                                'user_id' => auth()->id(),
+                                'client_id' => $record->client_id,
+                                'pay_method_id' => 1,
+                                'status_id' => 1,
+                            ]);
+                        }
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->url(fn($record) => \App\Filament\Resources\VisitResource::getUrl('view', ['record' => $record])),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->after(function (\App\Models\Visit $record) {
+                        $amount = $record->services()->sum('price');
+                        if ($record->payment) {
+                            $record->payment->update(['amount' => $amount]);
+                        } else if ($amount > 0) {
+                            $record->payment()->create([
+                                'amount' => $amount,
+                                'tax' => 0,
+                                'currency_id' => \App\Support\Money::getCurrencyId(),
+                                'user_id' => auth()->id(),
+                                'client_id' => $record->client_id,
+                                'pay_method_id' => 1,
+                                'status_id' => 1,
+                            ]);
+                        }
+                    }),
                 Tables\Actions\Action::make('add_payment_detail')
                     ->label(__('Add Payment'))
                     ->icon('heroicon-o-banknotes')

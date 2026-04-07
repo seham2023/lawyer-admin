@@ -82,17 +82,7 @@ class VisitResource extends Resource
                             ->searchable()
                             ->preload()
                             ->label(__('Services'))
-                            ->columnSpanFull()
-                            ->reactive()
-                            ->afterStateUpdated(function (callable $set, callable $get) {
-                                $serviceIds = $get('services') ?? [];
-                                $amount = \App\Models\Service::whereIn('id', $serviceIds)->sum('price');
-                                $set('amount', $amount);
-                                
-                                $tax = $get('tax') ?? 0;
-                                $total = $amount + ($amount * $tax / 100);
-                                $set('total_after_tax', $total);
-                            }),
+                            ->columnSpanFull(),
 
                         Forms\Components\TextInput::make('purpose')
                             ->label(__('Purpose'))
@@ -106,64 +96,6 @@ class VisitResource extends Resource
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
-
-                Forms\Components\Section::make(__('Payment Information'))
-                    ->schema([
-                        Forms\Components\Select::make('currency_id')
-                            ->label(__('Currency'))
-                            ->options(\App\Models\Currency::all()->pluck('name', 'id'))
-                            ->searchable()
-                            ->required()
-                            ->default(fn () => \App\Support\Money::getCurrencyId())
-                            ->reactive(),
-
-                        Forms\Components\TextInput::make('amount')
-                            ->label(__('Amount'))
-                            ->numeric()
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                $tax = $get('tax') ?? 0;
-                                $amount = $state ?? 0;
-                                $total = $amount + ($amount * $tax / 100);
-                                $set('total_after_tax', $total);
-                            }),
-
-                        Forms\Components\TextInput::make('tax')
-                            ->label(__('Tax') . ' (%)')
-                            ->numeric()
-                            ->default(0)
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                $amount = $get('amount') ?? 0;
-                                $tax = $state ?? 0;
-                                $total = $amount + ($amount * $tax / 100);
-                                $set('total_after_tax', $total);
-                            }),
-
-                        Forms\Components\TextInput::make('total_after_tax')
-                            ->label(__('Total After Tax'))
-                            ->numeric()
-                            ->disabled()
-                            ->dehydrated(false),
-
-                        Forms\Components\Select::make('pay_method_id')
-                            ->label(__('Payment Method'))
-                            ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
-                            ->searchable()
-                            ->default(1)
-                            ->native(false),
-
-                        Forms\Components\Select::make('payment_status_id')
-                            ->label(__('Payment Status'))
-                            ->options(Status::where('type', 'payment')->pluck('name', 'id'))
-                            ->searchable()
-                            ->default(1)
-                            ->native(false),
-                    ])
-                    ->columns(2)
-                    ->collapsible()
-                    ->collapsed(false),
             ]);
     }
 
@@ -279,17 +211,34 @@ class VisitResource extends Resource
                                 fn($query, $date) => $query->whereDate('visit_date', '<=', $date)
                             );
                     }),
+                Tables\Filters\SelectFilter::make('status_id')
+                    ->label(__('Status'))
+                    ->options(\App\Models\Status::where('type', 'visit')->pluck('name', 'id')),
 
-                Tables\Filters\Filter::make('has_payment')
-                    ->label(__('Has Payment'))
-                    ->query(fn($query) => $query->whereHas('payment')),
-
-                Tables\Filters\Filter::make('unpaid')
-                    ->label(__('Unpaid'))
-                    ->query(fn($query) => $query->whereDoesntHave('payment')
-                        ->orWhereHas('payment', function ($q) {
-                            $q->whereRaw('amount > (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)');
-                        })),
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->label(__('Payment Status'))
+                    ->options([
+                        'paid' => __('Paid'),
+                        'partial' => __('Partial'),
+                        'unpaid' => __('Unpaid'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        return $query->when($data['value'] === 'paid', function ($query) {
+                            return $query->whereHas('payment', function ($q) {
+                                $q->whereRaw('amount <= (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)');
+                            });
+                        })->when($data['value'] === 'partial', function ($query) {
+                            return $query->whereHas('payment', function ($q) {
+                                $q->whereRaw('amount > (SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id)')
+                                  ->whereRaw('(SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id) > 0');
+                            });
+                        })->when($data['value'] === 'unpaid', function ($query) {
+                            return $query->whereDoesntHave('payment')
+                                ->orWhereHas('payment', function ($q) {
+                                    $q->whereRaw('(SELECT COALESCE(SUM(amount), 0) FROM payment_details WHERE payment_id = payments.id) = 0');
+                                });
+                        });
+                    }),
             ])
             ->actions([
                 ViewAction::make(),

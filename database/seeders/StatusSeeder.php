@@ -102,7 +102,7 @@ class StatusSeeder extends Seeder
         }
 
         $visitStatuses = [
-            ['en' => 'Scheduled', 'ar' => 'مجدول'],
+            ['en' => 'new', 'ar' => 'جديد'],
             ['en' => 'Completed', 'ar' => 'مكتمل'],
             ['en' => 'Cancelled', 'ar' => 'ملغى'],
             ['en' => 'No Show', 'ar' => 'لم يحضر'],

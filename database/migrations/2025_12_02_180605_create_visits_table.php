@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('client_id')->nullable();
             $table->timestamps();
+            $table->unsignedBigInteger('status_id')->nullable()->after('client_id');
 
             $table->date('visit_date')->nullable();
             $table->string('purpose')->nullable();
