@@ -261,8 +261,7 @@ class ViewCase extends ViewRecord
                                     })
                                     ->columnSpan(1),
                             ]),
-                    ])
-                    ->collapsible(),
+                    ]),
 
                 // Additional Information
                 Infolists\Components\Section::make(__('Additional Information'))

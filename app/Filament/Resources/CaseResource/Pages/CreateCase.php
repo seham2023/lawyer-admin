@@ -44,6 +44,7 @@ class CreateCase extends CreateRecord
             $opponent = Opponent::create([
                 'name' => $data['opponent_name'],
                 'email' => $data['opponent_email'] ?? null,
+                'country_key' => $data['opponent_country_key'] ?? null,
                 'mobile' => $data['opponent_mobile'] ?? null,
                 'location' => $data['opponent_location'] ?? null,
                 'nationality_id' => $data['opponent_nationality_id'] ?? null,
@@ -55,6 +56,7 @@ class CreateCase extends CreateRecord
         if (!empty($data['opponent_lawyer_name'])) {
             $opponentLawyer = OpponentLawyer::create([
                 'name' => $data['opponent_lawyer_name'],
+                'country_key' => $data['opponent_lawyer_country_key'] ?? null,
                 'mobile' => $data['opponent_lawyer_mobile'] ?? null,
                 'email' => $data['opponent_lawyer_email'] ?? null,
             ]);
@@ -65,10 +67,12 @@ class CreateCase extends CreateRecord
         unset(
             $data['opponent_name'],
             $data['opponent_email'],
+            $data['opponent_country_key'],
             $data['opponent_mobile'],
             $data['opponent_location'],
             $data['opponent_nationality_id'],
             $data['opponent_lawyer_name'],
+            $data['opponent_lawyer_country_key'],
             $data['opponent_lawyer_mobile'],
             $data['opponent_lawyer_email'],
             $data['amount'],

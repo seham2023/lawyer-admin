@@ -8,6 +8,7 @@ class Opponent extends Model
 {
     protected $fillable = [
         'name',
+        'country_key',
         'mobile',
         'email',
         'location',

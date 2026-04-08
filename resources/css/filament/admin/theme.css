@@ -1,3 +1,81 @@
 @import '/vendor/filament/filament/resources/css/theme.css';
 
 @config 'tailwind.config.js';
+
+/* Premium Modern Layout Enhancements */
+
+/* 1. Subtle Radial Gradient Background */
+.fi-layout > .fi-main {
+    background: radial-gradient(circle at top left, rgba(212, 175, 55, 0.05), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(212, 175, 55, 0.05), transparent 40%),
+                #09090b; /* Deep Zinc/Black background */
+}
+
+/* 2. Glassmorphism Sidebar */
+.fi-sidebar {
+    background: rgba(15, 15, 18, 0.7) !important;
+    backdrop-filter: blur(12px) saturate(180%);
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 3. Soft & Deep Card Styling */
+.fi-section, .fi-ta-content, .fi-form-wrapper {
+    border-radius: 1.25rem !important; /* 20px */
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: rgba(24, 24, 27, 0.6) !important;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
+    transition: all 0.3s ease;
+}
+
+.fi-section:hover {
+    box-shadow: 0 15px 40px -12px rgba(212, 175, 55, 0.1) !important;
+}
+
+/* 4. Modernizing Inputs & Buttons */
+.fi-input-wrp {
+    border-radius: 0.75rem !important;
+    background: rgba(9, 9, 11, 0.4) !important;
+    transition: all 0.2s ease;
+}
+
+.fi-input-wrp:focus-within {
+    ring-color: #d4af37 !important;
+    border-color: #d4af37 !important;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2) !important;
+}
+
+.fi-btn {
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.025em;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fi-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.fi-btn-color-primary {
+    background: linear-gradient(135deg, #d4af37, #c5a028) !important;
+}
+
+/* 5. Typography Enhancements */
+h1, h2, h3, .fi-header-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+    color: #f9fafb !important;
+}
+
+/* 6. Wizard Enhancements */
+.fi-fo-wizard-header-step {
+    border-radius: 1rem !important;
+    margin: 0.25rem !important;
+}
+
+.fi-fo-wizard-header-step-active {
+    background: rgba(212, 175, 55, 0.1) !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+}

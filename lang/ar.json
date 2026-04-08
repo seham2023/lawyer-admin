@@ -93,8 +93,6 @@
     "high": "عالي",
     "recent_clients": "العملاء الحديثون",
     "legal_calendar": "التقويم القانوني",
-    "add_event": "إضافة مهمة",
-    "add_session": "إضافة جلسة",
     "view_details": "عرض التفاصيل",
     "event_title": "عنوان المهمة",
     "event_description": "وصف المهمة",
@@ -239,8 +237,6 @@
     "Payment Details": "تفاصيل الدفع",
     "Paid From": "مدفوع من",
     "Paid Until": "مدفوع حتى",
-    "Add Payment": "إضافة دفعة",
-    "Remaining balance": "الرصيد المتبقي",
     "Payment installment added successfully": "تمت إضافة قسط الدفع بنجاح",
     "No payment found": "لم يتم العثور على دفعة",
     "Please create a payment for this visit first.": "يرجى إنشاء دفعة لهذه  الاستشارة أولاً.",
@@ -456,7 +452,7 @@
     "judgment": "قيد التقاضي",
     "closed": "مغلقة",
     "Latest Session Court": "آخر محكمة من الجلسات",
-    "Session added successfully": "تم إضافة الجلسة بنجاح",
-    "Document added successfully": "تم إضافة المستند بنجاح",
-    "Payment added successfully": "تم إضافة الدفعة بنجاح"
+    "Payment added successfully": "تم إضافة الدفعة بنجاح",
+    "Add Document": "إضافة مستند",
+    "Add Payment": "إضافة دفعة"
 }

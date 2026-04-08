@@ -57,53 +57,61 @@ class SubLawyerResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make(__('sub_lawyer_information'))
+                    ->description(__('Provide the basic identification and login credentials for the sub-lawyer.'))
+                    ->icon('heroicon-o-user-plus')
                     ->schema([
                         Forms\Components\TextInput::make('first_name')
                             ->label(__('first_name'))
                             ->required()
-                            ->maxLength(191),
+                            ->maxLength(191)
+                            ->prefixIcon('heroicon-o-user'),
+
                         Forms\Components\TextInput::make('last_name')
                             ->label(__('last_name'))
                             ->required()
-                            ->maxLength(191),
+                            ->maxLength(191)
+                            ->prefixIcon('heroicon-o-user'),
+
                         Forms\Components\TextInput::make('email')
                             ->label(__('email'))
                             ->email()
                             ->unique(ignoreRecord: true)
-                            ->maxLength(191),
-                        Forms\Components\Select::make('country_key')
-                            ->label(__('country_key'))
-                            ->options([
-                                '00966' => '+966 (SA)',
-                                '00971' => '+971 (AE)',
-                                '00973' => '+973 (BH)',
-                                '002' => '+2 (EG)',
-                            ])
-                            ->default('00966')
-                            ->required()
-                            ->native(false),
-                        Forms\Components\TextInput::make('phone')
-                            ->label(__('phone'))
-                            ->tel()
-                            ->required()
-                            ->unique(ignoreRecord: true)
-                            ->maxLength(191),
-                        // Forms\Components\Select::make('specialist_type')
-                        //     ->label(__('role'))
-                        //     ->options([
-                        //         'lawyer' => __('lawyer'),
-                        //         'assistant' => __('assistant'),
-                        //         'legal_researcher' => __('legal_researcher'),
-                        //     ])
-                        //     ->default('lawyer')
-                        //     ->required()
-                        //     ->native(false),
+                            ->maxLength(191)
+                            ->prefixIcon('heroicon-o-envelope'),
+
+                        Forms\Components\Grid::make(3)
+                            ->schema([
+                                Forms\Components\Select::make('country_key')
+                                    ->label(__('country_key'))
+                                    ->options([
+                                        '00966' => '+966 (SA)',
+                                        '00971' => '+971 (AE)',
+                                        '00973' => '+973 (BH)',
+                                        '002' => '+2 (EG)',
+                                    ])
+                                    ->default('00966')
+                                    ->required()
+                                    ->native(false)
+                                    ->prefixIcon('heroicon-o-globe-alt')
+                                    ->columnSpan(1),
+
+                                Forms\Components\TextInput::make('phone')
+                                    ->label(__('phone'))
+                                    ->tel()
+                                    ->required()
+                                    ->unique(ignoreRecord: true)
+                                    ->maxLength(191)
+                                    ->prefixIcon('heroicon-o-phone')
+                                    ->columnSpan(2),
+                            ]),
+
                         Forms\Components\TextInput::make('password')
                             ->label(__('password'))
                             ->password()
                             ->dehydrated(fn ($state) => filled($state))
                             ->required(fn (string $context): bool => $context === 'create')
-                            ->minLength(8),
+                            ->minLength(8)
+                            ->prefixIcon('heroicon-o-lock-closed'),
                     ])->columns(2),
                 
                 // Forms\Components\Section::make(__('permissions'))

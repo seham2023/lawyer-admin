@@ -20,6 +20,7 @@ class EditCase extends EditRecord
         if ($this->record->opponent) {
             $data['opponent_name'] = $this->record->opponent->name;
             $data['opponent_email'] = $this->record->opponent->email;
+            $data['opponent_country_key'] = $this->record->opponent->country_key;
             $data['opponent_mobile'] = $this->record->opponent->mobile;
             $data['opponent_location'] = $this->record->opponent->location;
             $data['opponent_nationality_id'] = $this->record->opponent->nationality_id;
@@ -27,6 +28,7 @@ class EditCase extends EditRecord
 
         if ($this->record->opponent_lawyer) {
             $data['opponent_lawyer_name'] = $this->record->opponent_lawyer->name;
+            $data['opponent_lawyer_country_key'] = $this->record->opponent_lawyer->country_key;
             $data['opponent_lawyer_mobile'] = $this->record->opponent_lawyer->mobile;
             $data['opponent_lawyer_email'] = $this->record->opponent_lawyer->email;
         }
@@ -50,6 +52,7 @@ class EditCase extends EditRecord
                 $this->record->opponent->update([
                     'name' => $data['opponent_name'],
                     'email' => $data['opponent_email'] ?? null,
+                    'country_key' => $data['opponent_country_key'] ?? null,
                     'mobile' => $data['opponent_mobile'] ?? null,
                     'location' => $data['opponent_location'] ?? null,
                     'nationality_id' => $data['opponent_nationality_id'] ?? null,
@@ -59,6 +62,7 @@ class EditCase extends EditRecord
                 $opponent = Opponent::create([
                     'name' => $data['opponent_name'],
                     'email' => $data['opponent_email'] ?? null,
+                    'country_key' => $data['opponent_country_key'] ?? null,
                     'mobile' => $data['opponent_mobile'] ?? null,
                     'location' => $data['opponent_location'] ?? null,
                     'nationality_id' => $data['opponent_nationality_id'] ?? null,
@@ -80,6 +84,7 @@ class EditCase extends EditRecord
                 // Update existing opponent lawyer
                 $this->record->opponent_lawyer->update([
                     'name' => $data['opponent_lawyer_name'],
+                    'country_key' => $data['opponent_lawyer_country_key'] ?? null,
                     'mobile' => $data['opponent_lawyer_mobile'] ?? null,
                     'email' => $data['opponent_lawyer_email'] ?? null,
                 ]);
@@ -87,6 +92,7 @@ class EditCase extends EditRecord
                 // Create new opponent lawyer
                 $opponentLawyer = OpponentLawyer::create([
                     'name' => $data['opponent_lawyer_name'],
+                    'country_key' => $data['opponent_lawyer_country_key'] ?? null,
                     'mobile' => $data['opponent_lawyer_mobile'] ?? null,
                     'email' => $data['opponent_lawyer_email'] ?? null,
                 ]);
@@ -116,10 +122,12 @@ class EditCase extends EditRecord
         unset(
             $data['opponent_name'],
             $data['opponent_email'],
+            $data['opponent_country_key'],
             $data['opponent_mobile'],
             $data['opponent_location'],
             $data['opponent_nationality_id'],
             $data['opponent_lawyer_name'],
+            $data['opponent_lawyer_country_key'],
             $data['opponent_lawyer_mobile'],
             $data['opponent_lawyer_email'],
             $data['amount'],

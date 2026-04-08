@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('mobile')->nullable();
             $table->string('email')->nullable();
             $table->string('location')->nullable();
+            $table->string('country_key')->nullable();
             $table->foreignId('nationality_id')->nullable()->constrained('nationalities');
             $table->timestamps();
         });

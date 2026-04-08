@@ -133,7 +133,9 @@ class SessionsRelationManager extends RelationManager
                     ->preload(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label(__('Add Session'))
+                    ->modalHeading(__('Add Session')),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

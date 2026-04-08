@@ -73,201 +73,247 @@ class CaseResource extends Resource
                     ->columnSpanFull()
                     ->schema([
                         Forms\Components\Wizard\Step::make(__('client_information'))
+                            ->icon('heroicon-o-user')
                             ->schema([
-                                Select::make('client_id')
-                                    ->label(__('client'))
-                                    ->options(fn () => \App\Support\LawyerUserAccess::optionsForLawyer(auth()->user()->parent_id ?? auth()->id(), 'client'))
-                                    ->searchable()
-                                    ->preload()
-                                    ->required(),
+                                Forms\Components\Section::make()
+                                    ->schema([
+                                        Select::make('client_id')
+                                            ->label(__('client'))
+                                            ->options(fn () => \App\Support\LawyerUserAccess::optionsForLawyer(auth()->user()->parent_id ?? auth()->id(), 'client'))
+                                            ->searchable()
+                                            ->preload()
+                                            ->required()
+                                            ->prefixIcon('heroicon-o-user'),
 
-                                Select::make('client_type_id')
-                                    ->label(__('client_type'))
-                                    ->relationship('category', 'name')
-                                    ->options(Category::where('type', 'client_type')->pluck('name', 'id'))
-
-                                    ->searchable(),
+                                        Select::make('client_type_id')
+                                            ->label(__('client_type'))
+                                            ->relationship('category', 'name')
+                                            ->options(Category::where('type', 'client_type')->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->prefixIcon('heroicon-o-tag'),
+                                    ])->columns(2),
                             ]),
 
                        
 
                         Forms\Components\Wizard\Step::make(__('case_details'))
+                            ->icon('heroicon-o-briefcase')
                             ->schema([
-                                DatePicker::make('start_date')
-                                    ->label(__('start_date'))
-                                    ->required(),
+                                Forms\Components\Section::make()
+                                    ->schema([
+                                        Forms\Components\Grid::make(3)
+                                            ->schema([
+                                                DatePicker::make('start_date')
+                                                    ->label(__('start_date'))
+                                                    ->required()
+                                                    ->prefixIcon('heroicon-o-calendar'),
 
-                                Select::make('category_id')
-                                    ->label(__('category'))
-                                    ->options(Category::where('type', 'case')->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->required(),
+                                                Select::make('category_id')
+                                                    ->label(__('category'))
+                                                    ->options(Category::where('type', 'case')->pluck('name', 'id'))
+                                                    ->searchable()
+                                                    ->required()
+                                                    ->prefixIcon('heroicon-o-folder'),
 
-                                // Select::make('level_id')
-                                //     ->label(__('level'))
-                                //     ->options(Level::all()->pluck('name', 'id'))
-                                //     ->searchable()
-                                //     ->required(),
+                                                Select::make('status_id')
+                                                    ->label(__('status'))
+                                                    ->options(Status::where('type', 'case')->pluck('name', 'id'))
+                                                    ->searchable()
+                                                    ->required()
+                                                    ->prefixIcon('heroicon-o-check-circle'),
+                                            ]),
 
-                                Select::make('status_id')
-                                    ->label(__('status'))
-                                    ->options(Status::where('type', 'case')->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->required(),
+                                        TextInput::make('subject')
+                                            ->label(__('subject'))
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->prefixIcon('heroicon-o-pencil-square'),
 
-                                // Select::make('court_id')
-                                //     ->label(__('court'))
-                                //     ->options(\App\Models\Court::all()->pluck('name', 'id'))->dehydrated(false)
-                                //     ->searchable()
-                                //     ->preload()
-                                //     ->createOptionForm([
-                                //         Forms\Components\TextInput::make('name')
-                                //             ->label(__('name'))
-                                //             ->required()
-                                //             ->maxLength(255),
-                                //         Forms\Components\TextInput::make('location')
-                                //             ->label(__('location'))
-                                //             ->maxLength(255),
-                                //         Forms\Components\TextInput::make('court_number')
-                                //             ->label(__('court_number'))
-                                //             ->maxLength(255),
-                                //         Forms\Components\Select::make('category_id')
-                                //             ->label(__('category'))
-                                //             ->relationship('category', 'name')
-                                //             ->options(\App\Models\Category::where('type', 'court')->pluck('name', 'id'))
-                                //             ->searchable()
-                                //             ->preload(),
-                                //         Hidden::make('user_id')
-                                //             ->default(auth()->user()->id),
-                                //     ])
-                                //     ->createOptionAction(function (Forms\Components\Actions\Action $action) {
-                                //         return $action
-                                //             ->modalHeading(__('Create Court'))
-                                //             ->modalSubmitActionLabel(__('Create'))
-                                //             ->modalWidth('lg');
-                                //     }),
+                                        Textarea::make('subject_description')
+                                            ->label(__('subject_description'))
+                                            ->columnSpanFull()
+                                            ->rows(3),
 
+                                        RichEditor::make('contract')
+                                            ->label(__('contract'))
+                                            ->columnSpanFull(),
 
-
-
-
-                                TextInput::make('subject')
-                                    ->label(__('subject'))
-                                    ->required()
-                                    ->maxLength(255),
-
-                                Textarea::make('subject_description')
-                                    ->label(__('subject_description'))
-                                    ->columnSpanFull(),
-
-                                // RichEditor::make('notes')
-                                //     ->label(__('notes'))
-                                //     ->columnSpanFull(),
-
-                                RichEditor::make('contract')
-                                    ->label(__('contract'))
-                                    ->columnSpanFull(),
-
-                                Select::make('assigned_lawyer_id')
-                                    ->label(__('assigned_lawyer'))
-                                    ->options(fn () => \App\Support\LawyerUserAccess::optionsForLawyer(auth()->user()->parent_id ?? auth()->id(), 'sub_lawyer'))
-                                    ->searchable()
-                                    ->preload()
-                                    ->hint(__('If left empty, only the main lawyer can manage this case.')),
+                                        Select::make('assigned_lawyer_id')
+                                            ->label(__('assigned_lawyer'))
+                                            ->options(fn () => \App\Support\LawyerUserAccess::optionsForLawyer(auth()->user()->parent_id ?? auth()->id(), 'sub_lawyer'))
+                                            ->searchable()
+                                            ->preload()
+                                            ->prefixIcon('heroicon-o-user-plus')
+                                            ->hint(__('If left empty, only the main lawyer can manage this case.')),
+                                    ]),
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('financial_details'))
+                            ->icon('heroicon-o-banknotes')
                             ->schema([
-                                Select::make('currency_id')
-                                    ->label(__('currency'))
-                                    ->options(Currency::all()->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->required(),
+                                Forms\Components\Section::make()
+                                    ->schema([
+                                        Forms\Components\Grid::make(3)
+                                            ->schema([
+                                                Select::make('currency_id')
+                                                    ->label(__('currency'))
+                                                    ->options(Currency::all()->pluck('name', 'id'))
+                                                    ->searchable()
+                                                    ->required()
+                                                    ->prefixIcon('heroicon-o-currency-dollar'),
 
-                                TextInput::make('amount')
-                                    ->label(__('amount'))
-                                    ->numeric()
-                                    ->required()
-                                    ->reactive()
-                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                        $tax = $get('tax') ?? 0;
-                                        $amount = $state ?? 0;
-                                        $total = $amount + ($amount * $tax / 100);
-                                        $set('total_after_tax', $total);
-                                    }),
+                                                TextInput::make('amount')
+                                                    ->label(__('amount'))
+                                                    ->numeric()
+                                                    ->required()
+                                                    ->prefixIcon('heroicon-o-banknotes')
+                                                    ->reactive()
+                                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                                        $tax = $get('tax') ?? 0;
+                                                        $amount = $state ?? 0;
+                                                        $total = $amount + ($amount * $tax / 100);
+                                                        $set('total_after_tax', $total);
+                                                    }),
 
-                                TextInput::make('tax')
-                                    ->label(__('tax'))
-                                    ->numeric()
-                                    ->reactive()
-                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                        $amount = $get('amount') ?? 0;
-                                        $tax = $state ?? 0;
-                                        $total = $amount + ($amount * $tax / 100);
-                                        $set('total_after_tax', $total);
-                                    }),
+                                                TextInput::make('tax')
+                                                    ->label(__('tax'))
+                                                    ->numeric()
+                                                    ->prefixIcon('heroicon-o-receipt-percent')
+                                                    ->reactive()
+                                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                                        $amount = $get('amount') ?? 0;
+                                                        $tax = $state ?? 0;
+                                                        $total = $amount + ($amount * $tax / 100);
+                                                        $set('total_after_tax', $total);
+                                                    }),
+                                            ]),
 
-                                TextInput::make('total_after_tax')
-                                    ->label(__('total_after_tax'))
-                                    ->numeric()
-                                    ->disabled(),
+                                        Forms\Components\Grid::make(3)
+                                            ->schema([
+                                                TextInput::make('total_after_tax')
+                                                    ->label(__('total_after_tax'))
+                                                    ->numeric()
+                                                    ->disabled()
+                                                    ->prefixIcon('heroicon-o-calculator'),
 
-                                Select::make('pay_method_id')
-                                    ->label(__('payment_method'))
-                                    ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->required()
-                                    ->preload(),
+                                                Select::make('pay_method_id')
+                                                    ->label(__('payment_method'))
+                                                    ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
+                                                    ->searchable()
+                                                    ->required()
+                                                    ->preload()
+                                                    ->prefixIcon('heroicon-o-credit-card'),
 
-                                Select::make('payment_status_id')
-                                    ->label(__('payment_status'))
-                                    ->options(Status::where('type', 'payment')->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->default(1), // Default to 'Pending'
+                                                Select::make('payment_status_id')
+                                                    ->label(__('payment_status'))
+                                                    ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                                                    ->searchable()
+                                                    ->default(1)
+                                                    ->prefixIcon('heroicon-o-information-circle'),
+                                            ]),
+                                    ]),
                             ]),
 
 
-                             Forms\Components\Wizard\Step::make(__('opponent_information'))
+                        Forms\Components\Wizard\Step::make(__('opponent_information'))
+                            ->icon('heroicon-o-user-minus')
                             ->schema([
-                                TextInput::make('opponent_name')
-                                    ->label(__('opponent_name'))
-                                    ->maxLength(255),
+                                Forms\Components\Section::make()
+                                    ->schema([
+                                        TextInput::make('opponent_name')
+                                            ->label(__('opponent_name'))
+                                            ->maxLength(255)
+                                            ->prefixIcon('heroicon-o-user'),
 
-                                TextInput::make('opponent_mobile')
-                                    ->label(__('opponent_mobile'))
-                                    ->tel()
-                                    ->maxLength(255),
+                                        Forms\Components\Grid::make(3)
+                                            ->schema([
+                                                Forms\Components\Select::make('opponent_country_key')
+                                                    ->label(__('country_key'))
+                                                    ->options([
+                                                        '00966' => '+966 (SA)',
+                                                        '00971' => '+971 (AE)',
+                                                        '00965' => '+965 (KW)',
+                                                        '00974' => '+974 (QA)',
+                                                        '00973' => '+973 (BH)',
+                                                        '00968' => '+968 (OM)',
+                                                        '002' => '+2 (EG)',
+                                                    ])
+                                                    ->default('00966')
+                                                    ->searchable()
+                                                    ->native(false)
+                                                    ->prefixIcon('heroicon-o-globe-alt')
+                                                    ->columnSpan(1),
 
-                                TextInput::make('opponent_email')
-                                    ->label(__('opponent_email'))
-                                    ->email()
-                                    ->maxLength(255),
+                                                TextInput::make('opponent_mobile')
+                                                    ->label(__('opponent_mobile'))
+                                                    ->tel()
+                                                    ->maxLength(255)
+                                                    ->prefixIcon('heroicon-o-phone')
+                                                    ->columnSpan(2),
+                                            ]),
 
-                                TextInput::make('opponent_location')
-                                    ->label(__('opponent_location'))
-                                    ->maxLength(255),
+                                        TextInput::make('opponent_email')
+                                            ->label(__('opponent_email'))
+                                            ->email()
+                                            ->maxLength(255)
+                                            ->prefixIcon('heroicon-o-envelope'),
 
-                                Select::make('opponent_nationality_id')
-                                    ->label(__('opponent_nationality'))
-                                    ->options(Nationality::all()->pluck('name', 'id'))
-                                    ->searchable(),
+                                        TextInput::make('opponent_location')
+                                            ->label(__('opponent_location'))
+                                            ->maxLength(255)
+                                            ->prefixIcon('heroicon-o-map-pin'),
+
+                                        Select::make('opponent_nationality_id')
+                                            ->label(__('opponent_nationality'))
+                                            ->options(Nationality::all()->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->prefixIcon('heroicon-o-flag'),
+                                    ]),
                             ]),
 
                         Forms\Components\Wizard\Step::make(__('opponent_lawyer'))
+                            ->icon('heroicon-o-scale')
                             ->schema([
-                                TextInput::make('opponent_lawyer_name')
-                                    ->label(__('lawyer_name'))
-                                    ->maxLength(255),
+                                Forms\Components\Section::make()
+                                    ->schema([
+                                        TextInput::make('opponent_lawyer_name')
+                                            ->label(__('lawyer_name'))
+                                            ->maxLength(255)
+                                            ->prefixIcon('heroicon-o-user'),
 
-                                TextInput::make('opponent_lawyer_mobile')
-                                    ->label(__('lawyer_mobile'))
-                                    ->tel()
-                                    ->maxLength(255),
+                                        Forms\Components\Grid::make(3)
+                                            ->schema([
+                                                Forms\Components\Select::make('opponent_lawyer_country_key')
+                                                    ->label(__('country_key'))
+                                                    ->options([
+                                                        '00966' => '+966 (SA)',
+                                                        '00971' => '+971 (AE)',
+                                                        '00965' => '+965 (KW)',
+                                                        '00974' => '+974 (QA)',
+                                                        '00973' => '+973 (BH)',
+                                                        '00968' => '+968 (OM)',
+                                                        '002' => '+2 (EG)',
+                                                    ])
+                                                    ->default('00966')
+                                                    ->searchable()
+                                                    ->native(false)
+                                                    ->prefixIcon('heroicon-o-globe-alt')
+                                                    ->columnSpan(1),
 
-                                TextInput::make('opponent_lawyer_email')
-                                    ->label(__('lawyer_email'))
-                                    ->email()
-                                    ->maxLength(255),
+                                                TextInput::make('opponent_lawyer_mobile')
+                                                    ->label(__('lawyer_mobile'))
+                                                    ->tel()
+                                                    ->maxLength(255)
+                                                    ->prefixIcon('heroicon-o-phone')
+                                                    ->columnSpan(2),
+                                            ]),
+
+                                        TextInput::make('opponent_lawyer_email')
+                                            ->label(__('lawyer_email'))
+                                            ->email()
+                                            ->maxLength(255)
+                                            ->prefixIcon('heroicon-o-envelope'),
+                                    ]),
                             ]),
                     ]),
 
@@ -309,10 +355,7 @@ class CaseResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('currentCourt.court.name')
-                    ->label(__('court_name'))
-                    ->sortable()
-                    ->searchable(),
+               
 
                 TextColumn::make('start_date')
                     ->label(__('start_date'))
@@ -325,32 +368,15 @@ class CaseResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\IconColumn::make('payment_status')
+                Tables\Columns\SelectColumn::make('payment.status_id')
                     ->label(__('payment_status'))
-                    ->getStateUsing(function ($record) {
-                        if (!$record->payment) {
-                            return 'unpaid';
+                    ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                    ->searchable()
+                    ->sortable()
+                    ->updateStateUsing(function ($record, $state) {
+                        if ($record->payment) {
+                            $record->payment->update(['status_id' => $state]);
                         }
-                        $remaining = $record->payment->remaining_payment ?? 0;
-                        if ($remaining <= 0) {
-                            return 'paid';
-                        }
-                        if ($record->payment->total_paid > 0) {
-                            return 'partial';
-                        }
-                        return 'unpaid';
-                    })
-                    ->icon(fn(string $state): string => match ($state) {
-                        'paid' => 'heroicon-o-check-circle',
-                        'partial' => 'heroicon-o-clock',
-                        'unpaid' => 'heroicon-o-x-circle',
-                        default => 'heroicon-o-question-mark-circle',
-                    })
-                    ->color(fn(string $state): string => match ($state) {
-                        'paid' => 'success',
-                        'partial' => 'warning',
-                        'unpaid' => 'danger',
-                        default => 'gray',
                     }),
 
                 TextColumn::make('latestSession.court.name')
@@ -390,6 +416,12 @@ class CaseResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('status_id')
+                    ->label(__('status'))
+                    ->options(Status::where('type', 'case')->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload(),
+
                 Tables\Filters\SelectFilter::make('category_id')
                     ->label(__('category'))
                     ->relationship('category', 'name')
@@ -397,7 +429,7 @@ class CaseResource extends Resource
                     ->preload(),
 
                 Tables\Filters\SelectFilter::make('payment_status')
-                    ->label(__('Payment Status'))
+                    ->label(__('payment_status'))
                     ->options([
                         'paid' => __('Paid'),
                         'partial' => __('Partial'),
@@ -422,146 +454,149 @@ class CaseResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\Action::make('add_session')
+                    ->label(__('Add Session'))
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('success')
+                    ->tooltip(__('Add Session'))
+                    ->form([
+                        Forms\Components\TextInput::make('title')
+                            ->label(__('title'))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Textarea::make('details')
+                            ->label(__('details'))
+                            ->columnSpanFull(),
+                        Forms\Components\DateTimePicker::make('datetime')
+                            ->label(__('datetime'))
+                            ->required()
+                            ->default(now()),
+                        Forms\Components\Select::make('priority')
+                            ->label(__('priority'))
+                            ->options([
+                                'low' => __('priority_low'),
+                                'medium' => __('priority_medium'),
+                                'high' => __('priority_high'),
+                            ])
+                            ->default('medium')
+                            ->required(),
+                        Forms\Components\Select::make('court_id')
+                            ->label(__('court'))
+                            ->options(\App\Models\Court::where('user_id', auth()->id())->pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Forms\Components\TextInput::make('judge_name')
+                            ->label(__('judge_name'))
+                            ->maxLength(255),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $data['user_id'] = auth()->id();
+                        $record->sessions()->create($data);
+                        \Filament\Notifications\Notification::make()
+                            ->title(__('Session added successfully'))
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('add_document')
+                    ->label(__('Add Document'))
+                    ->icon('heroicon-o-document-plus')
+                    ->color('info')
+                    ->tooltip(__('Add Document'))
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label(__('name'))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Textarea::make('description')
+                            ->label(__('description'))
+                            ->required(),
+                        Forms\Components\FileUpload::make('file_path')
+                            ->label(__('file_path'))
+                            ->required()
+                            ->acceptedFileTypes(['application/pdf', 'image/*'])
+                            ->directory('case-documents'),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $record->documents()->create($data);
+                        \Filament\Notifications\Notification::make()
+                            ->title(__('Document added successfully'))
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('add_payment_detail')
+                    ->label(__('Add Payment'))
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->tooltip(__('Add Payment'))
+                    ->visible(fn($record) => $record->payment !== null)
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label(__('Payment Name'))
+                            ->placeholder(__('e.g., First Installment'))
+                            ->required()
+                            ->maxLength(255),
+
+                        Forms\Components\Select::make('payment_type')
+                            ->label(__('Payment Type'))
+                            ->options([
+                                'installment' => __('Installment'),
+                                'deposit' => __('Deposit'),
+                                'final' => __('Final Payment'),
+                                'partial' => __('Partial Payment'),
+                            ])
+                            ->required()
+                            ->default('installment'),
+
+                        Forms\Components\TextInput::make('amount')
+                            ->label(__('Amount'))
+                            ->numeric()
+                            ->required()
+                            ->minValue(0.01)
+                            ->rules([
+                                function ($record) {
+                                    return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                        if (!$record->payment) return;
+                                        
+                                        $remaining = $record->payment->remaining_payment;
+                                        if ($value > $remaining) {
+                                            $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                        }
+                                    };
+                                }
+                            ])
+                            ->helperText(fn($record) => __('Remaining balance') . ': ' . ($record->payment->remaining_payment ?? 0)),
+
+                        Forms\Components\DateTimePicker::make('paid_at')
+                            ->label(__('Payment Date'))
+                            ->required()
+                            ->default(now()),
+
+                        Forms\Components\Select::make('pay_method_id')
+                            ->label(__('Payment Method'))
+                            ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
+                            ->searchable()
+                            ->required(),
+
+                        Forms\Components\Textarea::make('details')
+                            ->label(__('Payment Details'))
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $data['payment_id'] = $record->payment->id;
+                        $record->payment->paymentDetails()->create($data);
+                        \Filament\Notifications\Notification::make()
+                            ->title(__('Payment added successfully'))
+                            ->success()
+                            ->send();
+                    }),
+
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
-
-                    Tables\Actions\Action::make('add_session')
-                        ->label(__('Add Session'))
-                        ->icon('heroicon-o-calendar-days')
-                        ->color('success')
-                        ->form([
-                            Forms\Components\TextInput::make('title')
-                                ->label(__('title'))
-                                ->required()
-                                ->maxLength(255),
-                            Forms\Components\Textarea::make('details')
-                                ->label(__('details'))
-                                ->columnSpanFull(),
-                            Forms\Components\DateTimePicker::make('datetime')
-                                ->label(__('datetime'))
-                                ->required()
-                                ->default(now()),
-                            Forms\Components\Select::make('priority')
-                                ->label(__('priority'))
-                                ->options([
-                                    'low' => __('priority_low'),
-                                    'medium' => __('priority_medium'),
-                                    'high' => __('priority_high'),
-                                ])
-                                ->default('medium')
-                                ->required(),
-                            Forms\Components\Select::make('court_id')
-                                ->label(__('court'))
-                                ->relationship('court', 'name')
-                                ->searchable()
-                                ->preload()
-                                ->required(),
-                            Forms\Components\TextInput::make('judge_name')
-                                ->label(__('judge_name'))
-                                ->maxLength(255),
-                        ])
-                        ->action(function ($record, array $data) {
-                            $data['user_id'] = auth()->id();
-                            $record->sessions()->create($data);
-                            \Filament\Notifications\Notification::make()
-                                ->title(__('Session added successfully'))
-                                ->success()
-                                ->send();
-                        }),
-
-                    Tables\Actions\Action::make('add_document')
-                        ->label(__('Add Document'))
-                        ->icon('heroicon-o-document-plus')
-                        ->color('info')
-                        ->form([
-                            Forms\Components\TextInput::make('name')
-                                ->label(__('name'))
-                                ->required()
-                                ->maxLength(255),
-                            Forms\Components\Textarea::make('description')
-                                ->label(__('description'))
-                                ->required(),
-                            Forms\Components\FileUpload::make('file_path')
-                                ->label(__('file_path'))
-                                ->required()
-                                ->acceptedFileTypes(['application/pdf', 'image/*'])
-                                ->directory('case-documents'),
-                        ])
-                        ->action(function ($record, array $data) {
-                            $record->documents()->create($data);
-                            \Filament\Notifications\Notification::make()
-                                ->title(__('Document added successfully'))
-                                ->success()
-                                ->send();
-                        }),
-
-                    Tables\Actions\Action::make('add_payment_detail')
-                        ->label(__('Add Payment'))
-                        ->icon('heroicon-o-banknotes')
-                        ->color('success')
-                        ->visible(fn($record) => $record->payment !== null)
-                        ->form([
-                            Forms\Components\TextInput::make('name')
-                                ->label(__('Payment Name'))
-                                ->placeholder(__('e.g., First Installment'))
-                                ->required()
-                                ->maxLength(255),
-
-                            Forms\Components\Select::make('payment_type')
-                                ->label(__('Payment Type'))
-                                ->options([
-                                    'installment' => __('Installment'),
-                                    'deposit' => __('Deposit'),
-                                    'final' => __('Final Payment'),
-                                    'partial' => __('Partial Payment'),
-                                ])
-                                ->required()
-                                ->default('installment'),
-
-                            Forms\Components\TextInput::make('amount')
-                                ->label(__('Amount'))
-                                ->numeric()
-                                ->required()
-                                ->minValue(0.01)
-                                ->rules([
-                                    function ($record) {
-                                        return function (string $attribute, $value, \Closure $fail) use ($record) {
-                                            if (!$record->payment) return;
-                                            
-                                            $remaining = $record->payment->remaining_payment;
-                                            if ($value > $remaining) {
-                                                $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
-                                            }
-                                        };
-                                    }
-                                ])
-                                ->helperText(fn($record) => __('Remaining balance') . ': ' . ($record->payment->remaining_payment ?? 0)),
-
-                            Forms\Components\DateTimePicker::make('paid_at')
-                                ->label(__('Payment Date'))
-                                ->required()
-                                ->default(now()),
-
-                            Forms\Components\Select::make('pay_method_id')
-                                ->label(__('Payment Method'))
-                                ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
-                                ->searchable()
-                                ->required(),
-
-                            Forms\Components\Textarea::make('details')
-                                ->label(__('Payment Details'))
-                                ->rows(3)
-                                ->columnSpanFull(),
-                        ])
-                        ->action(function ($record, array $data) {
-                            $data['payment_id'] = $record->payment->id;
-                            $record->payment->paymentDetails()->create($data);
-                            \Filament\Notifications\Notification::make()
-                                ->title(__('Payment added successfully'))
-                                ->success()
-                                ->send();
-                        }),
                 ]),
             ])
             ->bulkActions([

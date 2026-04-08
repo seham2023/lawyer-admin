@@ -64,47 +64,56 @@ class ClientResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make(__('client_information'))
+                    ->description(__('Enter the basic identification and contact details for the client.'))
+                    ->icon('heroicon-o-user-circle')
                     ->schema([
-                        // TextInput::make('name')
-                        //     ->label(__('name'))
-                        //     ->required()
-                        //     ->maxLength(255),
-
                         TextInput::make('first_name')
                             ->label(__('first_name'))
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->prefixIcon('heroicon-o-user'),
+
                         TextInput::make('last_name')
                             ->label(__('last_name'))
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->prefixIcon('heroicon-o-user'),
+
                         TextInput::make('identity_number')
                             ->label(__('identity_number'))
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->prefixIcon('heroicon-o-identification'),
 
-                        Forms\Components\Select::make('country_key')
-                            ->label(__('country_key'))
-                            ->options([
-                                '00966' => '+966 (SA)',
-                                '00971' => '+971 (AE)',
-                                '00965' => '+965 (KW)',
-                                '00974' => '+974 (QA)',
-                                '00973' => '+973 (BH)',
-                                '00968' => '+968 (OM)',
-                                '002' => '+2 (EG)',
-                            ])
-                            ->default('00966')
-                            ->required()
-                            ->searchable()
-                            ->native(false),
+                        Forms\Components\Grid::make(3)
+                            ->schema([
+                                Forms\Components\Select::make('country_key')
+                                    ->label(__('country_key'))
+                                    ->options([
+                                        '00966' => '+966 (SA)',
+                                        '00971' => '+971 (AE)',
+                                        '00965' => '+965 (KW)',
+                                        '00974' => '+974 (QA)',
+                                        '00973' => '+973 (BH)',
+                                        '00968' => '+968 (OM)',
+                                        '002' => '+2 (EG)',
+                                    ])
+                                    ->default('00966')
+                                    ->required()
+                                    ->searchable()
+                                    ->native(false)
+                                    ->prefixIcon('heroicon-o-globe-alt')
+                                    ->columnSpan(1),
 
-                        TextInput::make('phone')
-                            ->label(__('mobile'))
-                            ->tel()
-                            ->required()
-                            ->maxLength(20)
-                            ->placeholder('5xxxxxxxx'),
+                                TextInput::make('phone')
+                                    ->label(__('mobile'))
+                                    ->tel()
+                                    ->required()
+                                    ->maxLength(20)
+                                    ->placeholder('5xxxxxxxx')
+                                    ->prefixIcon('heroicon-o-phone')
+                                    ->columnSpan(2),
+                            ]),
 
                         // Forms\Components\Select::make('gender')
                         //     ->label(__('gender'))

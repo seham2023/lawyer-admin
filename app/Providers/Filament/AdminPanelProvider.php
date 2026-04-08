@@ -40,25 +40,27 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('images/legal/gavel.png'))
             ->colors([
                 'primary' => [
-                    50 => '#fbf8ef',
-                    100 => '#f5ecd6',
-                    200 => '#ebd9ab',
-                    300 => '#dec17b',
-                    400 => '#d1a555',
-                    500 => '#c58e3e',
-                    600 => '#aa7233',
-                    700 => '#8d5a2d',
-                    800 => '#744a29',
-                    900 => '#603d25',
-                    950 => '#351f12',
+                    50 => '#f9fafb',
+                    100 => '#f3f4f6',
+                    200 => '#e5e7eb',
+                    300 => '#d1d5db',
+                    400 => '#9ca3af',
+                    500 => '#d4af37', // Metallic Gold Primary
+                    600 => '#c5a028',
+                    700 => '#a6851e',
+                    800 => '#82671a',
+                    900 => '#6a5418',
+                    950 => '#3f310b',
                 ],
                 'danger' => Color::Rose,
-                'gray' => Color::Zinc,
-                'info' => Color::Sky,
+                'gray' => Color::Slate,
+                'info' => Color::Cyan,
                 'success' => Color::Emerald,
-                'warning' => Color::Orange,
+                'warning' => Color::Amber,
             ])
             ->font('Outfit')
+            ->spa()
+            ->databaseNotifications()
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full')
             ->viteTheme('resources/css/filament/admin/theme.css')
@@ -109,6 +111,11 @@ class AdminPanelProvider extends PanelProvider
 
         // Add Socket.IO and custom scripts to head
         FilamentView::registerRenderHook('panels::head.end', fn(): string => Blade::render('
+            <!-- Google Fonts: Montserrat -->
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
             <!-- Socket.IO Client -->
             <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
             

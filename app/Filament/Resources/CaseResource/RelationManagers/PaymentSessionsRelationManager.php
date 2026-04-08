@@ -17,6 +17,11 @@ class PaymentSessionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'paymentSessions';
 
+    public static function canViewForRecord(\Illuminate\Database\Eloquent\Model $ownerRecord, string $pageClass): bool
+    {
+        return $ownerRecord->payment?->pay_method_id === 6;
+    }
+
     public function form(Form $form): Form
     {
         return $form

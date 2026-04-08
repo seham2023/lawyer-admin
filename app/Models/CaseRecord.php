@@ -72,21 +72,19 @@ class CaseRecord extends Model
     }
 
     /**
-     * Get all court history records for this case.
+     * Get all sessions for this case.
      */
-    public function courtHistory()
+    public function sessions()
     {
-        return $this->hasMany(CaseCourtHistory::class, 'case_record_id');
+        return $this->hasMany(Session::class, 'case_record_id');
     }
 
     /**
-     * Get the current court for this case.
+     * Get the current court for this case from the latest session.
      */
     public function currentCourt()
     {
-        return $this->hasOne(CaseCourtHistory::class, 'case_record_id')
-            ->where('is_current', true)
-            ->with('court');
+        return $this->hasOne(Session::class, 'case_record_id')->latestOfMany('datetime')->with('court');
     }
 
     /**
@@ -107,10 +105,7 @@ class CaseRecord extends Model
         return $this->morphOne(Payment::class, 'payable');
     }
 
-    public function sessions()
-    {
-        return $this->hasMany(Session::class, 'case_record_id');
-    }
+    // sessions and latestSession are already defined below
 
     public function latestSession()
     {
