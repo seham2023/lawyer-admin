@@ -29,6 +29,15 @@ class CallNotification extends Component
             : ($callData['caller_name'] ?? $callData['callerName'] ?? 'Unknown Caller');
 
         $this->showCallModal = true;
+        $this->dispatch('play-ringtone');
+    }
+
+    #[On('call-ended-remote')]
+    public function handleRemoteEnd(): void
+    {
+        $this->showCallModal = false;
+        $this->incomingCall = null;
+        $this->dispatch('stop-ringtone');
     }
 
     public function acceptCall(): void

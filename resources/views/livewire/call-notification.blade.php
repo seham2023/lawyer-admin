@@ -46,57 +46,74 @@
         </div>
     @endif
 
-    {{-- Socket.IO Call Listener --}}
+    {{-- Ringing Sound --}}
+    <audio id="ringing-sound" loop preload="auto">
+        <source src="/sounds/call.mp3" type="audio/mpeg">
+    </audio>
+
+    {{-- Socket.IO Call Listener Logic --}}
     @script
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Listen for incoming calls from Socket.IO
+        const ringtone = document.getElementById('ringing-sound');
+
+        $wire.on('play-ringtone', () => {
+            console.log('Playing ringtone...');
+            if (ringtone) {
+                ringtone.currentTime = 0;
+                ringtone.play().catch(e => console.log('Audio play failed:', e));
+            }
+        });
+
+        $wire.on('stop-ringtone', () => {
+            console.log('Stopping ringtone...');
+            if (ringtone) {
+                ringtone.pause();
+                ringtone.currentTime = 0;
+            }
+        });
+
+        // Handle accept call
+        $wire.on('accept-call', (event) => {
+            const payload = Array.isArray(event) ? event[0] : event;
+            const callData = payload.callData ?? payload;
+
+            $wire.dispatch('stop-ringtone');
+
+            // Emit to Socket.IO that call was accepted
             if (window.socket && window.socket.socket) {
-                window.socket.socket.on('incomingCall', (data) => {
-                    console.log('Incoming call received:', data);
-                    @this.dispatch('incoming-call', { callData: data });
+                window.socket.socket.emit('acceptCall', {
+                    caller_id: callData.caller_id ?? callData.callerId ?? callData.userId,
+                    receiver_id: {{ auth()->id() }},
+                    room_id: callData.room_id,
                 });
             }
 
-            // Handle accept call
-            $wire.on('accept-call', (event) => {
-                const payload = Array.isArray(event) ? event[0] : event;
-                const callData = payload.callData ?? payload;
+            // Open video call page or modal
+            const params = new URLSearchParams({
+                session: callData.session_id ?? callData.sessionId ?? '',
+                token: callData.token ?? '',
+                apiKey: callData.api_key ?? callData.apiKey ?? '',
+                callType: callData.call_type ?? callData.callType ?? 'audio'
+            });
 
-                // Emit to Socket.IO that call was accepted
-                if (window.socket && window.socket.socket) {
-                    window.socket.socket.emit('acceptCall', {
-                        caller_id: callData.caller_id ?? callData.callerId ?? callData.userId,
-                        receiver_id: {{ auth()->id() }},
-                        room_id: callData.room_id,
-                    });
-                }
+            window.open('/admin/video-call?' + params.toString(), '_blank', 'width=1200,height=800');
+        });
 
-                // Open video call page or modal
-                const params = new URLSearchParams({
-                    session: callData.session_id ?? callData.sessionId ?? '',
-                    token: callData.token ?? '',
-                    apiKey: callData.api_key ?? callData.apiKey ?? '',
-                    callType: callData.call_type ?? callData.callType ?? 'audio'
+        // Handle reject call
+        $wire.on('reject-call', (event) => {
+            const payload = Array.isArray(event) ? event[0] : event;
+            const callData = payload.callData ?? payload;
+
+            $wire.dispatch('stop-ringtone');
+
+            // Emit to Socket.IO that call was rejected
+            if (window.socket && window.socket.socket) {
+                window.socket.socket.emit('rejectCall', {
+                    caller_id: callData.caller_id ?? callData.callerId ?? callData.userId,
+                    receiver_id: {{ auth()->id() }},
+                    room_id: callData.room_id,
                 });
-
-                window.open('/admin/video-call?' + params.toString(), '_blank', 'width=1200,height=800');
-            });
-
-            // Handle reject call
-            $wire.on('reject-call', (event) => {
-                const payload = Array.isArray(event) ? event[0] : event;
-                const callData = payload.callData ?? payload;
-
-                // Emit to Socket.IO that call was rejected
-                if (window.socket && window.socket.socket) {
-                    window.socket.socket.emit('rejectCall', {
-                        caller_id: callData.caller_id ?? callData.callerId ?? callData.userId,
-                        receiver_id: {{ auth()->id() }},
-                        room_id: callData.room_id,
-                    });
-                }
-            });
+            }
         });
     </script>
     @endscript
