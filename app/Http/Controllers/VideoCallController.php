@@ -28,7 +28,7 @@ class VideoCallController extends Controller
         try {
             $response = Http::withHeaders([
                 'lang' => app()->getLocale(),
-            ])->get(config('services.opentok.node_server_url') . '/api/createSessionToken', [
+            ])->get(config('socket.url') . '/api/createSessionToken', [
                 'senderId' => $caller->id,
                 'receiverId' => $receiver->id,
                 'roomId' => $validated['case_record_id'] ?? 0,

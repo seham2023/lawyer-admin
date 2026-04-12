@@ -15,7 +15,7 @@ class SocketIOService
     {
         $this->socketUrl = config('socket.url', 'https://qestass.com:4888');
         $this->socketPath = config('socket.path', '/socket.io');
-        $this->nodeServerUrl = rtrim(config('services.opentok.node_server_url', 'http://127.0.0.1:4888'), '/');
+        $this->nodeServerUrl = rtrim(config('services.opentok.node_server_url', 'https://qestass.com:4888'), '/');
     }
 
     /**
