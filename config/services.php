@@ -37,7 +37,7 @@ return [
     ],
 
     'opentok' => [
-        'node_server_url' => env('OPENTOK_NODE_SERVER_URL', 'https://localhost:4722'),
+        'node_server_url' => env('NODE_SERVER_URL', env('SOCKET_URL', env('OPENTOK_NODE_SERVER_URL', 'https://qestass.com:4888'))),
         'api_key' => env('OPENTOK_API_KEY'),
         'api_secret' => env('OPENTOK_API_SECRET'),
     ],
