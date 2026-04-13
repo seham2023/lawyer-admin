@@ -52,4 +52,8 @@ return [
         'app_certificate' => env('AGORA_APP_CERTIFICATE'),
     ],
 
+    'qestass' => [
+        'app_url' => env('QESTASS_APP_URL', 'https://qestass.com'),
+    ],
+
 ];

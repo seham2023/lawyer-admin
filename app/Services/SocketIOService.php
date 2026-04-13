@@ -93,10 +93,15 @@ class SocketIOService
         }
 
         if (str_starts_with($content, '/storage/') || str_starts_with($content, '/assets/')) {
-            return url(ltrim($content, '/'));
+            return $this->qestassAppUrl() . '/' . ltrim($content, '/');
         }
 
-        return url('assets/uploads/chat/' . ltrim($content, '/'));
+        return $this->qestassAppUrl() . '/assets/uploads/chat/' . ltrim($content, '/');
+    }
+
+    protected function qestassAppUrl(): string
+    {
+        return rtrim(config('services.qestass.app_url', 'https://qestass.com'), '/');
     }
 
     /**
