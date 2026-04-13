@@ -83,9 +83,6 @@
         </div>
     </div>
 
-    {{-- Call Notification Component --}}
-    <livewire:call-notification />
-
     {{-- Socket.IO Connection Script --}}
     @script
     <script>
