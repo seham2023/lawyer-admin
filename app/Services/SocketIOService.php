@@ -33,6 +33,17 @@ class SocketIOService
                 'duration' => $duration,
             ]);
 
+            if (!$response->successful()) {
+                Log::warning('SocketIO sendMessage returned non-success response', [
+                    'room_id' => $roomId,
+                    'sender_id' => $senderId,
+                    'receiver_id' => $receiverId,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'node_server_url' => $this->nodeServerUrl,
+                ]);
+            }
+
             return $response->successful();
         } catch (\Exception $e) {
             Log::error('SocketIO sendMessage failed', [

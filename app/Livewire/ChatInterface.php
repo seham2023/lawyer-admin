@@ -118,9 +118,7 @@ class ChatInterface extends Component
             'updated_at' => now(),
         ]);
 
-        // Relay through the already-connected dashboard browser socket.
-        // This avoids server-to-server HTTP failures and keeps the DB write single-source.
-        $this->dispatch('relay-message', [
+        $messagePayload = [
             'room_id' => $this->roomId,
             'roomId' => $this->roomId,
             'sender_id' => Auth::id(),
@@ -130,7 +128,28 @@ class ChatInterface extends Component
             'content' => $content,
             'type' => $type,
             'duration' => null,
-        ]);
+        ];
+
+        // Prefer a server-side relay so delivery does not depend on the dashboard
+        // browser websocket being healthy at the exact moment the message is sent.
+        $service = app(SocketIOService::class);
+        $relayed = $service->sendMessage(
+            $this->roomId,
+            Auth::id(),
+            $this->receiverId,
+            $content,
+            $type,
+        );
+
+        if (!$relayed) {
+            Log::warning('ChatInterface: HTTP relay failed, falling back to browser socket relay', [
+                'roomId' => $this->roomId,
+                'receiverId' => $this->receiverId,
+                'type' => $type,
+            ]);
+
+            $this->dispatch('relay-message', $messagePayload);
+        }
 
         $this->newMessage = '';
         $this->file = null;
