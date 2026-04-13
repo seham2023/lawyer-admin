@@ -54,7 +54,7 @@
                             <img src="{{ $message->content }}" alt="Image" class="max-w-full rounded-lg mb-2" />
                         @elseif($message->type === 'sound')
                             <audio controls class="max-w-full">
-                                <source src="{{ $message->content }}" type="audio/mpeg">
+                                <source src="{{ $message->content }}">
                             </audio>
                         @elseif($message->type === 'file')
                             <a href="{{ $message->content }}" target="_blank" class="flex items-center gap-2 hover:underline">
@@ -96,7 +96,7 @@
 
             {{-- Text Input --}}
             <div class="flex-1">
-                <textarea wire:model="newMessage" wire:keydown.enter.prevent="sendMessage" wire:keydown="handleTyping"
+                <textarea id="chat-input-{{ $roomId }}" wire:model="newMessage" wire:keydown.enter.prevent="sendMessage"
                     placeholder="{{ __('Type a message...') }}" rows="1"
                     class="w-full px-4 py-3 rounded-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     style="max-height: 120px;"></textarea>
@@ -132,6 +132,7 @@
     <script>
         const roomId = {{ $roomId }};
         const userId = {{ auth()->id() }};
+        const receiverId = {{ $receiverId ?? 0 }};
 
         // ═══════════════════════════════════════
         // Auto-scroll
@@ -147,6 +148,7 @@
 
         Livewire.hook('morph.updated', ({ el, component }) => {
             scrollToBottom();
+            setupTypingBridge();
         });
 
         // ═══════════════════════════════════════
@@ -175,6 +177,95 @@
             }
         };
         joinRoom();
+
+        // ═══════════════════════════════════════
+        // Typing emit bridge: dashboard -> mobile
+        // ═══════════════════════════════════════
+        function setupTypingBridge() {
+            const input = document.getElementById('chat-input-' + roomId);
+            if (!input || input.dataset.typingBound === '1') {
+                return;
+            }
+
+            let stopTypingTimer = null;
+            let isTyping = false;
+
+            const emitStartTyping = () => {
+                if (!window.socket || !receiverId) {
+                    return;
+                }
+
+                if (typeof window.socket.emitTyping === 'function') {
+                    window.socket.emitTyping(roomId, receiverId);
+                } else if (window.socket.socket) {
+                    window.socket.socket.emit('userTyping', {
+                        user_id: userId,
+                        room_id: roomId,
+                        receiver_id: receiverId,
+                    });
+                }
+            };
+
+            const emitStopTyping = () => {
+                if (!isTyping || !window.socket || !receiverId) {
+                    return;
+                }
+
+                isTyping = false;
+
+                if (typeof window.socket.emitStoppedTyping === 'function') {
+                    window.socket.emitStoppedTyping(roomId, receiverId);
+                } else if (window.socket.socket) {
+                    window.socket.socket.emit('userStoppedTyping', {
+                        user_id: userId,
+                        room_id: roomId,
+                        receiver_id: receiverId,
+                    });
+                }
+            };
+
+            input.addEventListener('input', () => {
+                const hasText = input.value.trim().length > 0;
+
+                if (hasText && !isTyping) {
+                    isTyping = true;
+                    emitStartTyping();
+                }
+
+                clearTimeout(stopTypingTimer);
+                stopTypingTimer = setTimeout(() => {
+                    emitStopTyping();
+                }, 1500);
+
+                if (!hasText) {
+                    emitStopTyping();
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                clearTimeout(stopTypingTimer);
+                emitStopTyping();
+            });
+
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    clearTimeout(stopTypingTimer);
+                    emitStopTyping();
+                }
+            });
+
+            const form = input.closest('form');
+            if (form) {
+                form.addEventListener('submit', () => {
+                    clearTimeout(stopTypingTimer);
+                    emitStopTyping();
+                });
+            }
+
+            input.dataset.typingBound = '1';
+        }
+
+        setupTypingBridge();
 
         // ═══════════════════════════════════════
         // Listen for real-time messages via Livewire dispatch

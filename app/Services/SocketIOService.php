@@ -71,7 +71,32 @@ class SocketIOService
             ->values()
             ->toArray();
 
+        foreach ($messages as $message) {
+            $message->content = $this->normalizeMessageContent($message->type ?? 'text', $message->content ?? '');
+        }
+
         return $messages;
+    }
+
+    protected function normalizeMessageContent(string $type, string $content): string
+    {
+        if ($content === '') {
+            return $content;
+        }
+
+        if (!in_array($type, ['image', 'sound', 'file'], true)) {
+            return $content;
+        }
+
+        if (str_starts_with($content, 'http://') || str_starts_with($content, 'https://')) {
+            return $content;
+        }
+
+        if (str_starts_with($content, '/storage/') || str_starts_with($content, '/assets/')) {
+            return url(ltrim($content, '/'));
+        }
+
+        return url('assets/uploads/chat/' . ltrim($content, '/'));
     }
 
     /**
