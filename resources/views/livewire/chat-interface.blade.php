@@ -150,10 +150,24 @@
         });
 
         // ═══════════════════════════════════════
+        // Helper: check if socket is connected (compatible with old + new versions)
+        // ═══════════════════════════════════════
+        function isSocketReady() {
+            if (!window.socket) return false;
+            // New version has isConnected() method
+            if (typeof window.socket.isConnected === 'function') return window.socket.isConnected();
+            // Old version has .connected property
+            if (window.socket.connected) return true;
+            // Check inner socket
+            if (window.socket.socket && window.socket.socket.connected) return true;
+            return false;
+        }
+
+        // ═══════════════════════════════════════
         // Join room via global socket client
         // ═══════════════════════════════════════
         const joinRoom = () => {
-            if (window.socket && window.socket.isConnected()) {
+            if (isSocketReady()) {
                 window.socket.joinRoom(roomId);
             } else {
                 // Retry until socket is ready
@@ -213,13 +227,13 @@
             const callData = Array.isArray(event) ? event[0] : event;
             console.log('[ChatInterface] Call data:', callData);
 
-            if (!window.socket || !window.socket.isConnected()) {
+            if (!isSocketReady()) {
                 console.error('[ChatInterface] Socket not connected!');
                 return;
             }
 
-            // Emit call signaling to Node.js server
-            window.socket.emitInitiateCall({
+            // Build call payload
+            const emitData = {
                 room_id: callData.room_id,
                 roomId: callData.room_id,
                 caller_id: callData.caller_id,
@@ -237,7 +251,14 @@
                 token: callData.receiver_token,
                 api_key: callData.api_key,
                 apiKey: callData.api_key,
-            });
+            };
+
+            // Emit call signaling (compatible with old + new socket-client.js)
+            if (typeof window.socket.emitInitiateCall === 'function') {
+                window.socket.emitInitiateCall(emitData);
+            } else if (window.socket.socket) {
+                window.socket.socket.emit('initiateCall', emitData);
+            }
 
             console.log('[ChatInterface] Opening call window...');
 

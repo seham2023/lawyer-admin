@@ -28,12 +28,14 @@ class SocketClient {
         console.log('[SocketClient] Connecting to', this.url, 'as user', this.userId);
 
         this.socket = io(this.url, {
-            transports: ['websocket', 'polling'],
+            transports: ['polling', 'websocket'],
+            upgrade: true,
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionDelayMax: 10000,
             reconnectionAttempts: Infinity,
-            timeout: 10000,
+            timeout: 15000,
+            rejectUnauthorized: false,
         });
 
         this.socket.on('connect', () => {

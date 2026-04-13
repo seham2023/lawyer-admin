@@ -100,17 +100,23 @@
             console.log('[CallNotification] Accepting call:', callData);
             $wire.dispatch('stop-ringtone');
 
-            // Emit acceptCall to Socket.IO server
-            if (window.socket && window.socket.isConnected()) {
-                window.socket.emitAcceptCall({
-                    caller_id: callData.caller_id ?? callData.callerId,
-                    callerId: callData.caller_id ?? callData.callerId,
-                    receiver_id: currentUserId,
-                    receiverId: currentUserId,
-                    room_id: callData.room_id ?? callData.roomId,
-                    roomId: callData.room_id ?? callData.roomId,
-                    token: callData.token || '',
-                });
+            // Emit acceptCall to Socket.IO server (compatible with old + new socket-client.js)
+            const acceptData = {
+                caller_id: callData.caller_id ?? callData.callerId,
+                callerId: callData.caller_id ?? callData.callerId,
+                receiver_id: currentUserId,
+                receiverId: currentUserId,
+                room_id: callData.room_id ?? callData.roomId,
+                roomId: callData.room_id ?? callData.roomId,
+                token: callData.token || '',
+            };
+
+            if (window.socket) {
+                if (typeof window.socket.emitAcceptCall === 'function') {
+                    window.socket.emitAcceptCall(acceptData);
+                } else if (window.socket.socket) {
+                    window.socket.socket.emit('acceptCall', acceptData);
+                }
                 console.log('[CallNotification] acceptCall emitted to socket');
             }
 
@@ -136,16 +142,22 @@
             console.log('[CallNotification] Rejecting call:', callData);
             $wire.dispatch('stop-ringtone');
 
-            // Emit rejectCall to Socket.IO server
-            if (window.socket && window.socket.isConnected()) {
-                window.socket.emitRejectCall({
-                    caller_id: callData.caller_id ?? callData.callerId,
-                    callerId: callData.caller_id ?? callData.callerId,
-                    receiver_id: currentUserId,
-                    receiverId: currentUserId,
-                    room_id: callData.room_id ?? callData.roomId,
-                    roomId: callData.room_id ?? callData.roomId,
-                });
+            // Emit rejectCall to Socket.IO server (compatible with old + new socket-client.js)
+            const rejectData = {
+                caller_id: callData.caller_id ?? callData.callerId,
+                callerId: callData.caller_id ?? callData.callerId,
+                receiver_id: currentUserId,
+                receiverId: currentUserId,
+                room_id: callData.room_id ?? callData.roomId,
+                roomId: callData.room_id ?? callData.roomId,
+            };
+
+            if (window.socket) {
+                if (typeof window.socket.emitRejectCall === 'function') {
+                    window.socket.emitRejectCall(rejectData);
+                } else if (window.socket.socket) {
+                    window.socket.socket.emit('rejectCall', rejectData);
+                }
                 console.log('[CallNotification] rejectCall emitted to socket');
             }
         });

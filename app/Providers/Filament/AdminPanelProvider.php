@@ -120,7 +120,7 @@ class AdminPanelProvider extends PanelProvider
             <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
             
             <!-- Socket Client Wrapper (SPA-safe, handles all event bridging to Livewire) -->
-            <script src="{{ asset(\'js/socket-client.js\') }}"></script>
+            <script src="{{ asset(\'js/socket-client.js\') }}?v={{ time() }}"></script>
             
             <!-- Meta tags for Socket.IO -->
             <meta name="user-id" content="{{ auth()->id() }}">
