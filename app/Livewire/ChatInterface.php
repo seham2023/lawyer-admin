@@ -180,9 +180,16 @@ class ChatInterface extends Component
         $nodeServerUrl = rtrim(config('services.opentok.node_server_url', config('socket.url', 'https://qestass.com:4888')), '/');
         
         try {
-            $response = Http::withHeaders([
+            $http = Http::withHeaders([
                 'lang' => app()->getLocale(),
-            ])->timeout(10)->get("{$nodeServerUrl}/api/createSessionToken", [
+            ])->timeout(10);
+
+            $nodeHost = parse_url($nodeServerUrl, PHP_URL_HOST);
+            if (in_array($nodeHost, ['localhost', '127.0.0.1', '::1'], true)) {
+                $http = $http->withoutVerifying();
+            }
+
+            $response = $http->get("{$nodeServerUrl}/api/createSessionToken", [
                 'senderId' => Auth::id(),
                 'receiverId' => $this->receiverId,
                 'roomId' => $this->roomId,
