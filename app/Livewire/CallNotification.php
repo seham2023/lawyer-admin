@@ -19,9 +19,11 @@ class CallNotification extends Component
         $this->callType = $callData['callType'] ?? $callData['call_type'] ?? 'audio';
 
         // Get caller name
+        $callerId = $callData['caller_id'] ?? $callData['callerId'] ?? $callData['userId'] ?? 0;
+        
         $caller = \DB::connection('qestass_app')
             ->table('users')
-            ->where('id', $callData['caller_id'] ?? $callData['callerId'] ?? $callData['userId'] ?? 0)
+            ->where('id', $callerId)
             ->first();
 
         $this->callerName = $caller
@@ -40,13 +42,41 @@ class CallNotification extends Component
         $this->dispatch('stop-ringtone');
     }
 
+    /**
+     * Also handle when call is accepted on another device
+     */
+    #[On('socket-call-accepted')]
+    public function handleCallAcceptedOnOtherDevice(): void
+    {
+        // If we're showing the call modal, dismiss it
+        // (the other device has picked up)
+        if ($this->showCallModal) {
+            $this->showCallModal = false;
+            $this->incomingCall = null;
+            $this->dispatch('stop-ringtone');
+        }
+    }
+
+    /**
+     * Also handle when call is rejected
+     */
+    #[On('socket-call-rejected')]
+    public function handleCallRejected(): void
+    {
+        if ($this->showCallModal) {
+            $this->showCallModal = false;
+            $this->incomingCall = null;
+            $this->dispatch('stop-ringtone');
+        }
+    }
+
     public function acceptCall(): void
     {
         if (!$this->incomingCall) {
             return;
         }
 
-        // Emit event to JavaScript to handle TokBox connection
+        // Emit event to JavaScript to handle connection
         $this->dispatch('accept-call', callData: $this->incomingCall);
         $this->showCallModal = false;
     }

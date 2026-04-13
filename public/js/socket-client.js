@@ -1,6 +1,7 @@
 /**
  * Socket.IO Client Wrapper for Dashboard
- * Handles real-time communication between dashboard and Socket.IO server
+ * SPA-safe: survives Filament page navigations
+ * Bridges all socket events → Livewire dispatch
  */
 
 class SocketClient {
@@ -9,134 +10,212 @@ class SocketClient {
         this.userId = userId;
         this.socket = null;
         this.connected = false;
+        this.currentRoomId = null;
         this.messageCallbacks = [];
         this.callCallbacks = [];
+        this._reconnectAttempts = 0;
     }
 
     /**
      * Connect to Socket.IO server
      */
     connect() {
-        if (this.connected) {
-            console.log('Already connected to Socket.IO');
+        if (this.connected && this.socket) {
+            console.log('[SocketClient] Already connected');
             return;
         }
+
+        console.log('[SocketClient] Connecting to', this.url, 'as user', this.userId);
 
         this.socket = io(this.url, {
             transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionDelay: 1000,
-            reconnectionAttempts: 5
+            reconnectionDelayMax: 10000,
+            reconnectionAttempts: Infinity,
+            timeout: 10000,
         });
 
         this.socket.on('connect', () => {
-            console.log('Connected to Socket.IO server');
+            console.log('[SocketClient] ✓ Connected, socket id:', this.socket.id);
             this.connected = true;
-            
+            this._reconnectAttempts = 0;
+
             const payload = {
                 user_id: this.userId,
+                userId: this.userId,
+                id: this.userId,
                 platform: 'dashboard'
             };
 
-            // Emit supported registration events so Node v4 can map this user
+            // Register for call routing + chat routing
             this.socket.emit('dashboardConnect', payload);
             this.socket.emit('registerUser', payload);
+            this.socket.emit('register', payload);
+            this.socket.emit('online', payload);
+            this.socket.emit('userOnline', payload);
 
-            // Update presence to online
-            this.updatePresence('online');
+            // Re-join room if we were in one
+            if (this.currentRoomId) {
+                this._joinRoomInternal(this.currentRoomId);
+            }
+
+            // Update presence
+            this._updatePresence('online');
         });
 
-        this.socket.on('disconnect', () => {
-            console.log('Disconnected from Socket.IO server');
+        this.socket.on('disconnect', (reason) => {
+            console.log('[SocketClient] Disconnected:', reason);
             this.connected = false;
         });
 
+        this.socket.on('reconnect', (attemptNumber) => {
+            console.log('[SocketClient] ✓ Reconnected after', attemptNumber, 'attempts');
+        });
+
         this.socket.on('connect_error', (error) => {
-            console.error('Socket.IO connection error:', error);
+            this._reconnectAttempts++;
+            console.error('[SocketClient] Connection error:', error.message);
         });
 
-        // Listen for new messages
+        // ═══════════════════════════════════════════════
+        // CHAT EVENTS → Bridge to Livewire
+        // ═══════════════════════════════════════════════
+
         this.socket.on('newMessage', (data) => {
-            console.log('New message received:', data);
-            this.messageCallbacks.forEach(callback => callback(data));
-            
-            // Show browser notification if page is not focused
-            if (document.hidden) {
-                this.showNotification(data);
+            console.log('[SocketClient] newMessage:', data);
+
+            // 1. Notify any registered callbacks (legacy support)
+            this.messageCallbacks.forEach(cb => cb(data));
+
+            // 2. Bridge to Livewire (SPA-safe — survives navigation)
+            if (window.Livewire) {
+                window.Livewire.dispatch('socket-new-message', { data: data });
             }
-            
-            // Play sound
-            this.playSound('notification');
+
+            // 3. Browser notification if tab is not focused
+            if (document.hidden) {
+                this._showMessageNotification(data);
+            }
         });
 
-        // Listen for incoming calls
+        this.socket.on('typingIndicator', (data) => {
+            if (window.Livewire) {
+                window.Livewire.dispatch('socket-typing', { data: data });
+            }
+        });
+
+        // ═══════════════════════════════════════════════
+        // CALL EVENTS → Bridge to Livewire
+        // ═══════════════════════════════════════════════
+
         this.socket.on('incomingCall', (data) => {
-            console.log('Incoming call:', data);
-            this.callCallbacks.forEach(callback => callback(data));
-            this.playSound('call');
-            this.showCallNotification(data);
+            console.log('[SocketClient] ★ incomingCall:', data);
+            this.callCallbacks.forEach(cb => cb(data));
+
+            // Bridge to Livewire CallNotification component
+            if (window.Livewire) {
+                window.Livewire.dispatch('incoming-call', { callData: data });
+            }
+
+            // Always show browser notification for calls (even if tab is focused)
+            this._showCallNotification(data);
         });
 
         this.socket.on('callAccepted', (data) => {
-            console.log('Call accepted:', data);
-            this.callCallbacks.forEach(callback => callback({ ...data, status: 'accepted' }));
+            console.log('[SocketClient] callAccepted:', data);
+            this.callCallbacks.forEach(cb => cb({ ...data, status: 'accepted' }));
+
+            if (window.Livewire) {
+                window.Livewire.dispatch('socket-call-accepted', { data: data });
+            }
         });
 
         this.socket.on('callRejected', (data) => {
-            console.log('Call rejected:', data);
-            this.callCallbacks.forEach(callback => callback({ ...data, status: 'rejected' }));
+            console.log('[SocketClient] callRejected:', data);
+            this.callCallbacks.forEach(cb => cb({ ...data, status: 'rejected' }));
+
+            if (window.Livewire) {
+                window.Livewire.dispatch('socket-call-rejected', { data: data });
+            }
         });
 
         this.socket.on('callEnded', (data) => {
-            console.log('Call ended:', data);
-            this.callCallbacks.forEach(callback => callback({ ...data, status: 'ended' }));
+            console.log('[SocketClient] callEnded:', data);
+            this.callCallbacks.forEach(cb => cb({ ...data, status: 'ended' }));
+
+            if (window.Livewire) {
+                window.Livewire.dispatch('call-ended-remote', { callData: data });
+            }
+        });
+
+        this.socket.on('callTimeout', (data) => {
+            console.log('[SocketClient] callTimeout:', data);
+            if (window.Livewire) {
+                window.Livewire.dispatch('call-ended-remote', { callData: { ...data, reason: 'timeout' } });
+            }
         });
 
         return this.socket;
     }
 
-    /**
-     * Join a specific room
-     */
-    joinRoom(roomId) {
-        if (!this.socket) {
-            console.error('Socket not connected');
-            return;
-        }
+    // ═══════════════════════════════════════════════
+    // ROOM MANAGEMENT
+    // ═══════════════════════════════════════════════
 
+    joinRoom(roomId) {
+        this.currentRoomId = roomId;
+        if (this.connected && this.socket) {
+            this._joinRoomInternal(roomId);
+        }
+    }
+
+    _joinRoomInternal(roomId) {
         this.socket.emit('adduser', {
             user_id: this.userId,
             room_id: roomId
         });
-
-        console.log(`Joined room: ${roomId}`);
+        this.socket.emit('joinRoom', {
+            user_id: this.userId,
+            room_id: roomId
+        });
+        console.log('[SocketClient] Joined room:', roomId);
     }
 
-    /**
-     * Send a message
-     */
+    leaveRoom() {
+        if (this.socket && this.connected) {
+            this.socket.emit('exitChat');
+        }
+        this.currentRoomId = null;
+    }
+
+    // ═══════════════════════════════════════════════
+    // MESSAGING
+    // ═══════════════════════════════════════════════
+
     sendMessage(data) {
-        if (!this.socket) {
-            console.error('Socket not connected');
-            return;
+        if (!this.socket || !this.connected) {
+            console.error('[SocketClient] Cannot send message — not connected');
+            return false;
         }
 
         this.socket.emit('sendMessage', {
             room_id: data.room_id,
-            sender_id: data.sender_id,
+            sender_id: data.sender_id || this.userId,
             receiver_id: data.receiver_id,
             content: data.content,
             type: data.type || 'text',
             duration: data.duration || null
         });
+        return true;
     }
 
-    /**
-     * Emit typing indicator
-     */
-    emitTyping(roomId, receiverId) {
-        if (!this.socket) return;
+    // ═══════════════════════════════════════════════
+    // TYPING INDICATORS
+    // ═══════════════════════════════════════════════
 
+    emitTyping(roomId, receiverId) {
+        if (!this.socket || !this.connected) return;
         this.socket.emit('userTyping', {
             user_id: this.userId,
             room_id: roomId,
@@ -144,12 +223,8 @@ class SocketClient {
         });
     }
 
-    /**
-     * Emit stopped typing
-     */
     emitStoppedTyping(roomId, receiverId) {
-        if (!this.socket) return;
-
+        if (!this.socket || !this.connected) return;
         this.socket.emit('userStoppedTyping', {
             user_id: this.userId,
             room_id: roomId,
@@ -157,123 +232,205 @@ class SocketClient {
         });
     }
 
-    /**
-     * Update user presence
-     */
-    updatePresence(status) {
-        fetch('/api/chat/presence', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                status: status,
-                platform: 'dashboard'
-            })
-        }).catch(error => console.error('Failed to update presence:', error));
+    // ═══════════════════════════════════════════════
+    // CALL SIGNALING
+    // ═══════════════════════════════════════════════
+
+    emitInitiateCall(data) {
+        if (!this.socket || !this.connected) {
+            console.error('[SocketClient] Cannot initiate call — not connected');
+            return false;
+        }
+        console.log('[SocketClient] Emitting initiateCall:', data);
+        this.socket.emit('initiateCall', data);
+        return true;
     }
 
-    /**
-     * Listen for messages
-     */
+    emitAcceptCall(data) {
+        if (!this.socket || !this.connected) return false;
+        console.log('[SocketClient] Emitting acceptCall:', data);
+        this.socket.emit('acceptCall', data);
+        return true;
+    }
+
+    emitRejectCall(data) {
+        if (!this.socket || !this.connected) return false;
+        console.log('[SocketClient] Emitting rejectCall:', data);
+        this.socket.emit('rejectCall', data);
+        return true;
+    }
+
+    emitCancelCall(data) {
+        if (!this.socket || !this.connected) return false;
+        console.log('[SocketClient] Emitting cancelCall:', data);
+        this.socket.emit('cancelCall', data);
+        return true;
+    }
+
+    emitEndCall(data) {
+        if (!this.socket || !this.connected) return false;
+        console.log('[SocketClient] Emitting endCall:', data);
+        this.socket.emit('endCall', data);
+        return true;
+    }
+
+    // ═══════════════════════════════════════════════
+    // CALLBACKS (Legacy support)
+    // ═══════════════════════════════════════════════
+
     onMessage(callback) {
         this.messageCallbacks.push(callback);
     }
 
-    /**
-     * Listen for calls
-     */
     onCall(callback) {
         this.callCallbacks.push(callback);
     }
 
-    /**
-     * Show browser notification
-     */
-    showNotification(data) {
-        if (!('Notification' in window)) {
-            return;
-        }
+    // ═══════════════════════════════════════════════
+    // BROWSER NOTIFICATIONS
+    // ═══════════════════════════════════════════════
 
-        if (Notification.permission === 'granted') {
-            new Notification(data.sender_name || 'New Message', {
-                body: data.type === 'text' ? data.content : `Sent a ${data.type}`,
-                icon: '/images/logo.png',
-                tag: `message-${data.room_id}`,
-                requireInteraction: false
+    _showMessageNotification(data) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+        try {
+            const title = data.sender_name || 'رسالة جديدة';
+            const body = data.type === 'text'
+                ? data.content
+                : (data.type === 'image' ? '📷 صورة' : data.type === 'sound' ? '🎤 رسالة صوتية' : '📎 ملف');
+
+            new Notification(title, {
+                body: body,
+                icon: '/images/legal/logo.png',
+                tag: `msg-${data.room_id}-${Date.now()}`,
+                requireInteraction: false,
             });
-        } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission();
+        } catch (e) {
+            console.log('[SocketClient] Notification failed:', e);
         }
     }
 
-    /**
-     * Show call notification
-     */
-    showCallNotification(data) {
-        if (!('Notification' in window)) {
-            return;
-        }
+    _showCallNotification(data) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-        if (Notification.permission === 'granted') {
-            new Notification(`${data.caller_name || data.callerName || 'Someone'} is calling`, {
-                body: `Incoming ${data.call_type || data.callType || 'audio'} call`,
-                icon: '/images/logo.png',
-                tag: `call-${data.room_id}`,
-                requireInteraction: true
+        try {
+            const callerName = data.caller_name || data.callerName || 'مستخدم';
+            const callType = data.call_type || data.callType || 'audio';
+            const typeLabel = callType === 'video' ? 'مكالمة فيديو' : 'مكالمة صوتية';
+
+            const notification = new Notification(`${callerName} - ${typeLabel}`, {
+                body: `${typeLabel} واردة من ${callerName}`,
+                icon: '/images/legal/logo.png',
+                tag: `call-${data.room_id || data.roomId}`,
+                requireInteraction: true,
             });
+
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+        } catch (e) {
+            console.log('[SocketClient] Call notification failed:', e);
         }
     }
 
-    /**
-     * Play sound
-     */
-    playSound(type) {
-        const audio = new Audio(`/sounds/${type}.mp3`);
-        audio.volume = 0.5;
-        audio.play().catch(error => console.log('Could not play sound:', error));
+    // ═══════════════════════════════════════════════
+    // PRESENCE
+    // ═══════════════════════════════════════════════
+
+    _updatePresence(status) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfMeta) return;
+
+        fetch('/api/chat/presence', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfMeta.content
+            },
+            body: JSON.stringify({ status: status, platform: 'dashboard' })
+        }).catch(err => console.log('[SocketClient] Presence update failed:', err.message));
     }
 
-    /**
-     * Disconnect from server
-     */
+    // ═══════════════════════════════════════════════
+    // DISCONNECT
+    // ═══════════════════════════════════════════════
+
     disconnect() {
         if (this.socket) {
-            this.updatePresence('offline');
+            this._updatePresence('offline');
             this.socket.disconnect();
             this.connected = false;
         }
     }
+
+    isConnected() {
+        return this.connected && this.socket && this.socket.connected;
+    }
 }
 
-// Initialize global socket instance
+// ═══════════════════════════════════════════════════════════
+// AUTO-INITIALIZE (runs once, survives Filament SPA navigation)
+// ═══════════════════════════════════════════════════════════
+
 window.SocketClient = SocketClient;
 
-// Auto-connect when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = document.querySelector('meta[name="user-id"]')?.content;
-    const socketUrl = document.querySelector('meta[name="socket-url"]')?.content || 'https://qestass.com:4888';
+// Prevent double-initialization in SPA
+if (!window.__socketInitialized) {
+    window.__socketInitialized = true;
 
-    console.log('=== SOCKET.IO INITIALIZATION ===');
-    console.log('User ID:', userId);
-    console.log('Socket URL:', socketUrl);
-    console.log('================================');
+    document.addEventListener('DOMContentLoaded', () => {
+        const userId = document.querySelector('meta[name="user-id"]')?.content;
+        const socketUrl = document.querySelector('meta[name="socket-url"]')?.content || 'https://qestass.com:4888';
 
-    if (userId) {
-        window.socket = new SocketClient(socketUrl, userId);
-        window.socket.connect();
+        console.log('[SocketClient] ════════════════════════════════');
+        console.log('[SocketClient] Initializing...');
+        console.log('[SocketClient] User ID:', userId);
+        console.log('[SocketClient] Socket URL:', socketUrl);
+        console.log('[SocketClient] ════════════════════════════════');
 
-        // Request notification permission
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
+        if (userId) {
+            window.socket = new SocketClient(socketUrl, parseInt(userId));
+            window.socket.connect();
+
+            // Request notification permission
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    console.log('[SocketClient] Notification permission:', permission);
+                });
+            }
+
+            // ═══════════════════════════════════════════════
+            // Register Service Worker for background push
+            // ═══════════════════════════════════════════════
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                    .then((registration) => {
+                        console.log('[SocketClient] Service Worker registered:', registration.scope);
+                    })
+                    .catch((err) => {
+                        console.log('[SocketClient] Service Worker registration failed:', err);
+                    });
+
+                // Listen for messages FROM the service worker (e.g., notification click)
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    console.log('[SocketClient] Message from SW:', event.data);
+                    if (event.data?.type === 'CALL_NOTIFICATION_CLICK') {
+                        // Focus the window and show the call modal
+                        window.focus();
+                        if (event.data.data && window.Livewire) {
+                            window.Livewire.dispatch('incoming-call', { callData: event.data.data });
+                        }
+                    }
+                });
+            }
+
+            // Graceful disconnect on page unload
+            window.addEventListener('beforeunload', () => {
+                window.socket.disconnect();
+            });
+        } else {
+            console.warn('[SocketClient] No user ID found — not connecting');
         }
-
-        // Update presence to offline when page unloads
-        window.addEventListener('beforeunload', () => {
-            window.socket.disconnect();
-        });
-    } else {
-        console.error('ERROR: No user ID found in meta tags!');
-    }
-});
+    });
+}

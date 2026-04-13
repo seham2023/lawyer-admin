@@ -18,7 +18,6 @@
             <div class="flex items-center gap-2">
                 {{-- Audio Call Button --}}
                 <button wire:click="initiateCall('audio')"
-                    onclick="console.log('Audio button clicked!');"
                     class="p-2 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition"
                     title="{{ __('Audio Call') }}">
                     <x-heroicon-o-phone class="w-5 h-5" />
@@ -26,7 +25,6 @@
 
                 {{-- Video Call Button --}}
                 <button wire:click="initiateCall('video')"
-                    onclick="console.log('Video button clicked!');"
                     class="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
                     title="{{ __('Video Call') }}">
                     <x-heroicon-o-video-camera class="w-5 h-5" />
@@ -43,8 +41,7 @@
     </div>
 
     {{-- Messages Area --}}
-    <div id="messages-container-{{ $roomId }}" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900"
-        wire:poll.5s="loadMessages">
+    <div id="messages-container-{{ $roomId }}" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900">
         @forelse($messages as $message)
             <div class="flex {{ $message->sender_id == auth()->id() ? 'justify-end' : 'justify-start' }}">
                 <div class="max-w-[70%]">
@@ -130,13 +127,15 @@
         @endif
     </div>
 
-    {{-- Socket.IO Integration --}}
+    {{-- Socket.IO Integration (SPA-safe via Livewire dispatch) --}}
     @script
     <script>
         const roomId = {{ $roomId }};
         const userId = {{ auth()->id() }};
 
-        // Auto-scroll to bottom
+        // ═══════════════════════════════════════
+        // Auto-scroll
+        // ═══════════════════════════════════════
         function scrollToBottom() {
             const container = document.getElementById('messages-container-' + roomId);
             if (container) {
@@ -144,90 +143,116 @@
             }
         }
 
-        // Scroll on load
         document.addEventListener('DOMContentLoaded', scrollToBottom);
 
-        // Scroll after Livewire updates
         Livewire.hook('morph.updated', ({ el, component }) => {
             scrollToBottom();
         });
 
-        // Socket.IO listeners
-        if (window.socket) {
-            // Join room
-            window.socket.joinRoom(roomId);
+        // ═══════════════════════════════════════
+        // Join room via global socket client
+        // ═══════════════════════════════════════
+        const joinRoom = () => {
+            if (window.socket && window.socket.isConnected()) {
+                window.socket.joinRoom(roomId);
+            } else {
+                // Retry until socket is ready
+                setTimeout(joinRoom, 500);
+            }
+        };
+        joinRoom();
 
-            // Listen for new messages
-            window.socket.socket.on('newMessage', (data) => {
-                if (data.room_id == roomId) {
-                    @this.loadMessages();
-                    scrollToBottom();
-                }
-            });
+        // ═══════════════════════════════════════
+        // Listen for real-time messages via Livewire dispatch
+        // (socket-client.js dispatches 'socket-new-message' globally)
+        // ═══════════════════════════════════════
+        Livewire.on('socket-new-message', (event) => {
+            const data = event.data || event[0]?.data || event;
+            const msgRoomId = data.room_id || data.roomId;
 
-            // Listen for typing
-            window.socket.socket.on('typingIndicator', (data) => {
-                if (data.room_id == roomId && data.user_id != userId) {
-                    const indicator = document.getElementById('typing-indicator-' + roomId);
-                    if (indicator) {
-                        indicator.textContent = data.is_typing ? 'typing...' : '';
+            if (String(msgRoomId) === String(roomId)) {
+                console.log('[ChatInterface] Real-time message for this room:', data);
+                @this.loadMessages();
+                setTimeout(scrollToBottom, 200);
+            }
+        });
+
+        // ═══════════════════════════════════════
+        // Typing indicator via Livewire dispatch
+        // ═══════════════════════════════════════
+        Livewire.on('socket-typing', (event) => {
+            const data = event.data || event[0]?.data || event;
+            if (String(data.room_id) === String(roomId) && String(data.user_id) !== String(userId)) {
+                const indicator = document.getElementById('typing-indicator-' + roomId);
+                if (indicator) {
+                    indicator.textContent = data.is_typing ? 'يكتب...' : '';
+
+                    // Auto-clear after 3 seconds
+                    if (data.is_typing) {
+                        clearTimeout(window.__typingTimeout);
+                        window.__typingTimeout = setTimeout(() => {
+                            indicator.textContent = '';
+                        }, 3000);
                     }
                 }
-            });
-        }
+            }
+        });
 
-        // Mark as read when viewing (delay to ensure component is loaded)
+        // Mark as read when viewing
         setTimeout(() => {
             if (@this && typeof @this.markAsRead === 'function') {
                 @this.markAsRead();
             }
         }, 100);
 
-        // Listen for call initiation
+        // ═══════════════════════════════════════
+        // Call initiation
+        // ═══════════════════════════════════════
         $wire.on('initiate-call', (event) => {
-            console.log('=== CALL INITIATION DEBUG ===');
-            console.log('1. Event received:', event);
-            console.log('2. Event type:', typeof event);
-            console.log('3. Event is array:', Array.isArray(event));
-
+            console.log('[ChatInterface] ═══ CALL INITIATION ═══');
             const callData = Array.isArray(event) ? event[0] : event;
-            console.log('4. Call data extracted:', callData);
-            console.log('5. Socket exists:', !!window.socket);
-            console.log('6. Socket.socket exists:', !!(window.socket && window.socket.socket));
+            console.log('[ChatInterface] Call data:', callData);
 
-            if (window.socket && window.socket.socket) {
-                const emitData = {
-                    room_id: callData.room_id,
-                    caller_id: callData.caller_id,
-                    receiver_id: callData.receiver_id,
-                    caller_name: callData.caller_name,
-                    caller_avatar: callData.caller_avatar,
-                    call_type: callData.call_type,
-                    session_id: callData.session_id,
-                    token: callData.receiver_token,
-                    api_key: callData.api_key
-                };
-
-                console.log('7. Emitting initiateCall event to Socket.IO:', emitData);
-
-                // Emit Node v4 call signaling event
-                window.socket.socket.emit('initiateCall', emitData);
-
-                console.log('8. Call event emitted successfully');
-
-                // Open video call page for lawyer
-                const callUrl = `/admin/video-call?session=${callData.session_id}&token=${callData.caller_token}&apiKey=${callData.api_key}&callType=${callData.call_type}`;
-                console.log('9. Opening call window:', callUrl);
-
-                window.open(callUrl, '_blank', 'width=1200,height=800');
-
-                console.log('10. Call window opened');
-            } else {
-                console.error('ERROR: Socket not available!');
-                console.log('window.socket:', window.socket);
+            if (!window.socket || !window.socket.isConnected()) {
+                console.error('[ChatInterface] Socket not connected!');
+                return;
             }
 
-            console.log('=== END CALL INITIATION DEBUG ===');
+            // Emit call signaling to Node.js server
+            window.socket.emitInitiateCall({
+                room_id: callData.room_id,
+                roomId: callData.room_id,
+                caller_id: callData.caller_id,
+                callerId: callData.caller_id,
+                receiver_id: callData.receiver_id,
+                receiverId: callData.receiver_id,
+                caller_name: callData.caller_name,
+                callerName: callData.caller_name,
+                caller_avatar: callData.caller_avatar,
+                callerAvatar: callData.caller_avatar,
+                call_type: callData.call_type,
+                callType: callData.call_type,
+                session_id: callData.session_id,
+                sessionId: callData.session_id,
+                token: callData.receiver_token,
+                api_key: callData.api_key,
+                apiKey: callData.api_key,
+            });
+
+            console.log('[ChatInterface] Opening call window...');
+
+            // Open video call page for the caller (lawyer)
+            const callUrl = `/admin/video-call?session=${encodeURIComponent(callData.session_id)}&token=${encodeURIComponent(callData.caller_token)}&apiKey=${encodeURIComponent(callData.api_key)}&callType=${encodeURIComponent(callData.call_type)}`;
+            window.open(callUrl, '_blank', 'width=1200,height=800');
+
+            console.log('[ChatInterface] ═══ CALL INITIATED ═══');
+        });
+
+        // Clean up on component destroy
+        $wire.on('hook:destroyed', () => {
+            if (window.socket) {
+                window.socket.leaveRoom();
+            }
         });
     </script>
     @endscript

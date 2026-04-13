@@ -119,7 +119,7 @@ class AdminPanelProvider extends PanelProvider
             <!-- Socket.IO Client -->
             <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
             
-            <!-- Socket Client Wrapper -->
+            <!-- Socket Client Wrapper (SPA-safe, handles all event bridging to Livewire) -->
             <script src="{{ asset(\'js/socket-client.js\') }}"></script>
             
             <!-- Meta tags for Socket.IO -->
@@ -131,31 +131,11 @@ class AdminPanelProvider extends PanelProvider
         // FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/css/demo.scss')"));
         FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/js/app.js')"));
         
-        // Global Call Notification Component and Socket Bridge
+        // Global Call Notification Component
+        // socket-client.js already dispatches 'incoming-call' and 'call-ended-remote'
+        // events to Livewire automatically — no JS bridge needed here
         FilamentView::registerRenderHook('panels::body.start', fn(): string => Blade::render('
             @livewire(\'call-notification\')
-            
-            <script>
-                document.addEventListener(\'DOMContentLoaded\', () => {
-                    // Poll for socket availability
-                    const checkSocket = setInterval(() => {
-                        if (window.socket) {
-                            clearInterval(checkSocket);
-                            
-                            // Relay incomingCall from Socket.io to Livewire
-                            window.socket.onCall((data) => {
-                                console.log(\'Global Socket Bridge: Incoming Call Received\', data);
-                                if (!data.status) { // Only trigger for NEW calls, not accepted/rejected/ended status updates handled elsewhere
-                                    Livewire.dispatch(\'incoming-call\', { callData: data });
-                                } else if (data.status === \'ended\') {
-                                    // Handle remote cancellation across all devices
-                                    Livewire.dispatch(\'call-ended-remote\', { callData: data });
-                                }
-                            });
-                        }
-                    }, 500);
-                });
-            </script>
         '));
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Services\AgoraService;
 use App\Services\SocketIOService;
 use App\Filament\Pages\Messages;
 use Livewire\Component;
@@ -10,6 +9,7 @@ use Livewire\WithFileUploads;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Locked;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
@@ -67,6 +67,13 @@ class ChatInterface extends Component
         $this->dispatch('messages-loaded');
     }
 
+    /**
+     * Handle real-time message from socket (dispatched by socket-client.js)
+     * This method is called via Livewire.dispatch('socket-new-message') from JS
+     * No need for #[On] attribute here — the JS @script in the blade handles it
+     * and calls @this.loadMessages() directly
+     */
+
     public function sendMessage(): void
     {
         if (empty($this->newMessage) && !$this->file) {
@@ -111,7 +118,8 @@ class ChatInterface extends Component
             'updated_at' => now(),
         ]);
 
-        // Send via Socket.IO
+        // Relay message via Node.js Socket.IO server for real-time delivery 
+        // to ALL connected devices (mobile + other dashboard sessions)
         $service = app(SocketIOService::class);
         $service->sendMessage(
             $this->roomId,
@@ -142,7 +150,8 @@ class ChatInterface extends Component
 
     public function handleTyping(): void
     {
-        // Emit typing event via Socket.IO
+        // Typing is emitted client-side via socket-client.js
+        // The Livewire dispatch triggers JS code that calls window.socket.emitTyping()
         $this->dispatch('user-typing', [
             'roomId' => $this->roomId,
             'userId' => Auth::id()
@@ -153,48 +162,73 @@ class ChatInterface extends Component
     {
         $this->authorizeRoomAccess();
 
-        Log::info('ChatInterface: initiateCall called', [
+        Log::info('ChatInterface: initiateCall', [
             'callType' => $callType,
             'roomId' => $this->roomId,
             'receiverId' => $this->receiverId
         ]);
 
-        $agoraService = app(AgoraService::class);
+        // ═══════════════════════════════════════════════════════
+        // Get Agora token from Node.js server (SINGLE AUTHORITY)
+        // This is the same endpoint Flutter uses, ensuring 
+        // consistent token generation across all platforms
+        // ═══════════════════════════════════════════════════════
+        
+        $nodeServerUrl = rtrim(config('services.opentok.node_server_url', config('socket.url', 'https://qestass.com:4888')), '/');
+        
+        try {
+            $response = Http::withHeaders([
+                'lang' => app()->getLocale(),
+            ])->timeout(10)->get("{$nodeServerUrl}/api/createSessionToken", [
+                'senderId' => Auth::id(),
+                'receiverId' => $this->receiverId,
+                'roomId' => $this->roomId,
+            ]);
 
-        // Create Agora session
-        $sessionData = $agoraService->createCallSession(Auth::id(), $this->receiverId, $this->roomId);
+            $data = $response->json();
 
-        Log::info('ChatInterface: Agora session created', [
-            'success' => $sessionData['success'] ?? false,
-            'sessionData' => $sessionData
-        ]);
+            Log::info('ChatInterface: Node.js session response', ['data' => $data]);
 
-        if (!$sessionData['success']) {
-            Log::error('ChatInterface: Failed to create call session');
-            $this->dispatch('call-error', message: 'Failed to create call session');
-            return;
+            if (($data['key'] ?? '') !== 'success') {
+                Log::error('ChatInterface: Node.js session creation failed', ['response' => $data]);
+                $this->dispatch('call-error', message: $data['msg'] ?? 'Failed to create call session');
+                return;
+            }
+
+            $sessionData = $data['data'];
+
+            $callerName = trim(
+                (Auth::user()->name ?? '') ?: 
+                ((Auth::user()->first_name ?? '') . ' ' . (Auth::user()->last_name ?? ''))
+            );
+
+            $callData = [
+                'room_id' => $this->roomId,
+                'caller_id' => Auth::id(),
+                'receiver_id' => $this->receiverId,
+                'call_type' => $callType,
+                'session_id' => $sessionData['channelName'],
+                'api_key' => $sessionData['appId'],
+                'caller_token' => $sessionData['token'],   // Caller's token from Node.js
+                'receiver_token' => '',                     // Receiver token generated server-side on initiateCall
+                'caller_name' => $callerName,
+                'caller_avatar' => Auth::user()->avatar ?? null,
+            ];
+
+            Log::info('ChatInterface: Dispatching initiate-call', $callData);
+
+            // Emit to JavaScript handler which will:
+            // 1. Send initiateCall socket event to Node.js
+            // 2. Open the call window for the caller
+            $this->dispatch('initiate-call', $callData);
+
+        } catch (\Exception $e) {
+            Log::error('ChatInterface: Failed to create session via Node.js', [
+                'error' => $e->getMessage(),
+                'url' => $nodeServerUrl,
+            ]);
+            $this->dispatch('call-error', message: 'Failed to connect to call server: ' . $e->getMessage());
         }
-
-        // Send call via Socket.IO
-        $socketService = app(SocketIOService::class);
-
-        $callData = [
-            'room_id' => $this->roomId,
-            'caller_id' => Auth::id(),
-            'receiver_id' => $this->receiverId,
-            'call_type' => $callType,
-            'session_id' => $sessionData['session_id'],
-            'api_key' => $sessionData['api_key'],
-            'caller_token' => $sessionData['lawyer_token'],
-            'receiver_token' => $sessionData['client_token'],
-            'caller_name' => trim((Auth::user()->name ?? '') ?: ((Auth::user()->first_name ?? '') . ' ' . (Auth::user()->last_name ?? ''))),
-            'caller_avatar' => Auth::user()->avatar ?? null,
-        ];
-
-        Log::info('ChatInterface: Dispatching initiate-call event', $callData);
-
-        // Emit call event
-        $this->dispatch('initiate-call', $callData);
     }
 
     public function render()
