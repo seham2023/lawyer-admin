@@ -118,16 +118,19 @@ class ChatInterface extends Component
             'updated_at' => now(),
         ]);
 
-        // Relay message via Node.js Socket.IO server for real-time delivery 
-        // to ALL connected devices (mobile + other dashboard sessions)
-        $service = app(SocketIOService::class);
-        $service->sendMessage(
-            $this->roomId,
-            Auth::id(),
-            $this->receiverId,
-            $content,
-            $type,
-        );
+        // Relay through the already-connected dashboard browser socket.
+        // This avoids server-to-server HTTP failures and keeps the DB write single-source.
+        $this->dispatch('relay-message', [
+            'room_id' => $this->roomId,
+            'roomId' => $this->roomId,
+            'sender_id' => Auth::id(),
+            'senderId' => Auth::id(),
+            'receiver_id' => $this->receiverId,
+            'receiverId' => $this->receiverId,
+            'content' => $content,
+            'type' => $type,
+            'duration' => null,
+        ]);
 
         $this->newMessage = '';
         $this->file = null;

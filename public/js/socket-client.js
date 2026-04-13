@@ -14,6 +14,7 @@ class SocketClient {
         this.messageCallbacks = [];
         this.callCallbacks = [];
         this._reconnectAttempts = 0;
+        this._pendingEmits = [];
     }
 
     /**
@@ -28,8 +29,8 @@ class SocketClient {
         console.log('[SocketClient] Connecting to', this.url, 'as user', this.userId);
 
         this.socket = io(this.url, {
-            transports: ['polling', 'websocket'],
-            upgrade: true,
+            transports: ['websocket'],
+            upgrade: false,
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionDelayMax: 10000,
@@ -42,6 +43,7 @@ class SocketClient {
             console.log('[SocketClient] ✓ Connected, socket id:', this.socket.id);
             this.connected = true;
             this._reconnectAttempts = 0;
+            this._flushPendingEmits();
 
             const payload = {
                 user_id: this.userId,
@@ -161,6 +163,31 @@ class SocketClient {
         return this.socket;
     }
 
+    _emitOrQueue(eventName, payload) {
+        if (this.socket && this.connected) {
+            this.socket.emit(eventName, payload);
+            return true;
+        }
+
+        console.warn('[SocketClient] Queueing event while disconnected:', eventName, payload);
+        this._pendingEmits.push({ eventName, payload });
+        return false;
+    }
+
+    _flushPendingEmits() {
+        if (!this.socket || !this.connected || this._pendingEmits.length === 0) {
+            return;
+        }
+
+        const queued = [...this._pendingEmits];
+        this._pendingEmits = [];
+
+        queued.forEach(({ eventName, payload }) => {
+            console.log('[SocketClient] Flushing queued event:', eventName, payload);
+            this.socket.emit(eventName, payload);
+        });
+    }
+
     // ═══════════════════════════════════════════════
     // ROOM MANAGEMENT
     // ═══════════════════════════════════════════════
@@ -196,12 +223,7 @@ class SocketClient {
     // ═══════════════════════════════════════════════
 
     sendMessage(data) {
-        if (!this.socket || !this.connected) {
-            console.error('[SocketClient] Cannot send message — not connected');
-            return false;
-        }
-
-        this.socket.emit('sendMessage', {
+        return this._emitOrQueue('sendMessage', {
             room_id: data.room_id,
             sender_id: data.sender_id || this.userId,
             receiver_id: data.receiver_id,
@@ -209,7 +231,11 @@ class SocketClient {
             type: data.type || 'text',
             duration: data.duration || null
         });
-        return true;
+    }
+
+    emitRelayMessage(data) {
+        console.log('[SocketClient] Emitting relayMessage:', data);
+        return this._emitOrQueue('relayMessage', data);
     }
 
     // ═══════════════════════════════════════════════
@@ -239,41 +265,28 @@ class SocketClient {
     // ═══════════════════════════════════════════════
 
     emitInitiateCall(data) {
-        if (!this.socket || !this.connected) {
-            console.error('[SocketClient] Cannot initiate call — not connected');
-            return false;
-        }
         console.log('[SocketClient] Emitting initiateCall:', data);
-        this.socket.emit('initiateCall', data);
-        return true;
+        return this._emitOrQueue('initiateCall', data);
     }
 
     emitAcceptCall(data) {
-        if (!this.socket || !this.connected) return false;
         console.log('[SocketClient] Emitting acceptCall:', data);
-        this.socket.emit('acceptCall', data);
-        return true;
+        return this._emitOrQueue('acceptCall', data);
     }
 
     emitRejectCall(data) {
-        if (!this.socket || !this.connected) return false;
         console.log('[SocketClient] Emitting rejectCall:', data);
-        this.socket.emit('rejectCall', data);
-        return true;
+        return this._emitOrQueue('rejectCall', data);
     }
 
     emitCancelCall(data) {
-        if (!this.socket || !this.connected) return false;
         console.log('[SocketClient] Emitting cancelCall:', data);
-        this.socket.emit('cancelCall', data);
-        return true;
+        return this._emitOrQueue('cancelCall', data);
     }
 
     emitEndCall(data) {
-        if (!this.socket || !this.connected) return false;
         console.log('[SocketClient] Emitting endCall:', data);
-        this.socket.emit('endCall', data);
-        return true;
+        return this._emitOrQueue('endCall', data);
     }
 
     // ═══════════════════════════════════════════════

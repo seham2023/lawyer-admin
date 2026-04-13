@@ -227,8 +227,8 @@
             const callData = Array.isArray(event) ? event[0] : event;
             console.log('[ChatInterface] Call data:', callData);
 
-            if (!isSocketReady()) {
-                console.error('[ChatInterface] Socket not connected!');
+            if (!window.socket) {
+                console.error('[ChatInterface] Socket client is not available');
                 return;
             }
 
@@ -248,6 +248,8 @@
                 callType: callData.call_type,
                 session_id: callData.session_id,
                 sessionId: callData.session_id,
+                caller_token: callData.caller_token,
+                callerToken: callData.caller_token,
                 token: callData.receiver_token,
                 api_key: callData.api_key,
                 apiKey: callData.api_key,
@@ -267,6 +269,24 @@
             window.open(callUrl, '_blank', 'width=1200,height=800');
 
             console.log('[ChatInterface] ═══ CALL INITIATED ═══');
+        });
+
+        $wire.on('relay-message', (event) => {
+            const payload = Array.isArray(event) ? event[0] : event;
+            const messageData = payload[0] ?? payload;
+
+            console.log('[ChatInterface] Relaying persisted message via socket:', messageData);
+
+            if (!window.socket) {
+                console.error('[ChatInterface] Socket client is not available for relayMessage');
+                return;
+            }
+
+            if (typeof window.socket.emitRelayMessage === 'function') {
+                window.socket.emitRelayMessage(messageData);
+            } else if (window.socket.socket) {
+                window.socket.socket.emit('relayMessage', messageData);
+            }
         });
 
         // Clean up on component destroy

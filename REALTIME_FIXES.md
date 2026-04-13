@@ -139,3 +139,21 @@
 - [ ] Test: call from mobile → dashboard (should show notification)
 - [ ] Test: accept on one device → other device stops ringing
 - [ ] Test: let call timeout (60s) → missed call notification appears
+
+
+
+I traced the current flow across the three projects and implemented the highest-confidence fixes.
+
+The main root causes were:
+
+InvalidToken: the backend was forwarding the receiver’s Agora token back to the caller on callAccepted. I fixed that in call-controller.js by storing the caller token at initiateCall time and returning the correct caller token on accept.
+Duplicate ringing / duplicate accept state: Flutter’s retry loop was re-sending initiateCall every 2 seconds, and Node treated each retry as a brand-new invite. I added active-call dedupe/throttling in that same file, so repeated retries for the same room no longer create fresh incoming-call bursts.
+Dashboard-to-mobile chat not real-time: the dashboard was relying on Laravel→Node HTTP relay after DB save. I switched the dashboard to relay the already-persisted message through the browser’s live socket instead, via new relayMessage handling in socket-handlers.js, chat-handlers.js, ChatInterface.php, and chat-interface.blade.php.
+Dashboard socket instability and duplicate JS listeners: I made the dashboard socket client websocket-only with queued emits in socket-client.js, and I hardened the call notification bindings in call-notification.blade.php so SPA navigation doesn’t stack duplicate listeners and duplicate ringtone playback.
+I also added better Agora page logging in video-call.blade.php so the next round of debugging has immediate signal if media still fails.
+I verified syntax with php -l on the edited Livewire PHP files and node -c on the edited Node/dashboard JS files that can be syntax-checked locally. I did not run full end-to-end call/chat tests here, so the next step is deploy both lawyer-filamnt and nodejs-v4, then test in this order:
+
+Dashboard → mobile message should appear instantly.
+Mobile → Filament call should ring once, accept once, and stop ringing on other devices.
+After Filament accepts a mobile-originated call, the mobile caller should no longer get AgoraRtcException / InvalidToken.
+Dashboard → mobile call should now survive brief socket reconnects instead of silently failing.

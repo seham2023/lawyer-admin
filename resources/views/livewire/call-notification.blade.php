@@ -68,109 +68,119 @@
     {{-- Socket.IO Call Event Handlers --}}
     @script
     <script>
-        const ringtone = document.getElementById('ringing-sound');
-        const currentUserId = {{ auth()->id() }};
+        window.__callNotificationCurrentUserId = {{ auth()->id() }};
+        window.__callNotificationBindingsInitialized = window.__callNotificationBindingsInitialized || false;
 
-        // ═══════════════════════════════════════
-        // Ringtone controls
-        // ═══════════════════════════════════════
-        $wire.on('play-ringtone', () => {
-            console.log('[CallNotification] Playing ringtone...');
-            if (ringtone) {
-                ringtone.currentTime = 0;
-                ringtone.play().catch(e => console.log('Audio play failed:', e));
-            }
-        });
+        function getRingtoneElement() {
+            return document.getElementById('ringing-sound');
+        }
 
-        $wire.on('stop-ringtone', () => {
-            console.log('[CallNotification] Stopping ringtone...');
-            if (ringtone) {
-                ringtone.pause();
-                ringtone.currentTime = 0;
-            }
-        });
+        if (!window.__callNotificationBindingsInitialized) {
+            window.__callNotificationBindingsInitialized = true;
 
-        // ═══════════════════════════════════════
-        // Handle ACCEPT call
-        // ═══════════════════════════════════════
-        $wire.on('accept-call', (event) => {
-            const payload = Array.isArray(event) ? event[0] : event;
-            const callData = payload.callData ?? payload;
-
-            console.log('[CallNotification] Accepting call:', callData);
-            $wire.dispatch('stop-ringtone');
-
-            // Emit acceptCall to Socket.IO server (compatible with old + new socket-client.js)
-            const acceptData = {
-                caller_id: callData.caller_id ?? callData.callerId,
-                callerId: callData.caller_id ?? callData.callerId,
-                receiver_id: currentUserId,
-                receiverId: currentUserId,
-                room_id: callData.room_id ?? callData.roomId,
-                roomId: callData.room_id ?? callData.roomId,
-                token: callData.token || '',
-            };
-
-            if (window.socket) {
-                if (typeof window.socket.emitAcceptCall === 'function') {
-                    window.socket.emitAcceptCall(acceptData);
-                } else if (window.socket.socket) {
-                    window.socket.socket.emit('acceptCall', acceptData);
+            // ═══════════════════════════════════════
+            // Ringtone controls
+            // ═══════════════════════════════════════
+            Livewire.on('play-ringtone', () => {
+                console.log('[CallNotification] Playing ringtone...');
+                const ringtone = getRingtoneElement();
+                if (ringtone) {
+                    ringtone.currentTime = 0;
+                    ringtone.play().catch(e => console.log('Audio play failed:', e));
                 }
-                console.log('[CallNotification] acceptCall emitted to socket');
-            }
-
-            // Open video call page with the credentials from incomingCall payload
-            const params = new URLSearchParams({
-                session: callData.session_id ?? callData.sessionId ?? '',
-                token: callData.token ?? '',
-                apiKey: callData.api_key ?? callData.apiKey ?? '',
-                callType: callData.call_type ?? callData.callType ?? 'audio'
             });
 
-            console.log('[CallNotification] Opening call window with params:', params.toString());
-            window.open('/admin/video-call?' + params.toString(), '_blank', 'width=1200,height=800');
-        });
-
-        // ═══════════════════════════════════════
-        // Handle REJECT call
-        // ═══════════════════════════════════════
-        $wire.on('reject-call', (event) => {
-            const payload = Array.isArray(event) ? event[0] : event;
-            const callData = payload.callData ?? payload;
-
-            console.log('[CallNotification] Rejecting call:', callData);
-            $wire.dispatch('stop-ringtone');
-
-            // Emit rejectCall to Socket.IO server (compatible with old + new socket-client.js)
-            const rejectData = {
-                caller_id: callData.caller_id ?? callData.callerId,
-                callerId: callData.caller_id ?? callData.callerId,
-                receiver_id: currentUserId,
-                receiverId: currentUserId,
-                room_id: callData.room_id ?? callData.roomId,
-                roomId: callData.room_id ?? callData.roomId,
-            };
-
-            if (window.socket) {
-                if (typeof window.socket.emitRejectCall === 'function') {
-                    window.socket.emitRejectCall(rejectData);
-                } else if (window.socket.socket) {
-                    window.socket.socket.emit('rejectCall', rejectData);
+            Livewire.on('stop-ringtone', () => {
+                console.log('[CallNotification] Stopping ringtone...');
+                const ringtone = getRingtoneElement();
+                if (ringtone) {
+                    ringtone.pause();
+                    ringtone.currentTime = 0;
                 }
-                console.log('[CallNotification] rejectCall emitted to socket');
-            }
-        });
+            });
 
-        // ═══════════════════════════════════════
-        // Handle remote call ended (auto-dismiss)
-        // This fires when call is accepted on another device,
-        // or caller cancels, or call times out
-        // ═══════════════════════════════════════
-        Livewire.on('call-ended-remote', (event) => {
-            console.log('[CallNotification] Remote call ended:', event);
-            $wire.dispatch('stop-ringtone');
-        });
+            // ═══════════════════════════════════════
+            // Handle ACCEPT call
+            // ═══════════════════════════════════════
+            Livewire.on('accept-call', (event) => {
+                const payload = Array.isArray(event) ? event[0] : event;
+                const callData = payload.callData ?? payload;
+
+                console.log('[CallNotification] Accepting call:', callData);
+                window.Livewire.dispatch('stop-ringtone');
+
+                // Emit acceptCall to Socket.IO server (compatible with old + new socket-client.js)
+                const acceptData = {
+                    caller_id: callData.caller_id ?? callData.callerId,
+                    callerId: callData.caller_id ?? callData.callerId,
+                    receiver_id: window.__callNotificationCurrentUserId,
+                    receiverId: window.__callNotificationCurrentUserId,
+                    room_id: callData.room_id ?? callData.roomId,
+                    roomId: callData.room_id ?? callData.roomId,
+                    token: callData.token || '',
+                };
+
+                if (window.socket) {
+                    if (typeof window.socket.emitAcceptCall === 'function') {
+                        window.socket.emitAcceptCall(acceptData);
+                    } else if (window.socket.socket) {
+                        window.socket.socket.emit('acceptCall', acceptData);
+                    }
+                    console.log('[CallNotification] acceptCall emitted to socket');
+                }
+
+                // Open video call page with the credentials from incomingCall payload
+                const params = new URLSearchParams({
+                    session: callData.session_id ?? callData.sessionId ?? '',
+                    token: callData.token ?? '',
+                    apiKey: callData.api_key ?? callData.apiKey ?? '',
+                    callType: callData.call_type ?? callData.callType ?? 'audio'
+                });
+
+                console.log('[CallNotification] Opening call window with params:', params.toString());
+                window.open('/admin/video-call?' + params.toString(), '_blank', 'width=1200,height=800');
+            });
+
+            // ═══════════════════════════════════════
+            // Handle REJECT call
+            // ═══════════════════════════════════════
+            Livewire.on('reject-call', (event) => {
+                const payload = Array.isArray(event) ? event[0] : event;
+                const callData = payload.callData ?? payload;
+
+                console.log('[CallNotification] Rejecting call:', callData);
+                window.Livewire.dispatch('stop-ringtone');
+
+                // Emit rejectCall to Socket.IO server (compatible with old + new socket-client.js)
+                const rejectData = {
+                    caller_id: callData.caller_id ?? callData.callerId,
+                    callerId: callData.caller_id ?? callData.callerId,
+                    receiver_id: window.__callNotificationCurrentUserId,
+                    receiverId: window.__callNotificationCurrentUserId,
+                    room_id: callData.room_id ?? callData.roomId,
+                    roomId: callData.room_id ?? callData.roomId,
+                };
+
+                if (window.socket) {
+                    if (typeof window.socket.emitRejectCall === 'function') {
+                        window.socket.emitRejectCall(rejectData);
+                    } else if (window.socket.socket) {
+                        window.socket.socket.emit('rejectCall', rejectData);
+                    }
+                    console.log('[CallNotification] rejectCall emitted to socket');
+                }
+            });
+
+            // ═══════════════════════════════════════
+            // Handle remote call ended (auto-dismiss)
+            // This fires when call is accepted on another device,
+            // or caller cancels, or call times out
+            // ═══════════════════════════════════════
+            Livewire.on('call-ended-remote', (event) => {
+                console.log('[CallNotification] Remote call ended:', event);
+                window.Livewire.dispatch('stop-ringtone');
+            });
+        }
     </script>
     @endscript
 </div>

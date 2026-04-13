@@ -57,12 +57,23 @@
         let localVideoTrack;
         let audioEnabled = true;
         let videoEnabled = true;
+        const uid = {{ $uid ?? 0 }};
+
+        console.log('[VideoCall] Initializing page', {
+            appId: appId,
+            channelName: channelName,
+            callType: callType,
+            uid: uid,
+            hasToken: Boolean(token),
+        });
 
         async function initializeSession() {
+            console.log('[VideoCall] Creating Agora client...');
             client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
             // Subscribe to remote stream
             client.on("user-published", async (user, mediaType) => {
+                console.log('[VideoCall] user-published', { uid: user.uid, mediaType: mediaType });
                 await client.subscribe(user, mediaType);
                 updateCallStatus('Connected');
 
@@ -78,10 +89,12 @@
             });
 
             client.on("user-unpublished", (user) => {
+                console.log('[VideoCall] user-unpublished', { uid: user.uid });
                 updateCallStatus('Participant left');
             });
 
             client.on("user-left", (user) => {
+                console.log('[VideoCall] user-left', { uid: user.uid });
                 updateCallStatus('Call ended');
                 setTimeout(() => window.close(), 2000);
             });
@@ -89,21 +102,25 @@
             // Connect to Session
             try {
                 // Join channel using the authenticated user's ID
-                const uid = {{ $uid ?? 0 }};
                 await client.join(appId, channelName, token, uid);
+                console.log('[VideoCall] Joined Agora channel successfully');
                 updateCallStatus('Waiting for other participant...');
 
                 // Publish local tracks
                 if (callType === 'video') {
                     [localAudioTrack, localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+                    console.log('[VideoCall] Local audio/video tracks created');
                     localVideoTrack.play(document.getElementById('publisher'));
                     await client.publish([localAudioTrack, localVideoTrack]);
                 } else {
                     localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                    console.log('[VideoCall] Local audio track created');
                     await client.publish([localAudioTrack]);
                 }
+
+                console.log('[VideoCall] Local tracks published');
             } catch (error) {
-                console.error('Error connecting to Agora:', error);
+                console.error('[VideoCall] Error connecting to Agora:', error);
                 updateCallStatus('Connection failed: ' + error.message);
             }
         }
@@ -163,6 +180,7 @@
         if (channelName && token && appId) {
             initializeSession();
         } else {
+            console.error('[VideoCall] Invalid call parameters', { appId, channelName, tokenPresent: Boolean(token), uid });
             updateCallStatus('Invalid call parameters');
         }
 
