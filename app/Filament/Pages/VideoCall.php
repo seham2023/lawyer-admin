@@ -23,6 +23,10 @@ class VideoCall extends Page
     public ?string $apiKey = null;
     public ?string $callType = 'video';
     public ?int $uid = null;
+    public ?int $roomId = null;
+    public ?int $callerId = null;
+    public ?int $receiverId = null;
+    public ?string $role = null;
 
     public function mount(): void
     {
@@ -31,5 +35,9 @@ class VideoCall extends Page
         $this->apiKey = request()->query('apiKey', config('services.agora.app_id'));
         $this->callType = request()->query('callType', 'video');
         $this->uid = auth()->id() ?? 0;
+        $this->roomId = request()->integer('roomId') ?: null;
+        $this->callerId = request()->integer('callerId') ?: null;
+        $this->receiverId = request()->integer('receiverId') ?: null;
+        $this->role = request()->query('role');
     }
 }

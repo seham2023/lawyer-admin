@@ -134,7 +134,11 @@
                     session: callData.session_id ?? callData.sessionId ?? '',
                     token: callData.token ?? '',
                     apiKey: callData.api_key ?? callData.apiKey ?? '',
-                    callType: callData.call_type ?? callData.callType ?? 'audio'
+                    callType: callData.call_type ?? callData.callType ?? 'audio',
+                    roomId: callData.room_id ?? callData.roomId ?? '',
+                    callerId: callData.caller_id ?? callData.callerId ?? '',
+                    receiverId: window.__callNotificationCurrentUserId,
+                    role: 'receiver',
                 });
 
                 console.log('[CallNotification] Opening call window with params:', params.toString());

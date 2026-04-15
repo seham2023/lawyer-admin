@@ -51,6 +51,10 @@
         const channelName = '{{ $sessionId }}'; // sessionId mapped to channelName
         const token = '{{ $token }}';
         const callType = '{{ $callType }}';
+        const roomId = {{ $roomId ?? 0 }};
+        const callerId = {{ $callerId ?? 0 }};
+        const receiverId = {{ $receiverId ?? 0 }};
+        const role = @js($role ?? '');
 
         let client;
         let localAudioTrack;
@@ -58,14 +62,154 @@
         let audioEnabled = true;
         let videoEnabled = true;
         const uid = {{ $uid ?? 0 }};
+        let remoteJoined = false;
+        let callTerminationSent = false;
+        let socketHandlersAttached = false;
 
         console.log('[VideoCall] Initializing page', {
             appId: appId,
             channelName: channelName,
             callType: callType,
             uid: uid,
+            roomId: roomId,
+            callerId: callerId,
+            receiverId: receiverId,
+            role: role,
             hasToken: Boolean(token),
         });
+
+        function updateCallStatus(status) {
+            document.getElementById('callStatus').textContent = status;
+        }
+
+        function closeWindowSoon(delay = 1500) {
+            window.setTimeout(() => window.close(), delay);
+        }
+
+        function buildSignalPayload() {
+            return {
+                caller_id: callerId,
+                callerId: callerId,
+                receiver_id: receiverId,
+                receiverId: receiverId,
+                room_id: roomId,
+                roomId: roomId,
+            };
+        }
+
+        function emitSignal(eventName, payload) {
+            if (!window.socket) {
+                console.warn('[VideoCall] Socket client is not available for', eventName);
+                return false;
+            }
+
+            const methodMap = {
+                cancelCall: 'emitCancelCall',
+                endCall: 'emitEndCall',
+                rejectCall: 'emitRejectCall',
+            };
+
+            const method = methodMap[eventName];
+
+            if (method && typeof window.socket[method] === 'function') {
+                window.socket[method](payload);
+                return true;
+            }
+
+            if (window.socket.socket) {
+                window.socket.socket.emit(eventName, payload);
+                return true;
+            }
+
+            return false;
+        }
+
+        function notifyCallTermination(source = 'manual') {
+            if (callTerminationSent || !roomId || !callerId || !receiverId) {
+                return;
+            }
+
+            const payload = buildSignalPayload();
+            let signalName = 'endCall';
+
+            if (!remoteJoined && role === 'caller') {
+                signalName = 'cancelCall';
+            }
+
+            callTerminationSent = emitSignal(signalName, payload);
+            console.log('[VideoCall] Sent signaling on close', { source, signalName, payload, callTerminationSent });
+        }
+
+        function handleRemoteSignal(status, data) {
+            const dataRoomId = Number(data?.room_id ?? data?.roomId ?? 0);
+
+            if (!dataRoomId || dataRoomId !== roomId) {
+                return;
+            }
+
+            callTerminationSent = true;
+            console.log('[VideoCall] Remote signaling event', { status, data });
+
+            if (status === 'rejected') {
+                updateCallStatus('Call rejected');
+                closeWindowSoon();
+                return;
+            }
+
+            if (status === 'timeout') {
+                updateCallStatus('No answer');
+                closeWindowSoon();
+                return;
+            }
+
+            if (status === 'ended') {
+                updateCallStatus('Call ended');
+                closeWindowSoon();
+            }
+        }
+
+        function attachSocketHandlers() {
+            if (socketHandlersAttached || !window.socket) {
+                return socketHandlersAttached;
+            }
+
+            socketHandlersAttached = true;
+
+            if (typeof window.socket.onCall === 'function') {
+                window.socket.onCall((data) => {
+                    const status = data?.status;
+
+                    if (status === 'rejected') {
+                        handleRemoteSignal('rejected', data);
+                    } else if (status === 'ended') {
+                        handleRemoteSignal('ended', data);
+                    }
+                });
+            } else if (window.socket.socket) {
+                window.socket.socket.on('callRejected', (data) => handleRemoteSignal('rejected', data));
+                window.socket.socket.on('callEnded', (data) => handleRemoteSignal('ended', data));
+            }
+
+            if (window.socket.socket) {
+                window.socket.socket.on('callTimeout', (data) => handleRemoteSignal('timeout', data));
+            }
+
+            console.log('[VideoCall] Socket handlers attached');
+            return true;
+        }
+
+        function waitForSocketHandlers(attempt = 0) {
+            if (attachSocketHandlers()) {
+                return;
+            }
+
+            if (attempt >= 20) {
+                console.warn('[VideoCall] Timed out waiting for socket client in popup');
+                return;
+            }
+
+            window.setTimeout(() => waitForSocketHandlers(attempt + 1), 500);
+        }
 
         async function initializeSession() {
             console.log('[VideoCall] Creating Agora client...');
@@ -75,6 +219,7 @@
             client.on("user-published", async (user, mediaType) => {
                 console.log('[VideoCall] user-published', { uid: user.uid, mediaType: mediaType });
                 await client.subscribe(user, mediaType);
+                remoteJoined = true;
                 updateCallStatus('Connected');
 
                 if (mediaType === "video") {
@@ -90,13 +235,15 @@
 
             client.on("user-unpublished", (user) => {
                 console.log('[VideoCall] user-unpublished', { uid: user.uid });
+                remoteJoined = false;
                 updateCallStatus('Participant left');
             });
 
             client.on("user-left", (user) => {
                 console.log('[VideoCall] user-left', { uid: user.uid });
+                remoteJoined = false;
                 updateCallStatus('Call ended');
-                setTimeout(() => window.close(), 2000);
+                closeWindowSoon(2000);
             });
 
             // Connect to Session
@@ -123,11 +270,6 @@
                 console.error('[VideoCall] Error connecting to Agora:', error);
                 updateCallStatus('Connection failed: ' + error.message);
             }
-        }
-
-        // Update Call Status
-        function updateCallStatus(status) {
-            document.getElementById('callStatus').textContent = status;
         }
 
         // Mute/Unmute Audio
@@ -168,15 +310,18 @@
 
         // End Call
         document.getElementById('endCall').addEventListener('click', async () => {
+            notifyCallTermination('end-button');
             if (localAudioTrack) localAudioTrack.close();
             if (localVideoTrack) localVideoTrack.close();
             if (client) await client.leave();
 
             updateCallStatus('Call ended');
-            setTimeout(() => window.close(), 1000);
+            closeWindowSoon(1000);
         });
 
         // Initialize on page load
+        waitForSocketHandlers();
+
         if (channelName && token && appId) {
             initializeSession();
         } else {
@@ -186,6 +331,7 @@
 
         // Cleanup on window close
         window.addEventListener('beforeunload', () => {
+            notifyCallTermination('beforeunload');
             if (localAudioTrack) localAudioTrack.close();
             if (localVideoTrack) localVideoTrack.close();
         });

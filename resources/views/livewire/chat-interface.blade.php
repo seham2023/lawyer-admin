@@ -356,7 +356,7 @@
             console.log('[ChatInterface] Opening call window...');
 
             // Open video call page for the caller (lawyer)
-            const callUrl = `/admin/video-call?session=${encodeURIComponent(callData.session_id)}&token=${encodeURIComponent(callData.caller_token)}&apiKey=${encodeURIComponent(callData.api_key)}&callType=${encodeURIComponent(callData.call_type)}`;
+            const callUrl = `/admin/video-call?session=${encodeURIComponent(callData.session_id)}&token=${encodeURIComponent(callData.caller_token)}&apiKey=${encodeURIComponent(callData.api_key)}&callType=${encodeURIComponent(callData.call_type)}&roomId=${encodeURIComponent(callData.room_id)}&callerId=${encodeURIComponent(callData.caller_id)}&receiverId=${encodeURIComponent(callData.receiver_id)}&role=caller`;
             window.open(callUrl, '_blank', 'width=1200,height=800');
 
             console.log('[ChatInterface] ═══ CALL INITIATED ═══');
