@@ -17,16 +17,29 @@ class SocketClient {
         this._pendingEmits = [];
     }
 
+    _timestamp() {
+        return new Date().toISOString();
+    }
+
+    _debug(label, data = undefined) {
+        const prefix = `[SocketClient][${this._timestamp()}] ${label}`;
+        if (data === undefined) {
+            console.log(prefix);
+            return;
+        }
+        console.log(prefix, data);
+    }
+
     /**
      * Connect to Socket.IO server
      */
     connect() {
         if (this.connected && this.socket) {
-            console.log('[SocketClient] Already connected');
+            this._debug('Already connected');
             return;
         }
 
-        console.log('[SocketClient] Connecting to', this.url, 'as user', this.userId);
+        this._debug('Connecting', { url: this.url, userId: this.userId });
 
         this.socket = io(this.url, {
             transports: ['websocket'],
@@ -40,7 +53,10 @@ class SocketClient {
         });
 
         this.socket.on('connect', () => {
-            console.log('[SocketClient] ✓ Connected, socket id:', this.socket.id);
+            this._debug('Connected', {
+                socketId: this.socket.id,
+                pendingEmits: this._pendingEmits.length,
+            });
             this.connected = true;
             this._reconnectAttempts = 0;
             this._flushPendingEmits();
@@ -69,17 +85,29 @@ class SocketClient {
         });
 
         this.socket.on('disconnect', (reason) => {
-            console.log('[SocketClient] Disconnected:', reason);
+            this._debug('Disconnected', {
+                reason: reason,
+                socketId: this.socket?.id ?? null,
+                roomId: this.currentRoomId,
+            });
             this.connected = false;
         });
 
         this.socket.on('reconnect', (attemptNumber) => {
-            console.log('[SocketClient] ✓ Reconnected after', attemptNumber, 'attempts');
+            this._debug('Reconnected', {
+                attemptNumber: attemptNumber,
+                socketId: this.socket?.id ?? null,
+            });
         });
 
         this.socket.on('connect_error', (error) => {
             this._reconnectAttempts++;
-            console.error('[SocketClient] Connection error:', error.message);
+            console.error(`[SocketClient][${this._timestamp()}] Connection error`, {
+                message: error.message,
+                description: error.description ?? null,
+                type: error.type ?? null,
+                attempts: this._reconnectAttempts,
+            });
         });
 
         // ═══════════════════════════════════════════════
@@ -87,7 +115,7 @@ class SocketClient {
         // ═══════════════════════════════════════════════
 
         this.socket.on('newMessage', (data) => {
-            console.log('[SocketClient] newMessage:', data);
+            this._debug('newMessage', data);
 
             // 1. Notify any registered callbacks (legacy support)
             this.messageCallbacks.forEach(cb => cb(data));
@@ -114,7 +142,7 @@ class SocketClient {
         // ═══════════════════════════════════════════════
 
         this.socket.on('incomingCall', (data) => {
-            console.log('[SocketClient] ★ incomingCall:', data);
+            this._debug('incomingCall', data);
             this.callCallbacks.forEach(cb => cb(data));
 
             // Bridge to Livewire CallNotification component
@@ -127,7 +155,7 @@ class SocketClient {
         });
 
         this.socket.on('callAccepted', (data) => {
-            console.log('[SocketClient] callAccepted:', data);
+            this._debug('callAccepted', data);
             this.callCallbacks.forEach(cb => cb({ ...data, status: 'accepted' }));
 
             if (window.Livewire) {
@@ -136,7 +164,7 @@ class SocketClient {
         });
 
         this.socket.on('callRejected', (data) => {
-            console.log('[SocketClient] callRejected:', data);
+            this._debug('callRejected', data);
             this.callCallbacks.forEach(cb => cb({ ...data, status: 'rejected' }));
 
             if (window.Livewire) {
@@ -145,7 +173,7 @@ class SocketClient {
         });
 
         this.socket.on('callEnded', (data) => {
-            console.log('[SocketClient] callEnded:', data);
+            this._debug('callEnded', data);
             this.callCallbacks.forEach(cb => cb({ ...data, status: 'ended' }));
 
             if (window.Livewire) {
@@ -154,7 +182,7 @@ class SocketClient {
         });
 
         this.socket.on('callTimeout', (data) => {
-            console.log('[SocketClient] callTimeout:', data);
+            this._debug('callTimeout', data);
             if (window.Livewire) {
                 window.Livewire.dispatch('call-ended-remote', { callData: { ...data, reason: 'timeout' } });
             }
@@ -165,11 +193,20 @@ class SocketClient {
 
     _emitOrQueue(eventName, payload) {
         if (this.socket && this.connected) {
+            this._debug('Emitting event', {
+                eventName: eventName,
+                socketId: this.socket.id,
+                payload: payload,
+            });
             this.socket.emit(eventName, payload);
             return true;
         }
 
-        console.warn('[SocketClient] Queueing event while disconnected:', eventName, payload);
+        console.warn(`[SocketClient][${this._timestamp()}] Queueing event while disconnected`, {
+            eventName: eventName,
+            payload: payload,
+            roomId: this.currentRoomId,
+        });
         this._pendingEmits.push({ eventName, payload });
         return false;
     }
@@ -183,7 +220,11 @@ class SocketClient {
         this._pendingEmits = [];
 
         queued.forEach(({ eventName, payload }) => {
-            console.log('[SocketClient] Flushing queued event:', eventName, payload);
+            this._debug('Flushing queued event', {
+                eventName: eventName,
+                socketId: this.socket.id,
+                payload: payload,
+            });
             this.socket.emit(eventName, payload);
         });
     }
@@ -208,7 +249,7 @@ class SocketClient {
             user_id: this.userId,
             room_id: roomId
         });
-        console.log('[SocketClient] Joined room:', roomId);
+        this._debug('Joined room', { roomId: roomId, socketId: this.socket?.id ?? null });
     }
 
     leaveRoom() {
@@ -234,7 +275,7 @@ class SocketClient {
     }
 
     emitRelayMessage(data) {
-        console.log('[SocketClient] Emitting relayMessage:', data);
+        this._debug('emitRelayMessage called', data);
         return this._emitOrQueue('relayMessage', data);
     }
 
@@ -265,27 +306,27 @@ class SocketClient {
     // ═══════════════════════════════════════════════
 
     emitInitiateCall(data) {
-        console.log('[SocketClient] Emitting initiateCall:', data);
+        this._debug('emitInitiateCall called', data);
         return this._emitOrQueue('initiateCall', data);
     }
 
     emitAcceptCall(data) {
-        console.log('[SocketClient] Emitting acceptCall:', data);
+        this._debug('emitAcceptCall called', data);
         return this._emitOrQueue('acceptCall', data);
     }
 
     emitRejectCall(data) {
-        console.log('[SocketClient] Emitting rejectCall:', data);
+        this._debug('emitRejectCall called', data);
         return this._emitOrQueue('rejectCall', data);
     }
 
     emitCancelCall(data) {
-        console.log('[SocketClient] Emitting cancelCall:', data);
+        this._debug('emitCancelCall called', data);
         return this._emitOrQueue('cancelCall', data);
     }
 
     emitEndCall(data) {
-        console.log('[SocketClient] Emitting endCall:', data);
+        this._debug('emitEndCall called', data);
         return this._emitOrQueue('endCall', data);
     }
 
@@ -398,11 +439,11 @@ if (!window.__socketInitialized) {
         const userId = document.querySelector('meta[name="user-id"]')?.content;
         const socketUrl = document.querySelector('meta[name="socket-url"]')?.content || 'https://qestass.com:4888';
 
-        console.log('[SocketClient] ════════════════════════════════');
-        console.log('[SocketClient] Initializing...');
-        console.log('[SocketClient] User ID:', userId);
-        console.log('[SocketClient] Socket URL:', socketUrl);
-        console.log('[SocketClient] ════════════════════════════════');
+        console.log(`[SocketClient][${new Date().toISOString()}] ════════════════════════════════`);
+        console.log(`[SocketClient][${new Date().toISOString()}] Initializing...`);
+        console.log(`[SocketClient][${new Date().toISOString()}] User ID:`, userId);
+        console.log(`[SocketClient][${new Date().toISOString()}] Socket URL:`, socketUrl);
+        console.log(`[SocketClient][${new Date().toISOString()}] ════════════════════════════════`);
 
         if (userId) {
             window.socket = new SocketClient(socketUrl, parseInt(userId));
