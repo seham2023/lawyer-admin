@@ -18,6 +18,142 @@ class ViewCase extends ViewRecord
     {
         return [
             Actions\EditAction::make(),
+            Actions\Action::make('add_session')
+                ->label(__('Add Session'))
+                ->icon('heroicon-o-calendar-days')
+                ->color('success')
+                ->form([
+                    \Filament\Forms\Components\TextInput::make('title')
+                        ->label(__('title'))
+                        ->required()
+                        ->maxLength(255),
+                    \Filament\Forms\Components\Textarea::make('details')
+                        ->label(__('details'))
+                        ->columnSpanFull(),
+                    \Filament\Forms\Components\DateTimePicker::make('datetime')
+                        ->label(__('datetime'))
+                        ->required()
+                        ->default(now()),
+                    \Filament\Forms\Components\Select::make('priority')
+                        ->label(__('priority'))
+                        ->options([
+                            'low' => __('priority_low'),
+                            'medium' => __('priority_medium'),
+                            'high' => __('priority_high'),
+                        ])
+                        ->default('medium')
+                        ->required(),
+                    \Filament\Forms\Components\Select::make('court_id')
+                        ->label(__('court'))
+                        ->options(\App\Models\Court::where('user_id', auth()->id())->pluck('name', 'id'))
+                        ->searchable()
+                        ->preload()
+                        ->required(),
+                    \Filament\Forms\Components\TextInput::make('judge_name')
+                        ->label(__('judge_name'))
+                        ->maxLength(255),
+                ])
+                ->action(function ($record, array $data) {
+                    $data['user_id'] = auth()->id();
+                    $record->sessions()->create($data);
+                    \Filament\Notifications\Notification::make()
+                        ->title(__('Session added successfully'))
+                        ->success()
+                        ->send();
+                }),
+
+            Actions\Action::make('add_document')
+                ->label(__('Add Document'))
+                ->icon('heroicon-o-document-plus')
+                ->color('info')
+                ->form([
+                    \Filament\Forms\Components\TextInput::make('name')
+                        ->label(__('name'))
+                        ->required()
+                        ->maxLength(255),
+                    \Filament\Forms\Components\Textarea::make('description')
+                        ->label(__('description'))
+                        ->required(),
+                    \Filament\Forms\Components\FileUpload::make('file_path')
+                        ->label(__('file_path'))
+                        ->required()
+                        ->acceptedFileTypes(['application/pdf', 'image/*'])
+                        ->directory('case-documents'),
+                ])
+                ->action(function ($record, array $data) {
+                    $record->documents()->create($data);
+                    \Filament\Notifications\Notification::make()
+                        ->title(__('Document added successfully'))
+                        ->success()
+                        ->send();
+                }),
+
+            Actions\Action::make('add_payment_detail')
+                ->label(__('Add Payment'))
+                ->icon('heroicon-o-banknotes')
+                ->color('success')
+                ->visible(fn($record) => $record->payment !== null)
+                ->form([
+                    \Filament\Forms\Components\TextInput::make('name')
+                        ->label(__('Payment Name'))
+                        ->placeholder(__('e.g., First Installment'))
+                        ->required()
+                        ->maxLength(255),
+
+                    \Filament\Forms\Components\Select::make('payment_type')
+                        ->label(__('Payment Type'))
+                        ->options([
+                            'installment' => __('Installment'),
+                            'deposit' => __('Deposit'),
+                            'final' => __('Final Payment'),
+                            'partial' => __('Partial Payment'),
+                        ])
+                        ->required()
+                        ->default('installment'),
+
+                    \Filament\Forms\Components\TextInput::make('amount')
+                        ->label(__('Amount'))
+                        ->numeric()
+                        ->required()
+                        ->minValue(0.01)
+                        ->rules([
+                            function ($record) {
+                                return function (string $attribute, $value, \Closure $fail) use ($record) {
+                                    if (!$record->payment) return;
+                                    
+                                    $remaining = $record->payment->remaining_payment;
+                                    if ($value > $remaining) {
+                                        $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                    }
+                                };
+                            }
+                        ])
+                        ->helperText(fn($record) => __('Remaining balance') . ': ' . ($record->payment->remaining_payment ?? 0)),
+
+                    \Filament\Forms\Components\DateTimePicker::make('paid_at')
+                        ->label(__('Payment Date'))
+                        ->required()
+                        ->default(now()),
+
+                    \Filament\Forms\Components\Select::make('pay_method_id')
+                        ->label(__('Payment Method'))
+                        ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
+                        ->searchable()
+                        ->required(),
+
+                    \Filament\Forms\Components\Textarea::make('details')
+                        ->label(__('Payment Details'))
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ])
+                ->action(function ($record, array $data) {
+                    $data['payment_id'] = $record->payment->id;
+                    $record->payment->paymentDetails()->create($data);
+                    \Filament\Notifications\Notification::make()
+                        ->title(__('Payment added successfully'))
+                        ->success()
+                        ->send();
+                }),
             Actions\DeleteAction::make(),
         ];
     }
