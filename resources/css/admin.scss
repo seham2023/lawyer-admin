@@ -54,8 +54,26 @@ body.fi-body {
         .fi-header {
             .fi-header-heading {
                 font-size: 24px;
+                color: #111827; // Ensure visibility in light mode
             }
         }
+    }
+}
+
+// Light mode heading visibility fixes
+.fi-section-header-heading,
+.fi-ta-header-heading,
+.fi-in-section-heading,
+.fi-wi-widget h2 {
+    color: #111827 !important;
+}
+
+html.dark {
+    .fi-section-header-heading,
+    .fi-ta-header-heading,
+    .fi-in-section-heading,
+    .fi-wi-widget h2 {
+        color: #ffffff !important;
     }
 }
 
@@ -70,6 +88,7 @@ body.fi-body {
     margin: 20px 50px 0px 50px;
     border-radius: 16px;
     padding: 20px 27px;
+    background-color: #ffffff; // Ensure solid white in light mode
     box-shadow: 0 0 22px 0px rgb(0 0 0 / 5%);
 
     @media (max-width:500px) {
