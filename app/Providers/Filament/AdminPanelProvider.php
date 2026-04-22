@@ -72,8 +72,8 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Lawyer/Widgets'), for: 'App\\Filament\\Lawyer\\Widgets')
             ->widgets([
                 \App\Filament\Lawyer\Widgets\UnreadMessagesWidget::class,
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                // Widgets\AccountWidget::class,
+                // Widgets\FilamentInfoWidget::class,
             ])
             ->globalSearch(true)
             ->middleware([

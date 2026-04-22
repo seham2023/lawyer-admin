@@ -224,10 +224,10 @@ class CalendarWidget extends FullCalendarWidget
                 ->label(__('Priority'))
                 ->options([
                     'low' => __('Low'),
-                    'normal' => __('Normal'),
+                    'medium' => __('Medium'),
                     'high' => __('High'),
                 ])
-                ->default('normal'),
+                ->default('medium'),
 
             Forms\Components\Select::make('court_id')
                 ->label(__('Court'))
@@ -433,7 +433,7 @@ class CalendarWidget extends FullCalendarWidget
                         ->content(function () use ($record) {
                             return match ($record->priority) {
                                 'high' => '🔴 High',
-                                'normal' => '🔵 Normal',
+                                'medium' => '🔵 Normal',
                                 'low' => '🟢 Low',
                                 default => '🔵 Normal',
                             };
@@ -531,7 +531,7 @@ class CalendarWidget extends FullCalendarWidget
             'datetime' => $data['datetime'],
             'case_record_id' => $data['case_record_id'],
             'court_id' => $data['court_id'],
-            'priority' => $data['priority'] ?? 'normal',
+            'priority' => $data['priority'] ?? 'medium',
             'case_number' => $data['case_record_id'],
         ]);
     }
@@ -561,7 +561,7 @@ class CalendarWidget extends FullCalendarWidget
             'datetime' => $data['datetime'],
             'case_record_id' => $data['case_record_id'],
             'court_id' => $data['court_id'],
-            'priority' => $data['priority'] ?? 'normal',
+            'priority' => $data['priority'] ?? 'medium',
             'case_number' => $data['case_record_id'],
         ]);
 
@@ -573,7 +573,7 @@ class CalendarWidget extends FullCalendarWidget
     {
         return match ($priority) {
             'high' => '#dc2626',     // Red for high priority
-            'normal' => '#3b82f6',   // Blue for normal priority
+            'medium' => '#3b82f6',   // Blue for normal priority
             'low' => '#10b981',      // Green for low priority
             default => '#3b82f6',    // Default blue
         };
@@ -584,7 +584,7 @@ class CalendarWidget extends FullCalendarWidget
     {
         return match ($priority) {
             'high' => '#b91c1c',     // Dark red for high priority
-            'normal' => '#1d4ed8',   // Dark blue for normal priority
+            'medium' => '#1d4ed8',   // Dark blue for normal priority
             'low' => '#059669',      // Dark green for low priority
             default => '#1d4ed8',    // Default dark blue
         };
