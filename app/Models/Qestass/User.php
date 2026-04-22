@@ -8,7 +8,9 @@ use App\Traits\DeviceTrait;
 use App\Traits\ReportTrait;
 use App\Traits\SmsTrait;
 use App\Traits\Uploadable;
+use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -18,8 +20,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Passport\HasApiTokens;
 
-
-class User extends Authenticatable implements HasName
+class User extends Authenticatable implements HasName, FilamentUser
 {
     use HasFactory, Notifiable, SoftDeletes;
 
@@ -487,5 +488,22 @@ class User extends Authenticatable implements HasName
 
         // Fallback to email if no name is available
         return $this->email ?? 'Unknown User';
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() === 'super-admin') {
+            return $this->type === 'admin';
+        }
+
+        if ($panel->getId() === 'admin') {
+            return $this->parent_id === null && $this->type !== 'admin';
+        }
+
+        if ($panel->getId() === 'sub-lawyer') {
+            return $this->parent_id !== null;
+        }
+
+        return false;
     }
 }

@@ -64,14 +64,14 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full')
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverResources(in: app_path('Filament/Lawyer/Resources'), for: 'App\\Filament\\Lawyer\\Resources')
+            ->discoverPages(in: app_path('Filament/Lawyer/Pages'), for: 'App\\Filament\\Lawyer\\Pages')
             ->pages([
-                // Custom Dashboard will be auto-discovered
+                Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Lawyer/Widgets'), for: 'App\\Filament\\Lawyer\\Widgets')
             ->widgets([
-                \App\Filament\Widgets\UnreadMessagesWidget::class,
+                \App\Filament\Lawyer\Widgets\UnreadMessagesWidget::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
@@ -89,7 +89,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentSpatieRolesPermissionsPlugin::make(),
-                TranslationManagerPlugin::make(),
                 SpatieLaravelTranslatablePlugin::make()
                     ->defaultLocales(['ar', 'en']),
                 FilamentFullCalendarPlugin::make()

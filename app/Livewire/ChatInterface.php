@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Services\SocketIOService;
-use App\Filament\Pages\Messages;
+// use App\Filament\Pages\Messages; // Removed to avoid Panel-specific dependency
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\On;
@@ -154,7 +154,7 @@ class ChatInterface extends Component
         $this->newMessage = '';
         $this->file = null;
         $this->loadMessages();
-        $this->dispatch('message-sent')->to(Messages::class);
+        $this->dispatch('message-sent');
     }
 
     public function markAsRead(): void
@@ -167,7 +167,7 @@ class ChatInterface extends Component
 
         $service = app(SocketIOService::class);
         $service->markAsRead($this->roomId, Auth::id());
-        $this->dispatch('refresh-rooms')->to(Messages::class);
+        $this->dispatch('refresh-rooms');
     }
 
     public function handleTyping(): void

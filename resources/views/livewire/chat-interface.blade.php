@@ -51,15 +51,15 @@
                         @if($message->type === 'text')
                             <p class="text-sm break-words">{{ $message->content }}</p>
                         @elseif($message->type === 'image')
-                            <img src="{{ $message->content }}" alt="Image" class="max-w-full rounded-lg mb-2" />
+                            <img src="{{ $message->content }}" alt="Image" class="rounded-lg mb-2 shadow-sm border border-gray-100 dark:border-gray-700" style="max-width: 300px; max-height: 300px; object-fit: cover;" />
                         @elseif($message->type === 'sound')
-                            <audio controls class="max-w-full">
+                            <audio controls class="w-full max-w-[280px] h-10">
                                 <source src="{{ $message->content }}">
                             </audio>
                         @elseif($message->type === 'file')
-                            <a href="{{ $message->content }}" target="_blank" class="flex items-center gap-2 hover:underline">
-                                <x-heroicon-o-document class="w-5 h-5" />
-                                <span class="text-sm">{{ __('Download File') }}</span>
+                            <a href="{{ $message->content }}" target="_blank" class="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                <x-heroicon-o-document-arrow-down class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                <span class="text-sm font-medium">{{ __('Download File') }}</span>
                             </a>
                         @endif
                     </div>
