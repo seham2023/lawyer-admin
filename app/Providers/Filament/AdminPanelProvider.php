@@ -67,7 +67,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Lawyer/Resources'), for: 'App\\Filament\\Lawyer\\Resources')
             ->discoverPages(in: app_path('Filament/Lawyer/Pages'), for: 'App\\Filament\\Lawyer\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\Lawyer\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Lawyer/Widgets'), for: 'App\\Filament\\Lawyer\\Widgets')
             ->widgets([

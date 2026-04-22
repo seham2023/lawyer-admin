@@ -16,7 +16,8 @@ class Event extends Model
         'end',
         'type',
         'color',
-        'all_day'
+        'all_day',
+        'user_id',
     ];
 
     protected $casts = [

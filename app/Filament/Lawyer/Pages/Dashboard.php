@@ -5,10 +5,10 @@ namespace App\Filament\Lawyer\Pages;
 use Filament\Pages\Dashboard as FilamentDashboard;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
-use App\Filament\Widgets\StatsOverviewWidget;
-use App\Filament\Widgets\CaseRecordsOverviewWidget;
-use App\Filament\Widgets\ClientsOverviewWidget;
-use App\Filament\Widgets\CalendarWidget;
+use App\Filament\Lawyer\Widgets\StatsOverviewWidget;
+use App\Filament\Lawyer\Widgets\CaseRecordsOverviewWidget;
+use App\Filament\Lawyer\Widgets\ClientsOverviewWidget;
+use App\Filament\Lawyer\Widgets\CalendarWidget;
 
 class Dashboard extends FilamentDashboard
 {
@@ -29,11 +29,11 @@ class Dashboard extends FilamentDashboard
     public function getWidgets(): array
     {
         return [
-            AccountWidget::class,
+            // AccountWidget::class,
             StatsOverviewWidget::class,
             CalendarWidget::class,
-            CaseRecordsOverviewWidget::class,
-            ClientsOverviewWidget::class,
+            // CaseRecordsOverviewWidget::class,
+            // ClientsOverviewWidget::class,
         ];
     }
 
