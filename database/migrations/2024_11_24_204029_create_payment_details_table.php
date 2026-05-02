@@ -20,6 +20,7 @@ return new class extends Migration
             $table->dateTime('paid_at'); // When this partial payment was made
             $table->foreignId('pay_method_id')->nullable()->constrained('pay_methods'); // How this partial payment was made
             $table->text('details')->nullable();
+            $table->text('file')->nullable();
             $table->timestamps();
         });
     }

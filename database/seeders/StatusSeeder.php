@@ -31,6 +31,7 @@ class StatusSeeder extends Seeder
             ]);
         }
         $caseStatuses = [
+            ['en' => 'new', 'ar' => 'جديد'],
             ['en' => 'Consultation', 'ar' => 'استشارة'],
 
             // Active Stages
@@ -65,6 +66,7 @@ class StatusSeeder extends Seeder
             ['en' => 'Draft', 'ar' => 'مسودة'],
             ['en' => 'Pending Approval', 'ar' => 'بانتظار الموافقة'],
             ['en' => 'Rejected', 'ar' => 'مرفوض'],
+            ['en' => 'Approved', 'ar' => 'موافق عليه'],
 
             // Billing Status (Crucial for Revenue)
             ['en' => 'Unbilled', 'ar' => 'غير مفوتر'], // Expense approved but not sent to client yet

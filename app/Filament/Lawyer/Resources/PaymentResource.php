@@ -130,12 +130,14 @@ class PaymentResource extends Resource
                         Select::make('pay_method_id')
                             ->label(__('Payment Method'))
                             ->options(PayMethod::all()->pluck('name', 'id'))
+                            ->default(fn() => PayMethod::first()?->id)
                             ->searchable()
                             ->required(),
 
                         Select::make('status_id')
                             ->label(__('Payment Status'))
                             ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                            ->default(fn() => Status::where('type', 'payment')->first()?->id)
                             ->searchable()
                             ->nullable(),
 

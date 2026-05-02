@@ -15,14 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('category_id')->nullable()->constrained('categories');
             $table->foreignId('status_id')->nullable()->constrained('statuses');
-            $table->foreignId('currency_id')->constrained('currencies');
-            $table->foreignId('pay_method_id')->constrained('pay_methods');
+         
             $table->string('file_path')->nullable();
             $table->string('name')->nullable();
             $table->string('receipt_number')->nullable();
-            $table->text('reason')->nullable();
+            $table->text('description')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->timestamp('date_time')->nullable();
+            $table->unsignedBigInteger('matter_id')->nullable();
+            $table->timestamp('date')->nullable();
             $table->timestamps();
         });
     }

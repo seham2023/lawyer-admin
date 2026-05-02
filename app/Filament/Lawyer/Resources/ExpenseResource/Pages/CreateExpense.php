@@ -29,28 +29,49 @@ class CreateExpense extends CreateRecord
         // Store check data temporarily
         $this->checkData = $checkData;
 
-        // Note: amount, currency_id, tax, etc. are NOT in Expense fillable,
-        // they will be used in afterCreate to create the Payment record.
+        // Store payment data
+        $this->paymentData = [
+            'amount' => $data['amount'] ?? 0,
+            'currency_id' => $data['currency_id'] ?? null,
+            'tax' => $data['tax'] ?? 0,
+            'pay_method_id' => $data['pay_method_id'] ?? null,
+            'payment_status_id' => $data['payment_status_id'] ?? 1,
+        ];
+
+        // Unset payment fields so they don't get saved to the expense record
+        unset(
+            $data['amount'],
+            $data['currency_id'],
+            $data['tax'],
+            $data['pay_method_id'],
+            $data['payment_status_id'],
+            $data['total_after_tax']
+        );
 
         return $data;
     }
 
+    protected array $paymentData = [];
+
     protected function afterCreate(): void
     {
-        $data = $this->form->getState();
-
         // Create Payment record for this expense
         // This links the payment to the expense via morph relationship (payable)
-        Payment::create([
-            'amount' => $data['amount'] + ($data['amount'] * ($data['tax'] ?? 0) / 100),
-            'tax' => $data['tax'] ?? 0,
-            'currency_id' => $data['currency_id'],
-            'pay_method_id' => $data['pay_method_id'],
-            'user_id' => auth()->id(),
-            'payable_type' => \App\Models\Expense::class,
-            'payable_id' => $this->record->id,
-            'status_id' => 2, // Typically marked as 'Paid' for an expense
-        ]);
+        if (!empty($this->paymentData)) {
+            $amount = $this->paymentData['amount'];
+            $tax = $this->paymentData['tax'];
+            
+            Payment::create([
+                'amount' => $amount + ($amount * $tax / 100),
+                'tax' => $tax,
+                'currency_id' => $this->paymentData['currency_id'],
+                'pay_method_id' => $this->paymentData['pay_method_id'],
+                'user_id' => auth()->id(),
+                'payable_type' => \App\Models\Expense::class,
+                'payable_id' => $this->record->id,
+                'status_id' => $this->paymentData['payment_status_id'],
+            ]);
+        }
 
         // Create ExpenseCheck if check data exists
         if (!empty(array_filter($this->checkData))) {

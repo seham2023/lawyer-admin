@@ -28,7 +28,8 @@ class CaseRecord extends Model
         'contract',
         'client_type_id',
         'client_id',
-        'assigned_lawyer_id'
+        'assigned_lawyer_id',
+        'number'
     ];
     protected $casts = [
         'start_date' => 'date',

@@ -67,6 +67,7 @@ class VisitResource extends Resource
                         Forms\Components\Select::make('status_id')
                             ->label(__('Status'))
                             ->options(Status::where('type', 'visit')->pluck('name', 'id'))
+                            ->default(fn() => Status::where('type', 'visit')->first()?->id)
                             ->searchable()
                             ->preload()
                             ->native(false),

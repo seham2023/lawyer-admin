@@ -21,13 +21,12 @@ return [
      * Set as false to remove from navigation.
      */
     'should_register_on_navigation' => [
-        'permissions' => false,
-        'roles' => false,
+        'permissions' => true,
+        'roles' => true,
     ],
 
     'guard_names' => [
         'web' => 'web',
-        'api' => 'api',
     ],
 
     'toggleable_guard_names' => [
@@ -39,7 +38,7 @@ return [
         ],
     ],
 
-    'default_guard_name' => null,
+    'default_guard_name' => 'web',
 
     'model_filter_key' => 'return \'%\'.$value;', // Eg: 'return \'%\'.$key.'\%\';'
 
@@ -66,7 +65,6 @@ return [
 
         'guard_names' => [
             'web',
-            'api',
         ],
 
         'permission_affixes' => [
@@ -105,7 +103,7 @@ return [
         /*
          * Permissions will be generated for the models associated with the respective Filament Resources
          */
-        'discover_models_through_filament_resources' => false,
+        'discover_models_through_filament_resources' => true,
 
         /*
          * Include directories which consists of models.
@@ -130,7 +128,7 @@ return [
         ],
 
         'excluded_policy_models' => [
-            \App\Models\User::class,
+            \App\Models\Qestass\User::class,
         ],
 
         /*
@@ -140,7 +138,8 @@ return [
             //'view-log'
         ],
 
-        'user_model' => \App\Models\User::class,
+        'user_model' => \App\Models\Qestass\User::class,
+        'user_model_class' => \App\Models\Qestass\User::class,
 
         'policies_namespace' => 'App\Policies',
     ],

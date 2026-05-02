@@ -79,6 +79,14 @@ class SubLawyerResource extends Resource
                             ->maxLength(191)
                             ->prefixIcon('heroicon-o-envelope'),
 
+                        Forms\Components\TextInput::make('password')
+                            ->label(__('password'))
+                            ->password()
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn (string $context): bool => $context === 'create')
+                            ->minLength(8)
+                            ->prefixIcon('heroicon-o-lock-closed'),
+
                         Forms\Components\Grid::make(3)
                             ->schema([
                                 Forms\Components\Select::make('country_key')
@@ -96,32 +104,31 @@ class SubLawyerResource extends Resource
                                     ->columnSpan(1),
 
                                 Forms\Components\TextInput::make('phone')
-                                    ->label(__('phone'))
+                                    ->label(__('mobile'))
                                     ->tel()
                                     ->required()
                                     ->unique(ignoreRecord: true)
                                     ->maxLength(191)
                                     ->prefixIcon('heroicon-o-phone')
                                     ->columnSpan(2),
-                            ]),
-
-                        Forms\Components\TextInput::make('password')
-                            ->label(__('password'))
-                            ->password()
-                            ->dehydrated(fn ($state) => filled($state))
-                            ->required(fn (string $context): bool => $context === 'create')
-                            ->minLength(8)
-                            ->prefixIcon('heroicon-o-lock-closed'),
+                            ])->columnSpanFull(),
                     ])->columns(2),
                 
                 Forms\Components\Section::make(__('permissions'))
                     ->schema([
-                        Forms\Components\CheckboxList::make('adminPermissions')
-                            ->relationship('adminPermissions', 'name')
-                            ->label(__('permissions'))
-                            ->columns(2)
-                            ->required(),
-                    ]),
+                        Forms\Components\Select::make('roles')
+                            ->relationship('roles', 'name')
+                            ->multiple()
+                            ->preload()
+                            ->searchable()
+                            ->label(__('roles')),
+                        Forms\Components\Select::make('permissions')
+                            ->relationship('permissions', 'name')
+                            ->multiple()
+                            ->preload()
+                            ->searchable()
+                            ->label(__('permissions')),
+                    ])->columns(2),
             ]);
     }
 

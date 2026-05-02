@@ -20,6 +20,7 @@ use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\DateTimePicker;
 use App\Filament\Lawyer\Resources\ExpenseResource\Pages;
+use App\Filament\Lawyer\Resources\ExpenseResource\RelationManagers;
 use Mvenghaus\FilamentPluginTranslatableInline\Forms\Components\TranslatableContainer;
 
 class ExpenseResource extends Resource
@@ -61,53 +62,14 @@ class ExpenseResource extends Resource
                         Select::make('category_id')
                             ->label(__('category'))
                             ->options(Category::where('type', 'expense')->pluck('name', 'id'))
+                            ->default(fn() => Category::where('type', 'expense')->first()?->id)
                             ->required(),
 
                         Select::make('status_id')
                             ->label(__('expense_status'))
                             ->options(Status::where('type', 'expense')->pluck('name', 'id'))
+                            ->default(fn() => Status::where('type', 'expense')->first()?->id)
                             ->required(),
-
-                        Select::make('currency_id')
-                            ->label(__('currency'))
-                            ->options(Currency::pluck('name', 'id'))
-                            ->required(),
-
-                        Select::make('pay_method_id')
-                            ->label(__('payment_method'))
-                            ->options(PayMethod::pluck('name', 'id'))
-                            ->required(),
-
-                        TextInput::make('amount')
-                            ->label(__('amount'))
-                            ->numeric()
-                            ->step(0.01)
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                $amount = $get('amount') ?? 0;
-                                $taxPercent = $get('tax') ?? 0;
-                                $taxAmount = ($amount * $taxPercent) / 100;
-                                $set('total_after_tax', $amount + $taxAmount);
-                            }),
-
-                        TextInput::make('tax')
-                            ->label(__('tax'))
-                            ->numeric()
-                            ->step(0.01)
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                $amount = $get('amount') ?? 0;
-                                $taxPercent = $get('tax') ?? 0;
-                                $taxAmount = ($amount * $taxPercent) / 100;
-                                $set('total_after_tax', $amount + $taxAmount);
-                            }),
-
-                        TextInput::make('total_after_tax')
-                            ->label(__('total_after_tax'))
-                            ->numeric()
-                            ->disabled()
-                            ->dehydrated(false),
 
                         TextInput::make('name')
                             ->label(__('name'))
@@ -116,8 +78,8 @@ class ExpenseResource extends Resource
                         TextInput::make('receipt_number')
                             ->label(__('receipt_number')),
 
-                        DateTimePicker::make('date_time')
-                            ->label(__('date_time'))
+                        DatePicker::make('date')
+                            ->label(__('date'))
                             ->required(),
 
                         FileUpload::make('file_path')
@@ -126,32 +88,76 @@ class ExpenseResource extends Resource
                             ->maxSize(10240)
                             ->directory('expenses'),
 
-                        Textarea::make('reason')
-                            ->label(__('reason'))
+                        Textarea::make('description')
+                            ->label(__('description'))
                             ->columnSpanFull(),
                     ])->columns(2),
 
-                Forms\Components\Section::make(__('check_details'))
+                Forms\Components\Section::make(__('financial_details'))
                     ->schema([
-                        TextInput::make('check_number')
-                            ->label(__('check_number')),
+                        Forms\Components\Grid::make(3)
+                            ->schema([
+                                Select::make('currency_id')
+                                    ->label(__('currency'))
+                                    ->options(Currency::all()->pluck('name', 'id'))
+                                    ->default(fn() => Currency::first()?->id)
+                                    ->searchable()
+                                    ->required()
+                                    ->prefixIcon('heroicon-o-currency-dollar'),
 
-                        TextInput::make('bank_name')
-                            ->label(__('bank_name')),
+                                TextInput::make('amount')
+                                    ->label(__('amount'))
+                                    ->numeric()
+                                    ->required()
+                                    ->prefixIcon('heroicon-o-banknotes')
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        $tax = $get('tax') ?? 0;
+                                        $amount = $state ?? 0;
+                                        $total = $amount + ($amount * $tax / 100);
+                                        $set('total_after_tax', $total);
+                                    }),
 
-                        Select::make('check_status_id')
-                            ->label(__('status'))
-                            ->options(Status::where('type', 'check')->pluck('name', 'id')),
+                                TextInput::make('tax')
+                                    ->label(__('tax'))
+                                    ->numeric()
+                                    ->prefixIcon('heroicon-o-receipt-percent')
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        $amount = $get('amount') ?? 0;
+                                        $tax = $state ?? 0;
+                                        $total = $amount + ($amount * $tax / 100);
+                                        $set('total_after_tax', $total);
+                                    }),
+                            ]),
 
-                        DatePicker::make('clearance_date')
-                            ->label(__('clearance_date')),
+                        Forms\Components\Grid::make(3)
+                            ->schema([
+                                TextInput::make('total_after_tax')
+                                    ->label(__('total_after_tax'))
+                                    ->numeric()
+                                    ->disabled()
+                                    ->prefixIcon('heroicon-o-calculator'),
 
-                        TextInput::make('deposit_account')
-                            ->label(__('deposit_account')),
-                    ])->columns(2)->collapsible()->visible(fn (callable $get) => $get('pay_method_id') === 2), // '2' is the ID for check payment method based on seeder order
+                                Select::make('pay_method_id')
+                                    ->label(__('payment_method'))
+                                    ->options(PayMethod::all()->pluck('name', 'id'))
+                                    ->default(fn() => PayMethod::first()?->id)
+                                    ->searchable()
+                                    ->required()
+                                    ->preload()
+                                    ->prefixIcon('heroicon-o-credit-card'),
 
+                                Select::make('payment_status_id')
+                                    ->label(__('payment_status'))
+                                    ->options(Status::where('type', 'payment')->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->default(1)
+                                    ->prefixIcon('heroicon-o-information-circle'),
+                            ]),
+                    ]),
 
-                      Hidden::make('user_id')
+                Hidden::make('user_id')
                     ->default(auth()->id())
             ]);
     }
@@ -169,18 +175,14 @@ class ExpenseResource extends Resource
                     ->label(__('category'))
                     ->sortable(),
 
-                TextColumn::make('currency.name')
-                    ->label(__('currency'))
-                    ->sortable(),
-
                 TextColumn::make('receipt_number')
                     ->label(__('receipt_number'))
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('date_time')
-                    ->label(__('date_time'))
-                    ->dateTime()
+                TextColumn::make('date')
+                    ->label(__('date'))
+                    ->date()
                     ->sortable(),
 
                 TextColumn::make('status.name')
@@ -210,7 +212,7 @@ class ExpenseResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\PaymentsRelationManager::class,
         ];
     }
 

@@ -19,10 +19,11 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Passport\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasName, FilamentUser
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     protected $fillable = ['first_name', 'last_name', 'email', 'country_key', 'phone', 'changed_phone', 'block', 'password', 'email_verified_at', 'phone_verified_at', 'avatar', 'status', 'active', 'gender', 'completed_info', 'type', 'code', 'pin_code', 'lat', 'long', 'address', 'wallet', 'total_bills', 'total_delivery_fees', 'num_orders', 'num_comments', 'num_rating', 'rate', 'parent_id', 'approve', 'bank_iban_number', 'specialist_type', 'available', 'bank_name', 'bank_account_number', 'experience_year', 'identity_number', 'bio', 'work_license', 'connected', 'stage', 'app_commission', 'nafath_accepted', 'license_number', 'license_start_date', 'license_expire_date', 'appointmentBookingType'];
 

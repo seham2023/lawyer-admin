@@ -29,6 +29,7 @@ class EditExpense extends EditRecord
             $data['tax'] = $payment->tax;
             $data['currency_id'] = $payment->currency_id;
             $data['pay_method_id'] = $payment->pay_method_id;
+            $data['payment_status_id'] = $payment->status_id;
             
             // Recompute net amount from gross stored in payment
             // amount = gross / (1 + tax/100)
@@ -55,6 +56,16 @@ class EditExpense extends EditRecord
                 'currency_id' => $data['currency_id'],
                 'tax' => $data['tax'] ?? 0,
                 'pay_method_id' => $data['pay_method_id'],
+                'status_id' => $data['payment_status_id'] ?? $payment->status_id,
+            ]);
+        } elseif (isset($data['amount'])) {
+            $this->record->payment()->create([
+                'amount' => $data['amount'] + ($data['amount'] * ($data['tax'] ?? 0) / 100),
+                'tax' => $data['tax'] ?? 0,
+                'currency_id' => $data['currency_id'],
+                'pay_method_id' => $data['pay_method_id'],
+                'user_id' => auth()->id(),
+                'status_id' => $data['payment_status_id'] ?? 1,
             ]);
         }
 
@@ -77,7 +88,19 @@ class EditExpense extends EditRecord
         }
 
         // Remove fields not in Expense fillable
-        unset($data['check_number'], $data['bank_name'], $data['clearance_date'], $data['deposit_account'], $data['check_status_id'], $data['tax'], $data['total_after_tax']);
+        unset(
+            $data['check_number'], 
+            $data['bank_name'], 
+            $data['clearance_date'], 
+            $data['deposit_account'], 
+            $data['check_status_id'], 
+            $data['tax'], 
+            $data['total_after_tax'],
+            $data['amount'],
+            $data['currency_id'],
+            $data['pay_method_id'],
+            $data['payment_status_id']
+        );
 
         return $data;
     }

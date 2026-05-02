@@ -25,6 +25,8 @@ return new class extends Migration {
             $table->text('subject_description')->nullable();
             $table->text('notes')->nullable();
             $table->text('contract')->nullable();
+            $table->string('number')->nullable();
+
             $table->timestamps();
         });
     }

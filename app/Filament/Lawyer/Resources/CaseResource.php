@@ -89,6 +89,7 @@ class CaseResource extends Resource
                                             ->label(__('client_type'))
                                             ->relationship('category', 'name')
                                             ->options(Category::where('type', 'client_type')->pluck('name', 'id'))
+                                            ->default(fn() => Category::where('type', 'client_type')->first()?->id)
                                             ->searchable()
                                             ->prefixIcon('heroicon-o-tag'),
                                     ])->columns(2),
@@ -101,16 +102,22 @@ class CaseResource extends Resource
                             ->schema([
                                 Forms\Components\Section::make()
                                     ->schema([
-                                        Forms\Components\Grid::make(3)
+                                        Forms\Components\Grid::make(4)
                                             ->schema([
                                                 DatePicker::make('start_date')
                                                     ->label(__('start_date'))
                                                     ->required()
                                                     ->prefixIcon('heroicon-o-calendar'),
 
+                                                TextInput::make('number')
+                                                    ->label(__('number'))
+                                                    ->maxLength(255)
+                                                    ->prefixIcon('heroicon-o-hashtag'),
+
                                                 Select::make('category_id')
                                                     ->label(__('category'))
                                                     ->options(Category::where('type', 'case')->pluck('name', 'id'))
+                                                    ->default(fn() => Category::where('type', 'case')->first()?->id)
                                                     ->searchable()
                                                     ->required()
                                                     ->prefixIcon('heroicon-o-folder'),
@@ -118,6 +125,7 @@ class CaseResource extends Resource
                                                 Select::make('status_id')
                                                     ->label(__('status'))
                                                     ->options(Status::where('type', 'case')->pluck('name', 'id'))
+                                                    ->default(fn() => Status::where('type', 'case')->first()?->id)
                                                     ->searchable()
                                                     ->required()
                                                     ->prefixIcon('heroicon-o-check-circle'),
@@ -158,6 +166,7 @@ class CaseResource extends Resource
                                                 Select::make('currency_id')
                                                     ->label(__('currency'))
                                                     ->options(Currency::all()->pluck('name', 'id'))
+                                                    ->default(fn() => Currency::first()?->id)
                                                     ->searchable()
                                                     ->required()
                                                     ->prefixIcon('heroicon-o-currency-dollar'),
@@ -199,6 +208,7 @@ class CaseResource extends Resource
                                                 Select::make('pay_method_id')
                                                     ->label(__('payment_method'))
                                                     ->options(\App\Models\PayMethod::all()->pluck('name', 'id'))
+                                                    ->default(fn() => \App\Models\PayMethod::first()?->id)
                                                     ->searchable()
                                                     ->required()
                                                     ->preload()
@@ -352,6 +362,11 @@ class CaseResource extends Resource
 
                 TextColumn::make('subject')
                     ->label(__('subject'))
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('number')
+                    ->label(__('number'))
                     ->sortable()
                     ->searchable(),
 

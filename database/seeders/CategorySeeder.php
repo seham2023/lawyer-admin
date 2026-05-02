@@ -38,12 +38,13 @@ class CategorySeeder extends Seeder
 
 
         $case_categories = [
+            ['en' => 'Personal Status', 'ar' => 'أحوال شخصية'],
             ['en' => 'Administrative', 'ar' => 'إدارية'],
             ['en' => 'Real Estate', 'ar' => 'عقارية'],
             ['en' => 'Commercial', 'ar' => 'تجارية'],
             ['en' => 'Criminal', 'ar' => 'جنائية'],
             ['en' => 'Civil', 'ar' => 'مدنية'],
-            ['en' => 'Personal Status', 'ar' => 'أحوال شخصية'],
+            
         ];
 
         foreach ($case_categories as $category) {

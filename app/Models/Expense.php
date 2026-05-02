@@ -9,18 +9,13 @@ class Expense extends Model
     protected $fillable = [
         'category_id',
         'status_id',
-        'currency_id',
-        'pay_method_id',
         'file_path',
         'name',
         'receipt_number',
-        'reason',
-        'date_time',
-        'check_number',
-        'bank_name',
-        'clearance_date',
-        'deposit_account',
+        'description',
         'user_id',
+        'matter_id',
+        'date',
     ];
 
     public function category()
