@@ -2,65 +2,49 @@
 
 namespace App\Policies;
 
-use App\Models\Qestass\User;
-use App\Models\Visit;
 use Illuminate\Auth\Access\Response;
+use App\Models\Visit;
+use App\Models\Qestass\User;
 
 class VisitPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return true; // Scoped by getEloquentQuery
+        return $user->checkPermissionTo('view-any Visit');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Visit $visit): bool
     {
-        return $user->type === 'admin' || $visit->user_id === $user->id;
+        return $user->checkPermissionTo('view Visit');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return true;
+        return $user->checkPermissionTo('create Visit');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Visit $visit): bool
     {
-        return $user->type === 'admin' || $visit->user_id === $user->id;
+        return $user->checkPermissionTo('update Visit');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Visit $visit): bool
     {
-        return $user->type === 'admin' || $visit->user_id === $user->id;
+        return $user->checkPermissionTo('delete Visit');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->checkPermissionTo('force-delete Visit');
+    }
+
     public function restore(User $user, Visit $visit): bool
     {
-        return $user->type === 'admin' || $visit->user_id === $user->id;
+        return $user->checkPermissionTo('restore Visit');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Visit $visit): bool
     {
-        return $user->type === 'admin';
+        return $user->checkPermissionTo('force-delete Visit');
     }
 }

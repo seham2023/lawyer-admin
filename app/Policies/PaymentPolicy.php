@@ -2,65 +2,49 @@
 
 namespace App\Policies;
 
+use Illuminate\Auth\Access\Response;
 use App\Models\Payment;
 use App\Models\Qestass\User;
-use Illuminate\Auth\Access\Response;
 
 class PaymentPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return true; // Scoped by getEloquentQuery
+        return $user->checkPermissionTo('view-any Payment');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Payment $payment): bool
     {
-        return $user->type === 'admin' || $payment->user_id === $user->id;
+        return $user->checkPermissionTo('view Payment');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return true;
+        return $user->checkPermissionTo('create Payment');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Payment $payment): bool
     {
-        return $user->type === 'admin' || $payment->user_id === $user->id;
+        return $user->checkPermissionTo('update Payment');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Payment $payment): bool
     {
-        return $user->type === 'admin' || $payment->user_id === $user->id;
+        return $user->checkPermissionTo('delete Payment');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->checkPermissionTo('force-delete Payment');
+    }
+
     public function restore(User $user, Payment $payment): bool
     {
-        return $user->type === 'admin';
+        return $user->checkPermissionTo('restore Payment');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Payment $payment): bool
     {
-        return $user->type === 'admin';
+        return $user->checkPermissionTo('force-delete Payment');
     }
 }

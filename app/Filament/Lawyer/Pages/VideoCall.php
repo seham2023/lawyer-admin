@@ -6,6 +6,11 @@ use Filament\Pages\Page;
 
 class VideoCall extends Page
 {
+    // public static function canAccess(): bool
+    // {
+    //     return auth()->user()->checkPermissionTo('view Message');
+    // }
+
     protected static ?string $navigationIcon = 'heroicon-o-video-camera';
 
     protected static string $view = 'filament.admin.pages.video-call';

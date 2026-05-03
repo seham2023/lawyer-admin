@@ -11,7 +11,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(App\Models\Qestass\User $user): bool
+    public function viewAny(User $user): bool
     {
         return $user->checkPermissionTo('view-any Document');
     }
@@ -19,7 +19,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(App\Models\Qestass\User $user, Document $document): bool
+    public function view(User $user, Document $document): bool
     {
         return $user->checkPermissionTo('view Document');
     }
@@ -27,7 +27,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(App\Models\Qestass\User $user): bool
+    public function create(User $user): bool
     {
         return $user->checkPermissionTo('create Document');
     }
@@ -35,7 +35,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(App\Models\Qestass\User $user, Document $document): bool
+    public function update(User $user, Document $document): bool
     {
         return $user->checkPermissionTo('update Document');
     }
@@ -43,7 +43,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(App\Models\Qestass\User $user, Document $document): bool
+    public function delete(User $user, Document $document): bool
     {
         return $user->checkPermissionTo('delete Document');
     }
@@ -51,7 +51,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can delete any models.
      */
-    public function deleteAny(App\Models\Qestass\User $user): bool
+    public function deleteAny(User $user): bool
     {
         return $user->checkPermissionTo('{{ deleteAnyPermission }}');
     }
@@ -59,7 +59,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(App\Models\Qestass\User $user, Document $document): bool
+    public function restore(User $user, Document $document): bool
     {
         return $user->checkPermissionTo('restore Document');
     }
@@ -67,7 +67,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can restore any models.
      */
-    public function restoreAny(App\Models\Qestass\User $user): bool
+    public function restoreAny(User $user): bool
     {
         return $user->checkPermissionTo('{{ restoreAnyPermission }}');
     }
@@ -75,7 +75,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can replicate the model.
      */
-    public function replicate(App\Models\Qestass\User $user, Document $document): bool
+    public function replicate(User $user, Document $document): bool
     {
         return $user->checkPermissionTo('{{ replicatePermission }}');
     }
@@ -83,7 +83,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can reorder the models.
      */
-    public function reorder(App\Models\Qestass\User $user): bool
+    public function reorder(User $user): bool
     {
         return $user->checkPermissionTo('{{ reorderPermission }}');
     }
@@ -91,7 +91,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(App\Models\Qestass\User $user, Document $document): bool
+    public function forceDelete(User $user, Document $document): bool
     {
         return $user->checkPermissionTo('force-delete Document');
     }
@@ -99,7 +99,7 @@ class DocumentPolicy
     /**
      * Determine whether the user can permanently delete any models.
      */
-    public function forceDeleteAny(App\Models\Qestass\User $user): bool
+    public function forceDeleteAny(User $user): bool
     {
         return $user->checkPermissionTo('{{ forceDeleteAnyPermission }}');
     }

@@ -2,65 +2,49 @@
 
 namespace App\Policies;
 
+use Illuminate\Auth\Access\Response;
 use App\Models\CaseRecord;
 use App\Models\Qestass\User;
-use Illuminate\Auth\Access\Response;
 
 class CaseRecordPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return true; // Filtered by getEloquentQuery
+        return $user->checkPermissionTo('view-any CaseRecord');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, CaseRecord $caseRecord): bool
     {
-        return $user->type === 'admin' || $caseRecord->user_id === $user->id;
+        return $user->checkPermissionTo('view CaseRecord');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return true;
+        return $user->checkPermissionTo('create CaseRecord');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, CaseRecord $caseRecord): bool
     {
-        return $user->type === 'admin' || $caseRecord->user_id === $user->id;
+        return $user->checkPermissionTo('update CaseRecord');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, CaseRecord $caseRecord): bool
     {
-        return $user->type === 'admin' || $caseRecord->user_id === $user->id;
+        return $user->checkPermissionTo('delete CaseRecord');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->checkPermissionTo('force-delete CaseRecord');
+    }
+
     public function restore(User $user, CaseRecord $caseRecord): bool
     {
-        return $user->type === 'admin' || $caseRecord->user_id === $user->id;
+        return $user->checkPermissionTo('restore CaseRecord');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, CaseRecord $caseRecord): bool
     {
-        return $user->type === 'admin';
+        return $user->checkPermissionTo('force-delete CaseRecord');
     }
 }

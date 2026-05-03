@@ -8,6 +8,11 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class UnreadMessagesWidget extends BaseWidget
 {
+    public static function canView(): bool
+    {
+        return auth()->user()->checkPermissionTo('view Dashboard');
+    }
+
     protected static ?int $sort = 1;
 
     protected int | string | array $columnSpan = 'full';

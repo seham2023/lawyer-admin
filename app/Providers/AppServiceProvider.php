@@ -30,8 +30,11 @@ class AppServiceProvider extends ServiceProvider
         // Register CaseRecord Observer for audit trail
         \App\Models\CaseRecord::observe(\App\Observers\CaseRecordObserver::class);
 
+        Gate::policy(\Spatie\Permission\Models\Role::class, \App\Policies\RolePolicy::class);
+        Gate::policy(\Spatie\Permission\Models\Permission::class, \App\Policies\PermissionPolicy::class);
+
         Gate::before(function ($user, $ability) {
-            if ($user->type === 'admin' || $user->parent_id === null) {
+            if ($user->parent_id === null) {
                 return true;
             }
             return null;

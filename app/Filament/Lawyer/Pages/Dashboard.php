@@ -12,6 +12,11 @@ use App\Filament\Lawyer\Widgets\CalendarWidget;
 
 class Dashboard extends FilamentDashboard
 {
+    // public static function canAccess(): bool
+    // {
+    //     return auth()->user()->checkPermissionTo('view Dashboard');
+    // }
+
     protected static ?string $navigationIcon = 'heroicon-o-home';
 
     protected static string $routePath = '/';

@@ -8,8 +8,7 @@ use Filament\Widgets;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Blade;
-use App\Filament\Resources\CaseResource;
-use App\Filament\Resources\ClientResource;
+
 use Filament\Http\Middleware\Authenticate;
 use Filament\Support\Facades\FilamentView;
 use Filament\SpatieLaravelTranslatablePlugin;

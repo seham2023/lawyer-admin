@@ -10,6 +10,11 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class ClientsOverviewWidget extends BaseWidget
 {
+    // public static function canView(): bool
+    // {
+    //     return auth()->user()->checkPermissionTo('view Dashboard');
+    // }
+
     protected static ?string $heading = null;
 
     public function getHeading(): ?string

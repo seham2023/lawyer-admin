@@ -27,6 +27,11 @@ use Carbon\Carbon;
 
 class StatsOverviewWidget extends BaseWidget
 {
+    // public static function canView(): bool
+    // {
+    //     return auth()->user()->checkPermissionTo('view Dashboard');
+    // }
+
     protected function getStats(): array
     {
         $lawyerId = auth()->id();
