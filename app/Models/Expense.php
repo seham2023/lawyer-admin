@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
 {
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'category_id',
         'status_id',
@@ -52,12 +54,6 @@ class Expense extends Model
     public function payments()
     {
         return $this->morphMany(Payment::class, 'payable');
-    }
-
-    // Relationship with Client
-    public function client()
-    {
-        return $this->belongsTo(Client::class);
     }
 
     public function check()

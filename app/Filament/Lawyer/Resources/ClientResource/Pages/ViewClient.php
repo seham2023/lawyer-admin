@@ -165,7 +165,7 @@ class ViewClient extends ViewRecord
                 ->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading(__('Delete Client'))
-                ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
+                ->modalDescription(__('client.detach_description'))
                 ->action(function (): void {
                     \App\Models\LawyerUser::query()
                         ->where('lawyer_id', auth()->id())

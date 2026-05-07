@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Session extends Model
 {
+    protected $connection = 'mysql';
     protected $table = 'case_sessions';
 
     protected $fillable = [

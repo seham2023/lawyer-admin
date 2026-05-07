@@ -53,7 +53,7 @@ class LawyerTimeResource extends Resource
                             ->icon('heroicon-o-globe-alt')
                             ->schema([
                                 Forms\Components\Section::make(__('Online Availability'))
-                                    ->description(__('Manage your online consultation times'))
+                                    ->description(__('lawyer_time.online_availability_help'))
                                     ->schema([
                                         Forms\Components\Repeater::make('online_days')
                                             ->label(__('Days'))
@@ -101,7 +101,7 @@ class LawyerTimeResource extends Resource
                                                                 $end = $get('end_time');
 
                                                                 if (!$start || !$end) {
-                                                                    return __('Select start and end times to see interval count');
+                                                                    return __('lawyer_time.interval_count_help');
                                                                 }
 
                                                                 try {
@@ -110,7 +110,7 @@ class LawyerTimeResource extends Resource
                                                                     $diffMinutes = $startTime->diffInMinutes($endTime);
                                                                     $intervalCount = floor($diffMinutes / 30);
 
-                                                                    return __(':count intervals of 30 minutes each will be generated', ['count' => $intervalCount]);
+                                                                    return __('lawyer_time.generated_intervals', ['count' => $intervalCount]);
                                                                 } catch (\Exception $e) {
                                                                     return '';
                                                                 }
@@ -158,7 +158,7 @@ class LawyerTimeResource extends Resource
                             ->icon('heroicon-o-building-office')
                             ->schema([
                                 Forms\Components\Section::make(__('Offline Availability'))
-                                    ->description(__('Manage your in-person consultation times'))
+                                    ->description(__('lawyer_time.offline_availability_help'))
                                     ->schema([
                                         Forms\Components\Repeater::make('offline_days')
                                             ->label(__('Days'))
@@ -206,7 +206,7 @@ class LawyerTimeResource extends Resource
                                                                 $end = $get('end_time');
 
                                                                 if (!$start || !$end) {
-                                                                    return __('Select start and end times to see interval count');
+                                                                    return __('lawyer_time.interval_count_help');
                                                                 }
 
                                                                 try {
@@ -215,7 +215,7 @@ class LawyerTimeResource extends Resource
                                                                     $diffMinutes = $startTime->diffInMinutes($endTime);
                                                                     $intervalCount = floor($diffMinutes / 30);
 
-                                                                    return __(':count intervals of 30 minutes each will be generated', ['count' => $intervalCount]);
+                                                                    return __('lawyer_time.generated_intervals', ['count' => $intervalCount]);
                                                                 } catch (\Exception $e) {
                                                                     return '';
                                                                 }

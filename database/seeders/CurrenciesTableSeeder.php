@@ -13,9 +13,10 @@ class CurrenciesTableSeeder extends Seeder
     public function run(): void
     {
         $currencies = [
+            ['code' => 'SAR', 'en' => 'Saudi Riyal', 'ar' => 'الريال السعودي'],
+
             ['code' => 'USD', 'en' => 'US Dollar', 'ar' => 'الدولار الأمريكي'],
             ['code' => 'EUR', 'en' => 'Euro', 'ar' => 'اليورو'],
-            ['code' => 'SAR', 'en' => 'Saudi Riyal', 'ar' => 'الريال السعودي'],
             ['code' => 'EGP', 'en' => 'Egyptian Pound', 'ar' => 'الجنيه المصري'],
             ['code' => 'AED', 'en' => 'UAE Dirham', 'ar' => 'الدرهم الإماراتي'],
             ['code' => 'GBP', 'en' => 'British Pound', 'ar' => 'الجنيه الإسترليني'],

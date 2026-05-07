@@ -60,7 +60,7 @@ class PaymentDetailRelationManager extends RelationManager
                                 
                                 $remaining = $payment->remaining_payment;
                                 if ($value > $remaining) {
-                                    $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                    $fail(__('payment.amount_exceeds_remaining', ['amount' => $remaining]));
                                 }
                             };
                         }
@@ -105,7 +105,7 @@ class PaymentDetailRelationManager extends RelationManager
                         if (!$this->ownerRecord->payment) {
                             \Filament\Notifications\Notification::make()
                                 ->title(__('No payment found'))
-                                ->body(__('Please create a payment for this case first.'))
+                                ->body(__('payment.create_case_first'))
                                 ->danger()
                                 ->send();
 

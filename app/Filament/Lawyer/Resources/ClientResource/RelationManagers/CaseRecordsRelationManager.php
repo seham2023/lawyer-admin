@@ -225,7 +225,7 @@ class CaseRecordsRelationManager extends RelationManager
                                         
                                         $remaining = $record->payment->remaining_payment;
                                         if ($value > $remaining) {
-                                            $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                            $fail(__('payment.amount_exceeds_remaining', ['amount' => $remaining]));
                                         }
                                     };
                                 }
@@ -257,7 +257,7 @@ class CaseRecordsRelationManager extends RelationManager
                         $record->payment->paymentDetails()->create($data);
 
                         \Filament\Notifications\Notification::make()
-                            ->title(__('Payment installment added successfully'))
+                            ->title(__('payment.installment_added_successfully'))
                             ->success()
                             ->send();
                     }),

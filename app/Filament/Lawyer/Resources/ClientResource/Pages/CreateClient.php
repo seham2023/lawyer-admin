@@ -77,8 +77,8 @@ class CreateClient extends CreateRecord
 
         if ($phoneMatch && $identityMatch && $phoneMatch->id !== $identityMatch->id) {
             throw ValidationException::withMessages([
-                'phone' => __('This phone belongs to a different client record.'),
-                'identity_number' => __('This identity number belongs to a different client record.'),
+                'phone' => __('client.phone_belongs_to_different_record'),
+                'identity_number' => __('client.identity_belongs_to_different_record'),
             ]);
         }
 
@@ -88,11 +88,11 @@ class CreateClient extends CreateRecord
     protected function getCreatedNotificationTitle(): ?string
     {
         if ($this->clientAlreadyLinked) {
-            return __('Client already exists for your account.');
+            return __('client.already_exists');
         }
 
         if ($this->attachedExistingClient) {
-            return __('Existing client linked to your account.');
+            return __('client.existing_linked');
         }
 
         return __('Client created');

@@ -356,8 +356,13 @@ class CaseResource extends Resource
                         });
                     })
                     ->sortable(query: function ($query, $direction) {
-                        return $query->join('users', 'case_records.client_id', '=', 'users.id')
-                            ->orderBy('users.first_name', $direction);
+                        $appDb = config('database.connections.qestass_app.database');
+
+                        return $query
+                            ->select('case_records.*')
+                            ->leftJoin($appDb . '.users as client_users', 'case_records.client_id', '=', 'client_users.id')
+                            ->orderBy('client_users.first_name', $direction)
+                            ->orderBy('client_users.last_name', $direction);
                     }),
 
                 TextColumn::make('subject')

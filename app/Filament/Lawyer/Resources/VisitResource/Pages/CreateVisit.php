@@ -10,27 +10,27 @@ class CreateVisit extends CreateRecord
 {
     protected static string $resource = VisitResource::class;
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        if (request()->has('client_id')) {
+            $this->data['client_id'] = request('client_id');
+        }
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['user_id'] = auth()->id();
         return $data;
     }
 
-    protected function afterCreate(): void
+    protected function getRedirectUrl(): string
     {
-        $amount = $this->record->services()->sum('price');
-        
-        // Create polymorphic payment for the visit
-        if ($amount > 0) {
-            $this->record->payment()->create([
-                'amount' => $amount,
-                'tax' => 0,
-                'currency_id' => \App\Support\Money::getCurrencyId(),
-                'user_id' => auth()->id(),
-                'client_id' => $this->record->client_id,
-                'pay_method_id' => 1, // Fallback to Cash ID 1
-                'status_id' => 1, // Default to Pending
-            ]);
+        if (request()->has('client_id')) {
+            return \App\Filament\Lawyer\Resources\ClientResource::getUrl('view', ['record' => request('client_id')]);
         }
+
+        return $this->getResource()::getUrl('index');
     }
 }

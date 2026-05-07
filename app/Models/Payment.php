@@ -5,10 +5,10 @@ namespace App\Models;
 use App\Models\Status;
 use App\Models\Currency;
 use App\Models\PayMethod;
-use App\Models\CaseRecord;
 use App\Models\PaymentDetail;
 use App\Models\Qestass\User;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Translatable\HasTranslations;
 
 class Payment extends Model
 {
@@ -30,6 +30,15 @@ class Payment extends Model
     protected $casts = [
         'payment_date' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (Payment $payment): void {
+            if ($payment->isPaidStatus()) {
+                $payment->markAsPaid();
+            }
+        });
+    }
 
     /**
      * Get the owning payable model (CaseRecord, Visit, Expense, etc.)
@@ -69,12 +78,43 @@ class Payment extends Model
         return $this->belongsTo(Status::class, 'status_id');
     }
 
-    /**
-     * @deprecated Use payable() morphTo relationship instead
-     */
-    public function caseRecord()
+    public function markAsPaid(): void
     {
-        return $this->belongsTo(CaseRecord::class, 'case_record_id');
+        $remaining = $this->remaining_payment;
+
+        if ($remaining <= 0) {
+            return;
+        }
+
+        $this->paymentDetails()->create([
+            'name' => 'Marked as paid',
+            'payment_type' => 'full',
+            'amount' => $remaining,
+            'paid_at' => now(),
+            'pay_method_id' => $this->pay_method_id,
+            'details' => 'Automatically created when payment status was set to Paid.',
+        ]);
+    }
+
+    public function isPaidStatus(): bool
+    {
+        if (! $this->status_id) {
+            return false;
+        }
+
+        $status = $this->relationLoaded('status')
+            ? $this->status
+            : Status::query()->find($this->status_id);
+
+        if (! $status || $status->type !== 'payment') {
+            return false;
+        }
+
+        if (in_array(HasTranslations::class, class_uses_recursive($status), true)) {
+            return strtolower($status->getTranslation('name', 'en', false)) === 'paid';
+        }
+
+        return in_array($status->name, ['Paid', 'مدفوع'], true);
     }
 
     public function getRemainingPaymentAttribute()
@@ -89,10 +129,5 @@ class Payment extends Model
     public function getTotalPaidAttribute()
     {
         return $this->paymentDetails()->sum('amount');
-    }
-
-    public function case()
-    {
-        return $this->hasOne(CaseRecord::class);
     }
 }

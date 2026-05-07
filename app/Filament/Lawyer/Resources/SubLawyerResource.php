@@ -57,7 +57,7 @@ class SubLawyerResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make(__('sub_lawyer_information'))
-                    ->description(__('Provide the basic identification and login credentials for the sub-lawyer.'))
+                    ->description(__('sub_lawyer.basic_details_help'))
                     ->icon('heroicon-o-user-plus')
                     ->schema([
                         Forms\Components\TextInput::make('first_name')

@@ -52,11 +52,16 @@ class ClientResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        $tenantOwnerId = auth()->user()?->parent_id ?? auth()->id();
+
         return LawyerUserAccess::applyToUserQuery(
             parent::getEloquentQuery(),
             auth()->id(),
             'client'
-        );
+        )->withCount([
+            'caseRecords as cases_count' => fn (Builder $query) => $query->where('user_id', $tenantOwnerId),
+            'visits as visits_count' => fn (Builder $query) => $query->where('user_id', $tenantOwnerId),
+        ]);
     }
 
     public static function form(Forms\Form $form): Forms\Form
@@ -64,7 +69,7 @@ class ClientResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make(__('client_information'))
-                    ->description(__('Enter the basic identification and contact details for the client.'))
+                    ->description(__('client.basic_details_help'))
                     ->icon('heroicon-o-user-circle')
                     ->schema([
                         TextInput::make('first_name')
@@ -225,6 +230,22 @@ class ClientResource extends Resource
                     ->sortable(['phone'])
                     ->searchable(['phone', 'country_key']),
 
+                TextColumn::make('cases_count')
+                    ->label(__('client.cases_count'))
+                    ->numeric()
+                    ->badge()
+                    ->color('info')
+                    ->alignCenter()
+                    ->sortable(),
+
+                TextColumn::make('visits_count')
+                    ->label(__('client.visits_count'))
+                    ->numeric()
+                    ->badge()
+                    ->color('success')
+                    ->alignCenter()
+                    ->sortable(),
+
                 // TextColumn::make('gender')
                 //     ->label(__('gender'))
                 //     ->sortable()
@@ -296,6 +317,22 @@ class ClientResource extends Resource
                     }),
             ])
             ->actions([
+                Tables\Actions\Action::make('add_case')
+                    ->label(__('Add Case'))
+                    ->icon('heroicon-o-briefcase')
+                    ->color('warning')
+                    ->iconButton()
+                    ->tooltip(__('Add Case'))
+                    ->url(fn (User $record): string => CaseResource::getUrl('create', ['client_id' => $record->id], isAbsolute: false)),
+
+                Tables\Actions\Action::make('add_visit')
+                    ->label(__('Add Visit'))
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('success')
+                    ->iconButton()
+                    ->tooltip(__('Add Visit'))
+                    ->url(fn (User $record): string => VisitResource::getUrl('create', ['client_id' => $record->id], isAbsolute: false)),
+
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 // Tables\Actions\Action::make('add_visit')
@@ -446,7 +483,7 @@ class ClientResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->modalHeading(__('Delete Client'))
-                    ->modalDescription(__('This will remove the client from your workspace without deleting the client record.'))
+                    ->modalDescription(__('client.detach_description'))
                     ->action(function (User $record): void {
                         LawyerUser::query()
                             ->where('lawyer_id', auth()->id())

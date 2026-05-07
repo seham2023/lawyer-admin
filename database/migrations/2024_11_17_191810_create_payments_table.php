@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('pay_method_id')->constrained('pay_methods');
             $table->foreignId('status_id')->nullable()->constrained('statuses');
             $table->string('image')->nullable();
-
+            $table->date('payment_date')->nullable();
             // Polymorphic relationship - payment can belong to CaseRecord, Visit, Expense, etc.
             $table->string('payable_type')->nullable();
             $table->unsignedBigInteger('payable_id')->nullable();

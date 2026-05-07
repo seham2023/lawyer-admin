@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('status_id')->nullable();
             $table->timestamps();
 
-            $table->date('visit_date')->nullable(); 
+            $table->datetime('visit_date')->nullable(); 
             $table->string('purpose')->nullable();
             $table->text('notes')->nullable();
         });

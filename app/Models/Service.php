@@ -25,6 +25,6 @@ class Service extends Model
 
     public function visits(): BelongsToMany
     {
-        return $this->belongsToMany(Visit::class);
+        return $this->belongsToMany(Visit::class)->using(ServiceVisit::class);
     }
 }

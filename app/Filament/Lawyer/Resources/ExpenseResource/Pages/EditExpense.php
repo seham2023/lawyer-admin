@@ -11,8 +11,10 @@ class EditExpense extends EditRecord
 {
     protected static string $resource = ExpenseResource::class;
 
-    protected function mutateFormDataBeforeFill(array $data): array
+    protected function fillForm(): void
     {
+        $data = $this->record->toArray();
+
         // Load check data
         $check = $this->record->check;
         if ($check) {
@@ -31,45 +33,40 @@ class EditExpense extends EditRecord
             $data['pay_method_id'] = $payment->pay_method_id;
             $data['payment_status_id'] = $payment->status_id;
             
+            // In ExpenseResource, 'amount' in the form seems to be the Net amount?
             // Recompute net amount from gross stored in payment
-            // amount = gross / (1 + tax/100)
             if ($payment->tax > 0) {
                 $data['amount'] = round($payment->amount / (1 + ($payment->tax / 100)), 2);
             } else {
                 $data['amount'] = $payment->amount;
             }
             
-            // Set total for the computed field
             $data['total_after_tax'] = $payment->amount;
         }
 
-        return $data;
+        $this->form->fill($data);
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        // Update Payment
-        $payment = $this->record->payment;
-        if ($payment) {
-            $payment->update([
-                'amount' => $data['amount'] + ($data['amount'] * ($data['tax'] ?? 0) / 100),
-                'currency_id' => $data['currency_id'],
-                'tax' => $data['tax'] ?? 0,
-                'pay_method_id' => $data['pay_method_id'],
-                'status_id' => $data['payment_status_id'] ?? $payment->status_id,
-            ]);
-        } elseif (isset($data['amount'])) {
-            $this->record->payment()->create([
-                'amount' => $data['amount'] + ($data['amount'] * ($data['tax'] ?? 0) / 100),
-                'tax' => $data['tax'] ?? 0,
-                'currency_id' => $data['currency_id'],
-                'pay_method_id' => $data['pay_method_id'],
-                'user_id' => auth()->id(),
-                'status_id' => $data['payment_status_id'] ?? 1,
-            ]);
+        // 1. Update or create Payment
+        $grossAmount = $data['amount'] + ($data['amount'] * ($data['tax'] ?? 0) / 100);
+        $paymentData = [
+            'amount' => $grossAmount,
+            'currency_id' => $data['currency_id'],
+            'tax' => $data['tax'] ?? 0,
+            'pay_method_id' => $data['pay_method_id'],
+            'status_id' => $data['payment_status_id'] ?? 1,
+            'user_id' => auth()->user()->parent_id ?? auth()->id(),
+        ];
+
+        if ($this->record->payment) {
+            $this->record->payment->update($paymentData);
+        } else {
+            $this->record->payment()->create($paymentData);
         }
 
-        // Extract check data
+        // 2. Update or create ExpenseCheck
         $checkData = [
             'check_number' => $data['check_number'] ?? null,
             'bank_name' => $data['bank_name'] ?? null,
@@ -78,7 +75,6 @@ class EditExpense extends EditRecord
             'status_id' => $data['check_status_id'] ?? null,
         ];
 
-        // Update or create ExpenseCheck
         $check = $this->record->check;
         if ($check) {
             $check->update($checkData);
@@ -87,7 +83,7 @@ class EditExpense extends EditRecord
             ExpenseCheck::create($checkData);
         }
 
-        // Remove fields not in Expense fillable
+        // 3. Remove fields not in Expense table
         unset(
             $data['check_number'], 
             $data['bank_name'], 

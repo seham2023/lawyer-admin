@@ -8,6 +8,7 @@ use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\RelationManagers\RelationManager;
 
 class PaymentDetailsRelationManager extends RelationManager
@@ -16,7 +17,20 @@ class PaymentDetailsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $title = 'Payment Installments';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('payment.installments');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('payment.detail');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('payment.installments');
+    }
 
     public function form(Form $form): Form
     {
@@ -160,6 +174,7 @@ class PaymentDetailsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
+                    ->label(__('payment.add_detail'))
                     ->mutateFormDataUsing(function (array $data): array {
                         // Automatically set payment_id from the parent visit's payment
                         $data['payment_id'] = $this->ownerRecord->payment?->id;

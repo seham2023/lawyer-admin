@@ -17,6 +17,7 @@ class EditCase extends EditRecord
     {
         $data = $this->record->toArray();
 
+        // Load opponent data
         if ($this->record->opponent) {
             $data['opponent_name'] = $this->record->opponent->name;
             $data['opponent_email'] = $this->record->opponent->email;
@@ -26,6 +27,7 @@ class EditCase extends EditRecord
             $data['opponent_nationality_id'] = $this->record->opponent->nationality_id;
         }
 
+        // Load opponent lawyer data
         if ($this->record->opponent_lawyer) {
             $data['opponent_lawyer_name'] = $this->record->opponent_lawyer->name;
             $data['opponent_lawyer_country_key'] = $this->record->opponent_lawyer->country_key;
@@ -33,11 +35,15 @@ class EditCase extends EditRecord
             $data['opponent_lawyer_email'] = $this->record->opponent_lawyer->email;
         }
 
-        if ($this->record->payment) {
-            $data['amount'] = $this->record->payment->amount;
-            $data['currency_id'] = $this->record->payment->currency_id;
-            $data['tax'] = $this->record->payment->tax;
-            $data['pay_method_id'] = $this->record->payment->pay_method_id;
+        // Load financial data from the linked payment
+        $payment = $this->record->payment;
+        if ($payment) {
+            $data['amount'] = $payment->amount;
+            $data['currency_id'] = $payment->currency_id;
+            $data['tax'] = $payment->tax;
+            $data['pay_method_id'] = $payment->pay_method_id;
+            $data['payment_status_id'] = $payment->status_id;
+            $data['total_after_tax'] = $payment->amount + ($payment->amount * ($payment->tax ?? 0) / 100);
         }
 
         $this->form->fill($data);
@@ -45,80 +51,60 @@ class EditCase extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        // Update or create opponent based on name
+        // 1. Update or create opponent
         if (!empty($data['opponent_name'])) {
+            $opponentData = [
+                'name' => $data['opponent_name'],
+                'email' => $data['opponent_email'] ?? null,
+                'country_key' => $data['opponent_country_key'] ?? null,
+                'mobile' => $data['opponent_mobile'] ?? null,
+                'location' => $data['opponent_location'] ?? null,
+                'nationality_id' => $data['opponent_nationality_id'] ?? null,
+            ];
+
             if ($this->record->opponent) {
-                // Update existing opponent
-                $this->record->opponent->update([
-                    'name' => $data['opponent_name'],
-                    'email' => $data['opponent_email'] ?? null,
-                    'country_key' => $data['opponent_country_key'] ?? null,
-                    'mobile' => $data['opponent_mobile'] ?? null,
-                    'location' => $data['opponent_location'] ?? null,
-                    'nationality_id' => $data['opponent_nationality_id'] ?? null,
-                ]);
+                $this->record->opponent->update($opponentData);
             } else {
-                // Create new opponent
-                $opponent = Opponent::create([
-                    'name' => $data['opponent_name'],
-                    'email' => $data['opponent_email'] ?? null,
-                    'country_key' => $data['opponent_country_key'] ?? null,
-                    'mobile' => $data['opponent_mobile'] ?? null,
-                    'location' => $data['opponent_location'] ?? null,
-                    'nationality_id' => $data['opponent_nationality_id'] ?? null,
-                ]);
-                $this->record->update(['opponent_id' => $opponent->id]);
-            }
-        } else {
-            // Remove opponent if name is empty
-            if ($opponent = $this->record->opponent) {
-                $this->record->update(['opponent_id' => null]);
-                $opponent->delete();
-                $data['opponent_id'] = null;
+                $opponent = Opponent::create($opponentData);
+                $this->record->opponent_id = $opponent->id;
             }
         }
 
-        // Update or create opponent lawyer based on name
+        // 2. Update or create opponent lawyer
         if (!empty($data['opponent_lawyer_name'])) {
+            $lawyerData = [
+                'name' => $data['opponent_lawyer_name'],
+                'country_key' => $data['opponent_lawyer_country_key'] ?? null,
+                'mobile' => $data['opponent_lawyer_mobile'] ?? null,
+                'email' => $data['opponent_lawyer_email'] ?? null,
+            ];
+
             if ($this->record->opponent_lawyer) {
-                // Update existing opponent lawyer
-                $this->record->opponent_lawyer->update([
-                    'name' => $data['opponent_lawyer_name'],
-                    'country_key' => $data['opponent_lawyer_country_key'] ?? null,
-                    'mobile' => $data['opponent_lawyer_mobile'] ?? null,
-                    'email' => $data['opponent_lawyer_email'] ?? null,
-                ]);
+                $this->record->opponent_lawyer->update($lawyerData);
             } else {
-                // Create new opponent lawyer
-                $opponentLawyer = OpponentLawyer::create([
-                    'name' => $data['opponent_lawyer_name'],
-                    'country_key' => $data['opponent_lawyer_country_key'] ?? null,
-                    'mobile' => $data['opponent_lawyer_mobile'] ?? null,
-                    'email' => $data['opponent_lawyer_email'] ?? null,
-                ]);
-                $this->record->update(['opponent_lawyer_id' => $opponentLawyer->id]);
-                $data['opponent_lawyer_id'] = $opponentLawyer->id;
-            }
-        } else {
-            // Remove opponent lawyer if name is empty
-            if ($opponentLawyer = $this->record->opponent_lawyer) {
-                $this->record->update(['opponent_lawyer_id' => null]);
-                $opponentLawyer->delete();
-                $data['opponent_lawyer_id'] = null;
+                $opponentLawyer = OpponentLawyer::create($lawyerData);
+                $this->record->opponent_lawyer_id = $opponentLawyer->id;
             }
         }
 
-        // Update payment
+        // 3. Update or create Payment
+        $paymentData = [
+            'amount' => $data['amount'] ?? 0,
+            'currency_id' => $data['currency_id'] ?? null,
+            'tax' => $data['tax'] ?? 0,
+            'pay_method_id' => $data['pay_method_id'] ?? 1,
+            'status_id' => $data['payment_status_id'] ?? 1,
+            'user_id' => auth()->user()->parent_id ?? auth()->id(),
+            'client_id' => $data['client_id'],
+        ];
+
         if ($this->record->payment) {
-            $this->record->payment->update([
-                'amount' => $data['amount'] ?? 0,
-                'currency_id' => $data['currency_id'] ?? null,
-                'tax' => $data['tax'] ?? 0,
-                'pay_method_id' => $data['pay_method_id'] ?? 1,
-            ]);
+            $this->record->payment->update($paymentData);
+        } else {
+            $this->record->payment()->create($paymentData);
         }
 
-        // Remove the fields that are not in case_records table
+        // 4. Remove phantom fields not in case_records table
         unset(
             $data['opponent_name'],
             $data['opponent_email'],
@@ -133,6 +119,8 @@ class EditCase extends EditRecord
             $data['amount'],
             $data['currency_id'],
             $data['tax'],
+            $data['pay_method_id'],
+            $data['payment_status_id'],
             $data['total_after_tax']
         );
 

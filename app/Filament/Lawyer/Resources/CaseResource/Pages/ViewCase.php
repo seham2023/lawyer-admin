@@ -123,7 +123,7 @@ class ViewCase extends ViewRecord
                                     
                                     $remaining = $record->payment->remaining_payment;
                                     if ($value > $remaining) {
-                                        $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                        $fail(__('payment.amount_exceeds_remaining', ['amount' => $remaining]));
                                     }
                                 };
                             }

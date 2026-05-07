@@ -14,10 +14,6 @@ abstract class BaseMessages extends Page
 
     protected static string $view = 'filament.admin.pages.messages';
 
-    protected static ?string $navigationGroup = 'Communication';
-
-    protected static ?string $title = 'Messages';
-
     // Remove max-width constraint for full-width layout
     protected ?string $maxContentWidth = 'full';
 
@@ -30,7 +26,17 @@ abstract class BaseMessages extends Page
 
     public static function getNavigationLabel(): string
     {
-        return __('Messages');
+        return __('messages');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('communication');
+    }
+
+    public function getTitle(): string
+    {
+        return __('messages');
     }
 
     public static function getNavigationBadge(): ?string

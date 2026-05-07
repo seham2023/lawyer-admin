@@ -8,6 +8,7 @@ use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\RelationManagers\RelationManager;
 
 class PaymentDetailsRelationManager extends RelationManager
@@ -16,7 +17,20 @@ class PaymentDetailsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $title = 'Payment Installments';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('payment.installments');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('payment.detail');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('payment.installments');
+    }
 
     public function form(Form $form): Form
     {
@@ -24,7 +38,7 @@ class PaymentDetailsRelationManager extends RelationManager
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->label(__('Payment Name'))
-                    ->placeholder(__('e.g., First Installment, Deposit, etc.'))
+                    ->placeholder(__('payment.detail_name_placeholder'))
                     ->required()
                     ->maxLength(255),
 
@@ -52,7 +66,7 @@ class PaymentDetailsRelationManager extends RelationManager
                                 
                                 $remaining = $payment->remaining_payment;
                                 if ($value > $remaining) {
-                                    $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                    $fail(__('payment.amount_exceeds_remaining', ['amount' => $remaining]));
                                 }
                             };
                         }
@@ -73,7 +87,7 @@ class PaymentDetailsRelationManager extends RelationManager
 
                 Forms\Components\Textarea::make('details')
                     ->label(__('Payment Details'))
-                    ->placeholder(__('Additional notes about this payment...'))
+                    ->placeholder(__('payment.additional_notes_placeholder'))
                     ->rows(3)
                     ->columnSpanFull(),
             ]);
@@ -172,6 +186,7 @@ class PaymentDetailsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
+                    ->label(__('payment.add_detail'))
                     ->mutateFormDataUsing(function (array $data): array {
                         // Automatically set payment_id from the parent visit's payment
                         $data['payment_id'] = $this->ownerRecord->payment?->id;
@@ -182,7 +197,7 @@ class PaymentDetailsRelationManager extends RelationManager
                         if (!$this->ownerRecord->payment) {
                             \Filament\Notifications\Notification::make()
                                 ->title(__('No payment found'))
-                                ->body(__('Please create a payment for this visit first.'))
+                                ->body(__('payment.create_visit_first'))
                                 ->danger()
                                 ->send();
 
@@ -213,7 +228,7 @@ class PaymentDetailsRelationManager extends RelationManager
                 ]),
             ])
             ->emptyStateHeading(__('No payment installments yet'))
-            ->emptyStateDescription(__('Add payment installments to track partial payments for this visit.'))
+            ->emptyStateDescription(__('payment.visit_installments_empty_description'))
             ->emptyStateIcon('heroicon-o-banknotes');
     }
 

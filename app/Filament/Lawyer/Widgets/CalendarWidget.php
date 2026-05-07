@@ -302,6 +302,7 @@ class CalendarWidget extends FullCalendarWidget
             //     ->modalCancelActionLabel('Close'),
 
             Actions\EditAction::make()
+                ->label(__('Edit'))
                 ->form(function ($record) {
                     if ($record instanceof Session) {
                         return $this->getSessionFormSchema();
@@ -340,11 +341,12 @@ class CalendarWidget extends FullCalendarWidget
                 }),
 
             Actions\DeleteAction::make()
+                ->label(__('Delete'))
                 ->modalHeading(function ($record) {
                     if ($record instanceof Session) {
-                        return 'Delete Session: ' . $record->title;
+                        return __('Delete Session') . ': ' . $record->title;
                     }
-                    return 'Delete Event: ' . $record->title;
+                    return __('Delete Event') . ': ' . $record->title;
                 }),
         ];
     }
@@ -355,9 +357,9 @@ class CalendarWidget extends FullCalendarWidget
         return Actions\ViewAction::make()
             ->modalHeading(function ($record) {
                 if ($record instanceof Session) {
-                    return 'Session Details: ' . $record->title;
+                    return __('Session Details') . ': ' . $record->title;
                 }
-                return 'Event Details: ' . $record->title;
+                return __('Event Details') . ': ' . $record->title;
             })
             ->form(function ($record) {
                 if ($record instanceof Session) {
@@ -366,38 +368,38 @@ class CalendarWidget extends FullCalendarWidget
                 return $this->getEventViewSchema($record);
             })
             ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Close');
+            ->modalCancelActionLabel(__('Close'));
     }
 
     // View schemas for display-only
     public function getEventViewSchema($record): array
     {
         return [
-            Forms\Components\Section::make('Event Details')
+            Forms\Components\Section::make(__('Event Details'))
                 ->schema([
                     Forms\Components\Placeholder::make('title')
-                        ->label('Event Title')
+                        ->label(__('Event Title'))
                         ->content($record->title),
 
                     Forms\Components\Placeholder::make('description')
-                        ->label('Description')
-                        ->content($record->description ?: 'No description'),
+                        ->label(__('Description'))
+                        ->content($record->description ?: __('No description')),
 
                     Forms\Components\Placeholder::make('start')
-                        ->label('Start Date & Time')
-                        ->content($record->start?->format('Y-m-d H:i:s') ?: 'Not set'),
+                        ->label(__('Start Date & Time'))
+                        ->content($record->start?->format('Y-m-d H:i:s') ?: __('Not set')),
 
                     Forms\Components\Placeholder::make('end')
-                        ->label('End Date & Time')
-                        ->content($record->end?->format('Y-m-d H:i:s') ?: 'Not set'),
+                        ->label(__('End Date & Time'))
+                        ->content($record->end?->format('Y-m-d H:i:s') ?: __('Not set')),
 
                     Forms\Components\Placeholder::make('type')
-                        ->label('Event Type')
-                        ->content(ucfirst($record->type ?: 'general')),
+                        ->label(__('Event Type'))
+                        ->content(__($record->type ?: 'general')),
 
                     Forms\Components\Placeholder::make('all_day')
-                        ->label('All Day Event')
-                        ->content($record->all_day ? 'Yes' : 'No'),
+                        ->label(__('All Day Event'))
+                        ->content($record->all_day ? __('Yes') : __('No')),
                 ])
         ];
     }
@@ -406,42 +408,42 @@ class CalendarWidget extends FullCalendarWidget
     {
         $caseRecord = CaseRecord::with('client')->find($record->case_record_id);
         $caseInfo = $caseRecord && $caseRecord->client
-            ? "Case #{$caseRecord->id} - {$caseRecord->client->name}"
-            : "Case #{$record->case_record_id}";
+            ? __('Case Number') . " {$caseRecord->id} - {$caseRecord->client->getFilamentName()}"
+            : __('Case Number') . " {$record->case_record_id}";
 
         return [
-            Forms\Components\Section::make('Session Details')
+            Forms\Components\Section::make(__('Session Details'))
                 ->schema([
                     Forms\Components\Placeholder::make('title')
-                        ->label('Session Title')
+                        ->label(__('Session Title'))
                         ->content($record->title),
 
                     Forms\Components\Placeholder::make('details')
-                        ->label('Details')
-                        ->content($record->details ?: 'No details'),
+                        ->label(__('Details'))
+                        ->content($record->details ?: __('No details')),
 
                     Forms\Components\Placeholder::make('datetime')
-                        ->label('Date & Time')
-                        ->content($record->datetime?->format('Y-m-d H:i:s') ?: 'Not set'),
+                        ->label(__('Date & Time'))
+                        ->content($record->datetime?->format('Y-m-d H:i:s') ?: __('Not set')),
 
                     Forms\Components\Placeholder::make('case_record_id')
-                        ->label('Case')
+                        ->label(__('Case'))
                         ->content($caseInfo),
 
                     Forms\Components\Placeholder::make('priority')
-                        ->label('Priority')
+                        ->label(__('Priority'))
                         ->content(function () use ($record) {
                             return match ($record->priority) {
-                                'high' => '🔴 High',
-                                'medium' => '🔵 Normal',
-                                'low' => '🟢 Low',
-                                default => '🔵 Normal',
+                                'high' => '🔴 ' . __('High'),
+                                'medium' => '🔵 ' . __('Normal'),
+                                'low' => '🟢 ' . __('Low'),
+                                default => '🔵 ' . __('Normal'),
                             };
                         }),
 
                     Forms\Components\Placeholder::make('court_id')
                         ->label(__('Court'))
-                        ->content($record->court?->name ?: 'Not set'),
+                        ->content($record->court?->name ?: __('Not set')),
                 ])
         ];
     }

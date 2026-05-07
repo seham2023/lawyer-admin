@@ -498,7 +498,6 @@ class User extends Authenticatable implements HasName, FilamentUser
         }
 
         if ($panel->getId() === 'admin') {
-            return true;
             return $this->parent_id === null && $this->type !== 'admin';
         }
 

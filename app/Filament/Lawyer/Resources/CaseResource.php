@@ -152,7 +152,7 @@ class CaseResource extends Resource
                                             ->searchable()
                                             ->preload()
                                             ->prefixIcon('heroicon-o-user-plus')
-                                            ->hint(__('If left empty, only the main lawyer can manage this case.')),
+                                            ->hint(__('case.assigned_lawyer_hint')),
                                     ]),
                             ]),
 
@@ -356,8 +356,13 @@ class CaseResource extends Resource
                         });
                     })
                     ->sortable(query: function ($query, $direction) {
-                        return $query->join('users', 'case_records.client_id', '=', 'users.id')
-                            ->orderBy('users.first_name', $direction);
+                        $appDb = config('database.connections.qestass_app.database');
+
+                        return $query
+                            ->select('case_records.*')
+                            ->leftJoin($appDb . '.users as client_users', 'case_records.client_id', '=', 'client_users.id')
+                            ->orderBy('client_users.first_name', $direction)
+                            ->orderBy('client_users.last_name', $direction);
                     }),
 
                 TextColumn::make('subject')
@@ -587,7 +592,7 @@ class CaseResource extends Resource
                                             
                                             $remaining = $record->payment->remaining_payment;
                                             if ($value > $remaining) {
-                                                $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                                $fail(__('payment.amount_exceeds_remaining', ['amount' => $remaining]));
                                             }
                                         };
                                     }

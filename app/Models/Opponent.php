@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Opponent extends Model
 {
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'name',
         'country_key',

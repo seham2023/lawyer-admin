@@ -26,13 +26,16 @@ class PaymentResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
 
-    protected static ?string $navigationGroup = 'Financial Management';
-
     protected static ?int $navigationSort = 1;
 
     public static function getNavigationLabel(): string
     {
         return __('Payments');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('financial_management');
     }
 
     public static function getPluralModelLabel(): string

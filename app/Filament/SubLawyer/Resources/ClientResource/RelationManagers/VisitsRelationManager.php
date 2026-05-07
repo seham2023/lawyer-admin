@@ -203,42 +203,12 @@ class VisitsRelationManager extends RelationManager
                     }),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
-                    ->after(function (\App\Models\Visit $record) {
-                        $amount = $record->services()->sum('price');
-                        if ($amount > 0) {
-                            $record->payment()->create([
-                                'amount' => $amount,
-                                'tax' => 0,
-                                'currency_id' => \App\Support\Money::getCurrencyId(),
-                                'user_id' => auth()->id(),
-                                'client_id' => $record->client_id,
-                                'pay_method_id' => 1,
-                                'status_id' => 1,
-                            ]);
-                        }
-                    }),
+                Tables\Actions\CreateAction::make(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->url(fn($record) => \App\Filament\SubLawyer\Resources\VisitResource::getUrl('view', ['record' => $record])),
-                Tables\Actions\EditAction::make()
-                    ->after(function (\App\Models\Visit $record) {
-                        $amount = $record->services()->sum('price');
-                        if ($record->payment) {
-                            $record->payment->update(['amount' => $amount]);
-                        } else if ($amount > 0) {
-                            $record->payment()->create([
-                                'amount' => $amount,
-                                'tax' => 0,
-                                'currency_id' => \App\Support\Money::getCurrencyId(),
-                                'user_id' => auth()->id(),
-                                'client_id' => $record->client_id,
-                                'pay_method_id' => 1,
-                                'status_id' => 1,
-                            ]);
-                        }
-                    }),
+                Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('add_payment_detail')
                     ->label(__('Add Payment'))
                     ->icon('heroicon-o-banknotes')

@@ -19,7 +19,17 @@ class PaymentDetailsRelationManager extends RelationManager
 
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
-        return __('Payment Installments');
+        return __('payment.installments');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('payment.detail');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('payment.installments');
     }
 
     public function form(Form $form): Form
@@ -55,7 +65,7 @@ class PaymentDetailsRelationManager extends RelationManager
                                 
                                 $remaining = $payment->remaining_payment;
                                 if ($value > $remaining) {
-                                    $fail(__('Amount cannot exceed the remaining balance of :amount', ['amount' => $remaining]));
+                                    $fail(__('payment.amount_exceeds_remaining', ['amount' => $remaining]));
                                 }
                             };
                         }
@@ -154,6 +164,7 @@ class PaymentDetailsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
+                    ->label(__('payment.add_detail'))
                     ->after(function () {
                         // Refresh the parent to update remaining balance
                         $this->ownerRecord->refresh();
