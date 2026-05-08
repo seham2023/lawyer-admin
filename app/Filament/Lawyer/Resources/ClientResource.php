@@ -7,7 +7,9 @@ use App\Models\Category;
 use App\Models\Country;
 use App\Models\State;
 use App\Models\City;
+use App\Models\CaseRecord;
 use App\Models\LawyerUser;
+use App\Models\Visit;
 use Filament\Notifications\Notification;
 use Filament\Forms;
 use Filament\Tables;
@@ -52,16 +54,11 @@ class ClientResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $tenantOwnerId = auth()->user()?->parent_id ?? auth()->id();
-
         return LawyerUserAccess::applyToUserQuery(
             parent::getEloquentQuery(),
             auth()->id(),
             'client'
-        )->withCount([
-            'caseRecords as cases_count' => fn (Builder $query) => $query->where('user_id', $tenantOwnerId),
-            'visits as visits_count' => fn (Builder $query) => $query->where('user_id', $tenantOwnerId),
-        ]);
+        );
     }
 
     public static function form(Forms\Form $form): Forms\Form
@@ -232,19 +229,25 @@ class ClientResource extends Resource
 
                 TextColumn::make('cases_count')
                     ->label(__('client.cases_count'))
+                    ->getStateUsing(fn (User $record): int => CaseRecord::query()
+                        ->where('client_id', $record->id)
+                        ->where('user_id', auth()->user()?->parent_id ?? auth()->id())
+                        ->count())
                     ->numeric()
                     ->badge()
                     ->color('info')
-                    ->alignCenter()
-                    ->sortable(),
+                    ->alignCenter(),
 
                 TextColumn::make('visits_count')
                     ->label(__('client.visits_count'))
+                    ->getStateUsing(fn (User $record): int => Visit::query()
+                        ->where('client_id', $record->id)
+                        ->where('user_id', auth()->user()?->parent_id ?? auth()->id())
+                        ->count())
                     ->numeric()
                     ->badge()
                     ->color('success')
-                    ->alignCenter()
-                    ->sortable(),
+                    ->alignCenter(),
 
                 // TextColumn::make('gender')
                 //     ->label(__('gender'))
