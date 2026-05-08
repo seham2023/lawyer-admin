@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class Role extends \Spatie\Permission\Models\Role
+class Permission extends \Spatie\Permission\Models\Permission
 {
     protected $connection = 'mysql';
 }
